@@ -1,23 +1,23 @@
 'use client';
 
 import {
-    Book,
-    Bug,
-    CheckCircle,
-    ChevronDown,
-    ChevronRight,
-    Clock,
-    Download,
-    ExternalLink,
-    FileText,
-    HelpCircle,
-    Lightbulb,
-    Mail,
-    MessageSquare,
-    Phone,
-    Search,
-    Send,
-    Video
+  Book,
+  Bug,
+  CheckCircle,
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  Download,
+  ExternalLink,
+  FileText,
+  HelpCircle,
+  Lightbulb,
+  Mail,
+  MessageSquare,
+  Phone,
+  Search,
+  Send,
+  Video
 } from 'lucide-react';
 import React, { useState } from 'react';
 
