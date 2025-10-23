@@ -342,11 +342,11 @@ export default function AdminDashboard() {
     bgColor,
     loading: cardLoading,
   }: StatCardProps) => (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-200">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-gray-600 text-sm mb-1">{label}</p>
-          <p className="text-3xl font-bold text-gray-900">
+          <p className="text-gray-600 text-sm font-medium mb-2">{label}</p>
+          <p className="text-3xl font-bold text-flowdoors-charcoal">
             {cardLoading ? (
               <span className="text-gray-400">Loading...</span>
             ) : (
@@ -362,185 +362,183 @@ export default function AdminDashboard() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header with Toggle */}
-        <div className="flex justify-between items-start mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Admin Dashboard
-            </h1>
-            <p className="text-gray-600">
-              Overview of your business metrics and recent activity
-            </p>
-          </div>
+    <div className="container mx-auto">
+      {/* Header with Toggle */}
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-flowdoors-charcoal mb-2">
+            Admin Dashboard
+          </h1>
+          <p className="text-gray-600">
+            Overview of your business metrics and recent activity
+          </p>
+        </div>
 
-          {/* Data Source Toggle */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-700">
-                Data Source:
-              </span>
-              <button
-                onClick={() => setUseMockData(!useMockData)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  useMockData ? 'bg-gray-400' : 'bg-blue-600'
-                }`}
-                aria-label={`Switch to ${useMockData ? 'real' : 'mock'} data`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    useMockData ? 'translate-x-1' : 'translate-x-6'
-                  }`}
-                />
-              </button>
+        {/* Data Source Toggle */}
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-flowdoors-charcoal">
+              Data Source:
+            </span>
+            <button
+              onClick={() => setUseMockData(!useMockData)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                useMockData ? 'bg-gray-400' : 'bg-flowdoors-blue'
+              }`}
+              aria-label={`Switch to ${useMockData ? 'real' : 'mock'} data`}
+            >
               <span
-                className={`text-sm font-medium ${useMockData ? 'text-gray-500' : 'text-blue-600'}`}
-              >
-                {useMockData ? 'Mock Data' : 'Real Data'}
-              </span>
-            </div>
-            {!useMockData && (
-              <div className="flex items-center gap-2 mt-2">
-                <AlertCircle className="w-4 h-4 text-green-500" />
-                <p className="text-xs font-medium text-green-700">
-                  Loading ONLY real data from Firestore
-                </p>
-              </div>
-            )}
-            {useMockData && (
-              <div className="flex items-center gap-2 mt-2">
-                <AlertCircle className="w-4 h-4 text-amber-500" />
-                <p className="text-xs text-amber-700">
-                  Showing mock/demo data for testing
-                </p>
-              </div>
-            )}
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  useMockData ? 'translate-x-1' : 'translate-x-6'
+                }`}
+              />
+            </button>
+            <span
+              className={`text-sm font-medium ${useMockData ? 'text-gray-500' : 'text-flowdoors-blue'}`}
+            >
+              {useMockData ? 'Mock Data' : 'Real Data'}
+            </span>
           </div>
+          {!useMockData && (
+            <div className="flex items-center gap-2 mt-2">
+              <AlertCircle className="w-4 h-4 text-flowdoors-green" />
+              <p className="text-xs font-medium text-flowdoors-green-700">
+                Loading ONLY real data from Firestore
+              </p>
+            </div>
+          )}
+          {useMockData && (
+            <div className="flex items-center gap-2 mt-2">
+              <AlertCircle className="w-4 h-4 text-amber-500" />
+              <p className="text-xs text-amber-700">
+                Showing mock/demo data for testing
+              </p>
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* Stats Grid - First Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <StatCard
-            icon={FileText}
-            label="Total Leads"
-            value={data.totalLeads}
-            bgColor="bg-blue-500"
-            loading={loading && !useMockData}
-          />
-          <StatCard
-            icon={FileText}
-            label="Total Quotes"
-            value={data.totalQuotes}
-            bgColor="bg-green-500"
-            loading={loading && !useMockData}
-          />
-          <StatCard
-            icon={DollarSign}
-            label="Total Quote Value"
-            value={`$${data.totalRevenue.toLocaleString()}`}
-            bgColor="bg-yellow-500"
-            loading={loading && !useMockData}
-          />
-          <StatCard
-            icon={Clock}
-            label="Pending Orders"
-            value={data.pendingOrders}
-            bgColor="bg-red-500"
-            loading={loading && !useMockData}
-          />
-        </div>
+      {/* Stats Grid - First Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <StatCard
+          icon={FileText}
+          label="Total Leads"
+          value={data.totalLeads}
+          bgColor="bg-flowdoors-blue"
+          loading={loading && !useMockData}
+        />
+        <StatCard
+          icon={FileText}
+          label="Total Quotes"
+          value={data.totalQuotes}
+          bgColor="bg-flowdoors-green"
+          loading={loading && !useMockData}
+        />
+        <StatCard
+          icon={DollarSign}
+          label="Total Quote Value"
+          value={`$${data.totalRevenue.toLocaleString()}`}
+          bgColor="bg-flowdoors-blue-600"
+          loading={loading && !useMockData}
+        />
+        <StatCard
+          icon={Clock}
+          label="Pending Orders"
+          value={data.pendingOrders}
+          bgColor="bg-amber-500"
+          loading={loading && !useMockData}
+        />
+      </div>
 
-        {/* Stats Grid - Second Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <StatCard
-            icon={ShoppingCart}
-            label="Total Orders"
-            value={data.totalOrders}
-            bgColor="bg-purple-500"
-            loading={loading && !useMockData}
-          />
-          <StatCard
-            icon={TrendingUp}
-            label="Conversion Rate"
-            value={`${data.conversionRate}%`}
-            bgColor="bg-indigo-500"
-            loading={loading && !useMockData}
-          />
-          <StatCard
-            icon={DollarSign}
-            label="Average Order Volume"
-            value={`$${data.averageOrderVolume.toLocaleString()}`}
-            bgColor="bg-emerald-500"
-            loading={loading && !useMockData}
-          />
-        </div>
+      {/* Stats Grid - Second Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <StatCard
+          icon={ShoppingCart}
+          label="Total Orders"
+          value={data.totalOrders}
+          bgColor="bg-flowdoors-charcoal"
+          loading={loading && !useMockData}
+        />
+        <StatCard
+          icon={TrendingUp}
+          label="Conversion Rate"
+          value={`${data.conversionRate}%`}
+          bgColor="bg-flowdoors-green-600"
+          loading={loading && !useMockData}
+        />
+        <StatCard
+          icon={DollarSign}
+          label="Average Order Volume"
+          value={`$${data.averageOrderVolume.toLocaleString()}`}
+          bgColor="bg-flowdoors-blue-700"
+          loading={loading && !useMockData}
+        />
+      </div>
 
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Activity */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Recent Activity
-            </h2>
-            {loading && !useMockData ? (
-              <div className="text-center py-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p className="text-gray-500 mt-2">Loading activity...</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {data.recentActivity.length > 0 ? (
-                  data.recentActivity.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3">
-                      <div
-                        className={`${activity.color} w-2 h-2 rounded-full mt-2`}
-                      ></div>
-                      <div className="flex-1">
-                        <p className="text-gray-900 font-medium">
-                          {activity.text}
-                        </p>
-                        <p className="text-gray-500 text-sm">{activity.time}</p>
-                      </div>
+      {/* Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Activity */}
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+          <h2 className="text-xl font-bold text-flowdoors-charcoal mb-4">
+            Recent Activity
+          </h2>
+          {loading && !useMockData ? (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-flowdoors-blue"></div>
+              <p className="text-gray-500 mt-2">Loading activity...</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {data.recentActivity.length > 0 ? (
+                data.recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div
+                      className={`${activity.color} w-2 h-2 rounded-full mt-2`}
+                    ></div>
+                    <div className="flex-1">
+                      <p className="text-flowdoors-charcoal font-medium">
+                        {activity.text}
+                      </p>
+                      <p className="text-gray-500 text-sm">{activity.time}</p>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500 text-center py-8">
-                    No recent activity
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Quick Actions */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Quick Actions
-            </h2>
-            <div className="space-y-3">
-              <button
-                onClick={handleViewOrders}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                <FileText className="w-4 h-4" />
-                View All Orders
-              </button>
-              <button
-                onClick={handleGenerateReport}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Generate Report
-              </button>
-              <button
-                onClick={handleManageUsers}
-                className="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                <Users className="w-4 h-4" />
-                Manage Users
-              </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 text-center py-8">
+                  No recent activity
+                </p>
+              )}
             </div>
+          )}
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+          <h2 className="text-xl font-bold text-flowdoors-charcoal mb-4">
+            Quick Actions
+          </h2>
+          <div className="space-y-3">
+            <button
+              onClick={handleViewOrders}
+              className="w-full bg-flowdoors-blue hover:bg-flowdoors-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+            >
+              <FileText className="w-4 h-4" />
+              View All Orders
+            </button>
+            <button
+              onClick={handleGenerateReport}
+              className="w-full bg-flowdoors-green hover:bg-flowdoors-green-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+            >
+              <Download className="w-4 h-4" />
+              Generate Report
+            </button>
+            <button
+              onClick={handleManageUsers}
+              className="w-full bg-flowdoors-charcoal hover:bg-flowdoors-charcoal-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+            >
+              <Users className="w-4 h-4" />
+              Manage Users
+            </button>
           </div>
         </div>
       </div>
