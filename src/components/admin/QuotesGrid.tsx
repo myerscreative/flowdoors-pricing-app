@@ -472,7 +472,7 @@ const QuoteCard = ({
     const createdAt = coerceDate(quote.createdAt)
 
     return (
-      <div className="w-full min-w-[320px] p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+      <div className="w-full min-w-0 max-w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
         {/* Header Section */}
         <div className="mb-6">
           <div className="flex items-start justify-between mb-3">
@@ -686,7 +686,7 @@ const QuoteCard = ({
   const createdAt = coerceDate(quote.createdAt)
 
   return (
-    <div className="w-full min-w-[320px] p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+    <div className="w-full min-w-0 max-w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
       {/* Header Section */}
       <div className="mb-6">
         <div className="flex items-start justify-between mb-3">
@@ -913,9 +913,11 @@ function QuotesGrid({
 }: QuotesGridProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="w-full rounded-2xl h-80" />
+          <div key={i} className="min-w-0 flex">
+            <Skeleton className="w-full rounded-xl h-96" />
+          </div>
         ))}
       </div>
     )
@@ -935,29 +937,23 @@ function QuotesGrid({
   }
 
   return (
-    <div
-      className={cn(
-        'grid gap-6',
-        isMinimized
-          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-          : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-      )}
-    >
+    <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
       {quotes.map((quote) => (
-        <QuoteCard
-          key={quote.id}
-          quote={quote}
-          visibleFields={visibleFields}
-          isMinimized={isMinimized}
-          _onUpdateFollowUp={onUpdateFollowUp}
-          onUpdateStatus={onUpdateStatus}
-          onUpdateSalesRep={onUpdateSalesRep}
-          onAddNote={onAddNote}
-          onAddTask={onAddTask}
-          onToggleTask={onToggleTask}
-          salespeople={salespeople}
-          onDeleteQuote={onDeleteQuote}
-        />
+        <div key={quote.id} className="min-w-0 flex">
+          <QuoteCard
+            quote={quote}
+            visibleFields={visibleFields}
+            isMinimized={isMinimized}
+            _onUpdateFollowUp={onUpdateFollowUp}
+            onUpdateStatus={onUpdateStatus}
+            onUpdateSalesRep={onUpdateSalesRep}
+            onAddNote={onAddNote}
+            onAddTask={onAddTask}
+            onToggleTask={onToggleTask}
+            salespeople={salespeople}
+            onDeleteQuote={onDeleteQuote}
+          />
+        </div>
       ))}
     </div>
   )
