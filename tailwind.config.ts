@@ -53,6 +53,50 @@ const config: Config = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        flowdoors: {
+          // Primary Blue (#00aeef)
+          blue: {
+            DEFAULT: '#00aeef',
+            50: '#e6f7fd',
+            100: '#cceff9',
+            200: '#99dff4',
+            300: '#66cfee',
+            400: '#33c0f3',
+            500: '#00aeef',
+            600: '#0097d1',
+            700: '#0080b3',
+            800: '#006a95',
+            900: '#005377',
+          },
+          // Accent Green (#8dc63f)
+          green: {
+            DEFAULT: '#8dc63f',
+            50: '#f3f9e9',
+            100: '#e7f3d3',
+            200: '#cfe7a7',
+            300: '#b7db7b',
+            400: '#9fd04f',
+            500: '#8dc63f',
+            600: '#7ab82f',
+            700: '#68a125',
+            800: '#558a1e',
+            900: '#437317',
+          },
+          // Charcoal (#2e2e2e)
+          charcoal: {
+            DEFAULT: '#2e2e2e',
+            50: '#f5f5f5',
+            100: '#e0e0e0',
+            200: '#c2c2c2',
+            300: '#a3a3a3',
+            400: '#858585',
+            500: '#666666',
+            600: '#4d4d4d',
+            700: '#3d3d3d',
+            800: '#2e2e2e',
+            900: '#1a1a1a',
+          },
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -78,6 +122,11 @@ const config: Config = {
       },
       transitionDuration: {
         '400': '400ms',
+      },
+      fontFamily: {
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
+        body: ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
       },
     },
   },

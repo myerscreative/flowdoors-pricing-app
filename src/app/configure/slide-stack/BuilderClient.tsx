@@ -7,9 +7,9 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import {
-    CONFIG_BASES,
-    GLASS_BASE,
-    GLASS_IMAGE_BY_KEY,
+  CONFIG_BASES,
+  GLASS_BASE,
+  GLASS_IMAGE_BY_KEY,
 } from '../../../lib/assets'
 
 type Finish = 'black' | 'white' | 'bronze' | 'anodized'
@@ -80,12 +80,13 @@ export default function SlideStackBuilder() {
   const [exterior, setExterior] = useState<Finish | null>(null)
   const [interior, setInterior] = useState<Finish | null>(null)
   // const [_sameInterior] = useState<boolean>(true);
-  const [glassType, setGlassType] = useState<GlassType>('low-e3')
-  const [hardware, setHardware] = useState<HardwareFinish>('black')
+  const [glassType, setGlassType] = useState<GlassType | null>(null)
+  const [hardware, setHardware] = useState<HardwareFinish | null>(null)
   const [twoTone, setTwoTone] = useState<boolean>(false)
   const [showErrors, setShowErrors] = useState(false)
   const [panelCount, setPanelCount] = useState<number | null>(null)
   const [layoutCode, setLayoutCode] = useState<string | null>(null)
+  const [layoutAcknowledged, setLayoutAcknowledged] = useState<boolean>(false)
 
   // ---- URL parameter reading ----
   useEffect(() => {
@@ -221,6 +222,7 @@ export default function SlideStackBuilder() {
       hOk &&
       !!panelCount &&
       !!layoutCode &&
+      layoutAcknowledged &&
       colorOk &&
       !!glassType &&
       !!hardware
@@ -230,6 +232,7 @@ export default function SlideStackBuilder() {
     height,
     panelCount,
     layoutCode,
+    layoutAcknowledged,
     exterior,
     twoTone,
     interior,
@@ -241,7 +244,7 @@ export default function SlideStackBuilder() {
     const missing: string[] = []
     const wOk = typeof width === 'number' && width >= 24 && width <= 240
     const hOk = typeof height === 'number' && height >= 48 && height <= 120
-    if (!wOk || !hOk || !panelCount || !layoutCode)
+    if (!wOk || !hOk || !panelCount || !layoutCode || !layoutAcknowledged)
       missing.push('Size & Configuration')
     if (!exterior || (twoTone && !interior)) missing.push('Color Selection')
     if (!glassType) missing.push('Glass Options')
@@ -308,13 +311,13 @@ export default function SlideStackBuilder() {
       <button
         type="button"
         onClick={onSelect}
-        className={`flex flex-col items-center gap-3 rounded-xl border-2 bg-white p-4 transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-          selected ? 'border-blue-500' : 'border-gray-200'
+        className={`flex flex-col items-center gap-3 rounded-xl border-2 bg-white p-4 transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-flowdoors-blue ${
+          selected ? 'border-flowdoors-blue' : 'border-slate-200'
         }`}
       >
         {selected && (
           <div className="absolute -top-2 -right-2">
-            <CheckCircle2 className="h-6 w-6 text-blue-600" />
+            <CheckCircle2 className="h-6 w-6 text-flowdoors-blue" />
           </div>
         )}
         <div className={`h-16 w-16 rounded ${display.colorClass}`} />
@@ -341,12 +344,25 @@ export default function SlideStackBuilder() {
     <button
       type="button"
       onClick={() => onSelect(value)}
-      className={`flex w-full items-center gap-4 rounded-xl border bg-white p-4 text-left shadow-sm transition hover:shadow-md focus:ring-2 focus:ring-blue-500 ${
-        selected ? 'ring-2 ring-blue-500' : 'border-gray-200'
+      className={`relative flex w-full items-center gap-4 rounded-xl border bg-white p-4 text-left transition-all duration-200 ${
+        selected
+          ? 'border-flowdoors-blue bg-flowdoors-blue/5 shadow-[0_0_0_3px_rgba(0,174,239,0.15)]'
+          : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
       }`}
     >
-      <span className={`h-12 w-12 shrink-0 rounded-full ${colorClass}`} />
-      <span className="font-medium text-gray-800">{label}</span>
+      <span className={`h-10 w-10 shrink-0 rounded-lg ${colorClass}`} />
+      <span className={`font-semibold text-sm ${
+        selected ? 'text-flowdoors-blue' : 'text-slate-900'
+      }`}>
+        {label}
+      </span>
+      {selected && (
+        <div className="absolute top-3 right-3">
+          <div className="w-5 h-5 rounded-full bg-flowdoors-blue flex items-center justify-center">
+            <CheckCircle2 className="w-3.5 h-3.5 text-white" fill="white" />
+          </div>
+        </div>
+      )}
     </button>
   )
 
@@ -366,8 +382,8 @@ export default function SlideStackBuilder() {
     <button
       type="button"
       onClick={onSelect}
-      className={`text-left rounded-xl border bg-white p-5 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-        selected ? 'ring-2 ring-blue-500' : 'border-gray-200'
+      className={`text-left rounded-xl border bg-white p-5 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-flowdoors-blue ${
+        selected ? 'ring-2 ring-flowdoors-blue' : 'border-slate-200'
       }`}
     >
       {children}
@@ -379,36 +395,40 @@ export default function SlideStackBuilder() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-slate-50 py-8">
       <div className="mx-auto max-w-7xl px-4">
         {/* Header */}
-        <div className="mb-4 flex items-end justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
-              FlowDoors Quote Builder
-            </h1>
-            <p className="text-sm text-gray-500">
-              Premium Window &amp; Door Solutions
-            </p>
-          </div>
-          <div className="text-right text-sm leading-5 text-gray-600">
-            <div>
-              <span className="font-medium text-gray-800">Configuring:</span>{' '}
-              Item A
+        <div className="mb-8">
+          <div className="rounded-2xl bg-white p-6 shadow-lg border border-slate-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-display font-bold text-flowdoors-charcoal mb-1">
+                  Configure Your FlowDoor
+                </h1>
+                <p className="text-slate-600">
+                  Connect to Family, Friends, &amp; Nature
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-slate-600 mb-1">
+                  <span className="font-medium text-flowdoors-charcoal">Configuring:</span>{' '}
+                  Item A
+                </div>
+                <Link
+                  href="/select-product"
+                  className="text-flowdoors-blue hover:text-flowdoors-blue-600 font-medium transition-colors"
+                >
+                  Change Product Type
+                </Link>
+              </div>
             </div>
-            <Link
-              href="/select-product"
-              className="text-blue-600 hover:underline"
-            >
-              Change Product Type
-            </Link>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px,1fr]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[320px,1fr]">
           {/* Sticky sidebar */}
           <aside className="hidden lg:block self-start sticky top-20">
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
               <div className="rounded-xl border border-gray-200 p-3">
                 <div className="flex h-28 items-center justify-center overflow-hidden rounded-lg">
                   <Image
@@ -419,15 +439,6 @@ export default function SlideStackBuilder() {
                     className="max-h-full max-w-full object-contain"
                   />
                 </div>
-                <div className="mt-3 text-sm font-medium text-gray-800">
-                  Slide &amp; Stack System
-                </div>
-                <Link
-                  href="/select-product"
-                  className="mt-1 inline-block text-xs text-blue-600 hover:underline"
-                >
-                  Change Product Type
-                </Link>
               </div>
 
               <nav className="mt-6 space-y-3" aria-label="Configuration steps">
@@ -454,13 +465,17 @@ export default function SlideStackBuilder() {
                       ? 'Low–E3 Glass'
                       : glassType === 'laminated'
                         ? 'Laminated Glass'
-                        : 'Clear Glass'
+                        : glassType === 'clear'
+                          ? 'Clear Glass'
+                          : '—'
                   const hardwareSummary = () =>
                     hardware === 'silver'
                       ? 'Silver'
-                      : hardware
-                        ? hardware.charAt(0).toUpperCase() + hardware.slice(1)
-                        : '—'
+                      : hardware === 'black'
+                        ? 'Black'
+                        : hardware === 'white'
+                          ? 'White'
+                          : '—'
                   const summary =
                     s.id === 'size-config'
                       ? sizeSummary()
@@ -477,14 +492,14 @@ export default function SlideStackBuilder() {
                       aria-current={isActive ? 'step' : undefined}
                       className={`flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left text-sm transition ${
                         isActive
-                          ? 'border-blue-400 bg-blue-50/50 text-blue-700'
-                          : 'border-gray-200 text-gray-700 hover:bg-gray-50'
-                      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                          ? 'border-flowdoors-blue bg-flowdoors-blue/10 text-flowdoors-blue'
+                          : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                      } focus:outline-none focus:ring-2 focus:ring-flowdoors-blue`}
                     >
                       <div className="flex items-center gap-3">
                         <span
                           className={`grid h-6 w-6 place-items-center rounded-full text-xs ${
-                            isActive ? 'bg-green-600 text-white' : 'bg-gray-100'
+                            isActive ? 'bg-flowdoors-green text-white' : 'bg-slate-100'
                           }`}
                         >
                           {i + 1}
@@ -508,17 +523,37 @@ export default function SlideStackBuilder() {
             {/* 1) Size & Configuration */}
             <section
               id="size-config"
-              className="scroll-mt-24 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+              className="scroll-mt-24 rounded-2xl border border-slate-200 bg-white p-8 shadow-lg"
             >
-              <h2 className="mb-4 text-xl font-semibold text-gray-900">
-                1. Size &amp; Configuration
-              </h2>
+              <div className="flex items-start gap-5 mb-7">
+                <div className="relative mt-1">
+                  <div className="w-10 h-10 rounded-lg bg-flowdoors-blue/10 flex items-center justify-center text-flowdoors-blue text-lg font-bold border-2 border-flowdoors-blue/20">
+                    1
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl md:text-2xl font-semibold text-flowdoors-charcoal mb-1">
+                    Size &amp; Configuration
+                  </h2>
+                  <p className="text-slate-500 text-sm md:text-base">
+                    Set your door dimensions and layout
+                  </p>
+                </div>
+              </div>
 
               {/* Dimensions */}
-              <div className="grid gap-4 rounded-xl border border-gray-200 p-4 md:grid-cols-2">
+              <div className="ml-0 md:ml-15 rounded-xl border border-slate-200 p-6">
+                {/* Recommended Rough Opening */}
+                <div className="rounded-lg bg-flowdoors-blue/5 border border-flowdoors-blue/20 p-3 mb-6">
+                  <div className="text-sm text-flowdoors-blue font-medium">
+                    Recommended Rough Opening: 1 inch wider and 1 inch higher than the order door size.
+                  </div>
+                </div>
+                
+                <div className="grid gap-5 md:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-800">
-                    Width (inches) *
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Width (inches) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -534,15 +569,19 @@ export default function SlideStackBuilder() {
                       )
                     }
                     placeholder="Enter width"
-                    className={`w-full rounded-lg border bg-white px-3 py-2 outline-none focus:ring-2 ${showErrors && (typeof width !== 'number' || width < 24 || width > 240) ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 ring-blue-500'}`}
+                    className={`w-full h-11 rounded-lg border bg-white px-3 py-2 text-base outline-none focus:ring-2 focus:ring-flowdoors-blue/20 focus:border-flowdoors-blue ${
+                      showErrors && (typeof width !== 'number' || width < 24 || width > 240) 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-slate-300'
+                    }`}
                   />
-                  <div className="mt-1 text-xs text-gray-500">
-                    Usable opening = width − 5".
+                  <div className="mt-1.5 text-xs text-slate-500">
+                    Usable opening = width − 5"
                   </div>
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-800">
-                    Height (inches) *
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Height (inches) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -558,17 +597,22 @@ export default function SlideStackBuilder() {
                       )
                     }
                     placeholder="Enter height"
-                    className={`w-full rounded-lg border bg-white px-3 py-2 outline-none focus:ring-2 ${showErrors && (typeof height !== 'number' || height < 48 || height > 120) ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 ring-blue-500'}`}
+                    className={`w-full h-11 rounded-lg border bg-white px-3 py-2 text-base outline-none focus:ring-2 focus:ring-flowdoors-blue/20 focus:border-flowdoors-blue ${
+                      showErrors && (typeof height !== 'number' || height < 48 || height > 120) 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-slate-300'
+                    }`}
                   />
-                  <div className="mt-1 text-xs text-gray-500">
+                  <div className="mt-1.5 text-xs text-slate-500">
                     Max height: 120"
                   </div>
+                </div>
                 </div>
               </div>
 
               {/* Panel Count */}
               <div
-                className={`mt-6 rounded-xl border p-4 ${showErrors && !panelCount ? 'border-red-400' : 'border-gray-200'}`}
+                className={`mt-6 rounded-xl border p-4 ${showErrors && !panelCount ? 'border-red-400' : 'border-slate-200'}`}
               >
                 <div className="text-lg font-semibold text-gray-900">
                   Panel Count
@@ -578,7 +622,7 @@ export default function SlideStackBuilder() {
                 </div>
 
                 {typeof width !== 'number' ? (
-                  <div className="mt-3 rounded-lg bg-gray-50 p-3 text-sm text-gray-600">
+                  <div className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
                     Enter width to see available panel counts.
                   </div>
                 ) : validPanelOptions.length === 0 ? (
@@ -610,22 +654,35 @@ export default function SlideStackBuilder() {
 
               {/* Panel Layout */}
               <div
-                className={`mt-6 rounded-xl border p-4 ${showErrors && !layoutCode ? 'border-red-400' : 'border-gray-200'}`}
+                className={`mt-6 rounded-xl border p-4 ${showErrors && !layoutCode ? 'border-red-400' : 'border-slate-200'}`}
               >
                 <div className="text-lg font-semibold text-gray-900">
                   Panel Layout
                 </div>
-                <div className="mt-2 text-xs text-gray-500">
-                  As viewed from outside the building.
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="layout-acknowledge"
+                    checked={layoutAcknowledged}
+                    onChange={(e) => setLayoutAcknowledged(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-flowdoors-blue focus:ring-flowdoors-blue"
+                  />
+                  <label htmlFor="layout-acknowledge" className="text-sm text-flowdoors-blue">
+                    I understand images are as viewed from outside the building.
+                  </label>
                 </div>
 
                 {!panelCount ? (
-                  <div className="mt-3 rounded-lg bg-gray-50 p-3 text-sm text-gray-600">
+                  <div className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
                     Select a panel count to see layouts.
                   </div>
                 ) : (LAYOUTS[panelCount] ?? []).length === 0 ? (
                   <div className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
                     No layouts available for {panelCount} panels yet.
+                  </div>
+                ) : !layoutAcknowledged ? (
+                  <div className="mt-4 rounded-lg bg-slate-50 p-4 text-sm text-slate-600">
+                    Please acknowledge the viewing direction above to select a layout.
                   </div>
                 ) : (
                   <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -659,12 +716,12 @@ export default function SlideStackBuilder() {
             {/* 2) Color Selection */}
             <section
               id="color-selection"
-              className="scroll-mt-24 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+              className="scroll-mt-24 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
             >
               <h2 className="mb-4 text-xl font-semibold text-gray-900">
                 2. Color Selection
               </h2>
-              <div className="rounded-xl border border-gray-200 p-4">
+              <div className="rounded-xl border border-slate-200 p-4">
                 <div className="mb-4 text-lg font-semibold text-gray-900">
                   Exterior Finish
                 </div>
@@ -687,15 +744,15 @@ export default function SlideStackBuilder() {
                 </div>
 
                 {/* Two-tone toggle */}
-                <div className="mt-6 flex items-center gap-3 rounded-lg bg-gray-50 p-3">
+                <div className="mt-6 flex items-center gap-3 rounded-lg bg-slate-50 p-3">
                   <button
                     type="button"
                     role="switch"
                     aria-checked={twoTone}
                     onClick={() => setTwoTone((v) => !v)}
                     className={`relative inline-flex h-7 w-14 items-center rounded-full transition ${
-                      twoTone ? 'bg-blue-600' : 'bg-gray-300'
-                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                      twoTone ? 'bg-flowdoors-blue' : 'bg-slate-300'
+                    } focus:outline-none focus:ring-2 focus:ring-flowdoors-blue`}
                   >
                     <span
                       className={`absolute left-1 inline-block h-6 w-6 transform rounded-full bg-white shadow ring-1 ring-black/5 transition ${
@@ -739,56 +796,84 @@ export default function SlideStackBuilder() {
             {/* 3) Glass Options */}
             <section
               id="glass-options"
-              className="scroll-mt-24 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+              className="scroll-mt-24 rounded-2xl border border-slate-200 bg-white p-8 shadow-lg"
             >
-              <h2 className="mb-4 text-xl font-semibold text-gray-900">
-                3. Glass Options
-              </h2>
+              <div className="flex items-start gap-5 mb-7">
+                <div className="relative mt-1">
+                  <div className="w-10 h-10 rounded-lg bg-flowdoors-green/10 flex items-center justify-center text-flowdoors-green text-lg font-bold border-2 border-flowdoors-green/20">
+                    3
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl md:text-2xl font-semibold text-flowdoors-charcoal mb-1">
+                    Glass Options
+                  </h2>
+                  <p className="text-slate-500 text-sm md:text-base">
+                    Choose your glass type and features
+                  </p>
+                </div>
+              </div>
 
-              <div className="rounded-xl border border-gray-200 p-4">
-                <div className="mb-2 text-sm font-medium text-gray-800">
+              <div className="ml-0 md:ml-15">
+                <div className="mb-4 text-sm font-medium text-slate-700">
                   Glass Type
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {(['low-e3', 'clear', 'laminated'] as GlassType[]).map(
-                    (g) => (
-                      <Tile
-                        key={g}
-                        title={
-                          g === 'clear'
-                            ? 'Clear Glass'
-                            : g === 'low-e3'
-                              ? 'Low-E3 Glass'
-                              : 'Laminated Glass'
-                        }
-                        subtitle={
-                          g === 'clear'
-                            ? '-$50 per panel'
-                            : g === 'low-e3'
-                              ? 'Included'
-                              : '+$75 per panel'
-                        }
-                        selected={glassType === g}
-                        onSelect={() => setGlassType(g)}
-                      >
-                        <div className="grid h-24 place-items-center rounded-lg">
-                          {/* eslint-disable @next/next/no-img-element */}
-                          <img
-                            src={`${GLASS_BASE}${GLASS_IMAGES[g]}`}
-                            alt={
-                              g === 'clear'
-                                ? 'Clear Glass'
-                                : g === 'low-e3'
-                                  ? 'Low-E3 Glass'
-                                  : 'Laminated Glass'
-                            }
-                            className="max-h-24 max-w-full object-contain"
-                            draggable={false}
-                          />
-                          {/* eslint-enable @next/next/no-img-element */}
-                        </div>
-                      </Tile>
-                    )
+                    (g) => {
+                      const isSelected = glassType === g
+                      return (
+                        <button
+                          key={g}
+                          onClick={() => setGlassType(g)}
+                          className={`relative p-5 rounded-xl border transition-all duration-200 text-left ${
+                            isSelected
+                              ? 'border-flowdoors-blue bg-flowdoors-blue/5 shadow-[0_0_0_3px_rgba(0,174,239,0.15)]'
+                              : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className="mb-3 flex justify-center">
+                            {/* eslint-disable @next/next/no-img-element */}
+                            <img
+                              src={`${GLASS_BASE}${GLASS_IMAGES[g]}`}
+                              alt={
+                                g === 'clear'
+                                  ? 'Clear Glass'
+                                  : g === 'low-e3'
+                                    ? 'Low-E3 Glass'
+                                    : 'Laminated Glass'
+                              }
+                              className="max-h-20 max-w-full object-contain rounded-lg"
+                              draggable={false}
+                            />
+                            {/* eslint-enable @next/next/no-img-element */}
+                          </div>
+                          <div className={`font-semibold text-sm mb-1 ${
+                            isSelected ? 'text-flowdoors-blue' : 'text-slate-900'
+                          }`}>
+                            {g === 'clear'
+                              ? 'Clear Glass'
+                              : g === 'low-e3'
+                                ? 'Low-E3 Glass'
+                                : 'Laminated Glass'}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {g === 'clear'
+                              ? '-$50 per panel'
+                              : g === 'low-e3'
+                                ? 'Included'
+                                : '+$75 per panel'}
+                          </div>
+                          {isSelected && (
+                            <div className="absolute top-3 right-3">
+                              <div className="w-5 h-5 rounded-full bg-flowdoors-blue flex items-center justify-center">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-white" fill="white" />
+                              </div>
+                            </div>
+                          )}
+                        </button>
+                      )
+                    }
                   )}
                 </div>
               </div>
@@ -797,33 +882,48 @@ export default function SlideStackBuilder() {
             {/* 4) Hardware Finish */}
             <section
               id="hardware-finish"
-              className="scroll-mt-24 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+              className="scroll-mt-24 rounded-2xl border border-slate-200 bg-white p-8 shadow-lg"
             >
-              <h2 className="mb-4 text-xl font-semibold text-gray-900">
-                4. Hardware Finish
-              </h2>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                <FinishSwatch
-                  label="Black"
-                  value="black"
-                  selected={hardware === 'black'}
-                  onSelect={() => setHardware('black')}
-                  colorClass="bg-black"
-                />
-                <FinishSwatch
-                  label="White"
-                  value="white"
-                  selected={hardware === 'white'}
-                  onSelect={() => setHardware('white')}
-                  colorClass="bg-white border border-gray-300"
-                />
-                <FinishSwatch
-                  label="Silver"
-                  value="silver"
-                  selected={hardware === 'silver'}
-                  onSelect={() => setHardware('silver')}
-                  colorClass="bg-gray-400"
-                />
+              <div className="flex items-start gap-5 mb-7">
+                <div className="relative mt-1">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 text-lg font-bold border-2 border-slate-200">
+                    4
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl md:text-2xl font-semibold text-flowdoors-charcoal mb-1">
+                    Hardware Finish
+                  </h2>
+                  <p className="text-slate-500 text-sm md:text-base">
+                    Select your preferred hardware color
+                  </p>
+                </div>
+              </div>
+
+              <div className="ml-0 md:ml-15">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <FinishSwatch
+                    label="Black"
+                    value="black"
+                    selected={hardware === 'black'}
+                    onSelect={() => setHardware('black')}
+                    colorClass="bg-black"
+                  />
+                  <FinishSwatch
+                    label="White"
+                    value="white"
+                    selected={hardware === 'white'}
+                    onSelect={() => setHardware('white')}
+                    colorClass="bg-white border border-slate-300"
+                  />
+                  <FinishSwatch
+                    label="Silver"
+                    value="silver"
+                    selected={hardware === 'silver'}
+                    onSelect={() => setHardware('silver')}
+                    colorClass="bg-slate-400"
+                  />
+                </div>
               </div>
 
               <div className="mt-6 flex justify-end">
@@ -836,7 +936,8 @@ export default function SlideStackBuilder() {
                         typeof width !== 'number' ||
                         typeof height !== 'number' ||
                         !panelCount ||
-                        !layoutCode
+                        !layoutCode ||
+                        !layoutAcknowledged
                       ) {
                         scrollTo('size-config')
                         return
@@ -917,7 +1018,7 @@ export default function SlideStackBuilder() {
                     // Navigate to summary page
                     router.push('/summary')
                   }}
-                  className={`inline-flex items-center gap-2 rounded-md px-4 py-2 font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-600 text-white hover:bg-blue-700`}
+                  className={`inline-flex items-center gap-2 rounded-md px-4 py-2 font-medium transition focus:outline-none focus:ring-2 focus:ring-flowdoors-blue bg-flowdoors-blue text-white hover:bg-flowdoors-blue/90`}
                 >
                   {isFormComplete
                     ? 'Finalize Selections & View Summary →'

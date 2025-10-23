@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
+import * as admin from 'firebase-admin'
 import type { QueryDocumentSnapshot } from 'firebase-admin/firestore'
 
 export interface Lead {
@@ -161,6 +162,114 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    )
+  }
+}
+
+// POST endpoint for creating new leads from forms
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const {
+      // Common fields
+      name,
+      email,
+      phone,
+      zipCode,
+      location,
+      timeline,
+      source,
+      type, // 'homeowner' or 'contractor'
+      referralCode,
+      
+      // Homeowner-specific fields
+      bestTimeToCall,
+      projectType,
+      projectDetails,
+      budget,
+      
+      // Contractor-specific fields
+      companyName,
+      licenseNumber,
+      tradeType,
+      doorCount,
+      doorWidth,
+      doorHeight,
+      notes,
+    } = body
+
+    // Validate required fields
+    if (!name || !email || !phone) {
+      return NextResponse.json(
+        { error: 'Missing required fields: name, email, and phone are required' },
+        { status: 400 }
+      )
+    }
+
+    // Get user agent and referer from headers
+    const userAgent = request.headers.get('user-agent') || ''
+    const referer = request.headers.get('referer') || ''
+
+    // Prepare the lead document
+    const leadDoc: any = {
+      name,
+      email: email.toLowerCase(),
+      phone,
+      zip: zipCode || '',
+      location: location || '',
+      timeline: timeline || 'researching',
+      role: type === 'contractor' ? 'contractor' : 'homeowner',
+      status: 'new',
+      source: source || 'web',
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      userAgent,
+      referer,
+    }
+
+    // Add optional fields
+    if (referralCode) leadDoc.referral = referralCode
+    if (bestTimeToCall) leadDoc.bestTimeToCall = bestTimeToCall
+    if (projectType) leadDoc.projectType = projectType
+    if (projectDetails) leadDoc.projectDetails = projectDetails
+    if (budget) leadDoc.budget = budget
+
+    // Add contractor-specific fields
+    if (type === 'contractor') {
+      if (companyName) leadDoc.companyName = companyName
+      if (licenseNumber) leadDoc.licenseNumber = licenseNumber
+      if (tradeType) leadDoc.tradeType = tradeType
+      if (doorCount) leadDoc.doorCount = doorCount
+      if (doorWidth) leadDoc.doorWidth = doorWidth
+      if (doorHeight) leadDoc.doorHeight = doorHeight
+      if (notes) leadDoc.notes = notes
+    }
+
+    // Save to Firestore
+    const db = adminDb
+    const docRef = await db.collection('leads').add(leadDoc)
+
+    console.info(`✅ Lead created: ${docRef.id} for ${email} (${type})`)
+
+    // TODO: Send email notification to sales team
+    // You can implement email sending here using your email service
+
+    return NextResponse.json(
+      {
+        success: true,
+        id: docRef.id,
+        message: 'Lead submitted successfully',
+      },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('Error creating lead:', error)
+    return NextResponse.json(
+      {
+        error: 'Failed to create lead',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }

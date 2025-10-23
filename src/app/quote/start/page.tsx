@@ -1,9 +1,9 @@
 'use client'
 
 import {
-  LeadIntakeForm,
+  ModernQuoteStartForm,
   type LeadIntakeValues,
-} from '@/components/LeadIntakeForm'
+} from '@/components/forms/ModernQuoteStartForm'
 import { postLead, type LeadPayload } from '@/lib/marketing/attribution'
 
 export default function QuoteStartPage() {
@@ -43,5 +43,5 @@ export default function QuoteStartPage() {
     window.location.href = '/select-product'
   }
 
-  return <LeadIntakeForm onSubmit={handleLeadSubmit} />
+  return <ModernQuoteStartForm onSubmit={handleLeadSubmit} />
 }

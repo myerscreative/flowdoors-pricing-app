@@ -45,13 +45,19 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['@genkit-ai/core', '@genkit-ai/firebase'],
   },
   images: {
-    // Allow FlowDoors assets from GCS
+    // Allow FlowDoors assets from GCS and Webflow CDN
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'storage.googleapis.com',
         port: '',
         pathname: '/flowdoors_images/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.prod.website-files.com',
+        port: '',
+        pathname: '/**',
       },
     ],
   },

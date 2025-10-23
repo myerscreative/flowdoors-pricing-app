@@ -1,6 +1,6 @@
 import { Toaster } from '@/components/ui/toaster'
 import type { Metadata } from 'next'
-import { DM_Sans, Inter, Playfair_Display } from 'next/font/google'
+import { DM_Sans, Inter, Playfair_Display, Poppins } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import Providers from './providers'
@@ -8,6 +8,12 @@ import Providers from './providers'
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
+})
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['600', '700'],
+  variable: '--font-poppins',
 })
 
 const playfairDisplay = Playfair_Display({
@@ -23,8 +29,8 @@ const dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'FlowDoors Quoter',
-  description: 'Configure your custom Slide-and-Stack door system and get a quote instantly.',
+  title: 'FlowDoors - San Diego Custom Door Systems',
+  description: 'Premium slide-and-stack door solutions in San Diego, CA',
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ??
       process.env.NEXT_PUBLIC_SITE_URL ??
@@ -84,7 +90,7 @@ export default function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className={`${inter.variable} ${playfairDisplay.variable} ${dmSans.variable} font-body bg-gradient-to-b from-[#f8f9fa] to-[#e9ecef]`}
+        className={`${inter.variable} ${poppins.variable} ${playfairDisplay.variable} ${dmSans.variable} font-body bg-gradient-to-b from-[#f8f9fa] to-[#e9ecef]`}
       >
         {/* Google Tag Manager (noscript) */}
         <noscript>

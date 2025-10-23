@@ -14,6 +14,9 @@ importers:
       '@dnd-kit/sortable':
         specifier: ^8.0.0
         version: 8.0.0(@dnd-kit/core@6.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      '@fontsource/poppins':
+        specifier: ^5.2.7
+        version: 5.2.7
       '@genkit-ai/ai':
         specifier: ^1.16.1
         version: 1.21.0(@google-cloud/firestore@7.11.6)(firebase-admin@12.7.0)(firebase@11.10.0)(genkit@1.21.0(@google-cloud/firestore@7.11.6)(firebase-admin@12.7.0)(firebase@11.10.0))
@@ -1047,6 +1050,9 @@ packages:
 
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
+
+  '@fontsource/poppins@5.2.7':
+    resolution: {integrity: sha512-6uQyPmseo4FgI97WIhA4yWRlNaoLk4vSDK/PyRwdqqZb5zAEuc+Kunt8JTMcsHYUEGYBtN15SNkMajMdqUSUmg==}
 
   '@genkit-ai/ai@1.21.0':
     resolution: {integrity: sha512-DLAes+w3Yv9a4zgJUL5CS8eVrNvud/LRv+F4E/O3KkpWz0uoKYREIrTZYSrDt/pF/jlqkRDQaalf7sGKS44IuQ==}
@@ -8263,6 +8269,8 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
 
   '@floating-ui/utils@0.2.10': {}
+
+  '@fontsource/poppins@5.2.7': {}
 
   '@genkit-ai/ai@1.21.0(@google-cloud/firestore@7.11.6)(firebase-admin@12.7.0)(firebase@11.10.0)(genkit@1.21.0(@google-cloud/firestore@7.11.6)(firebase-admin@12.7.0)(firebase@11.10.0))':
     dependencies:
