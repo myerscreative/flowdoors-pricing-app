@@ -398,121 +398,118 @@ export default function MarketingPage() {
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 space-y-4 md:space-y-0">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Marketing Dashboard
-          </h1>
-          <p className="text-gray-600">Attribution and performance metrics</p>
-          <p className="text-sm text-gray-500 mt-2">
-            Last updated: {mounted ? lastUpdated.toLocaleString() : ''}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          {/* Data Source Toggle */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-700">
-                Data Source:
-              </span>
-              <button
-                onClick={() => setUseMockData(!useMockData)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  useMockData ? 'bg-gray-400' : 'bg-flowdoors-blue'
-                }`}
-                aria-label={`Switch to ${useMockData ? 'real' : 'mock'} data`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    useMockData ? 'translate-x-1' : 'translate-x-6'
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Marketing Dashboard
+        </h1>
+        <p className="text-gray-600 mb-6">Attribution and performance metrics</p>
+        
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+            <div className="flex items-center gap-6">
+              {/* Segmented Data Source Control */}
+              <div className="bg-gray-100 p-1 rounded-lg inline-flex">
+                <button
+                  onClick={() => setUseMockData(false)}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    !useMockData
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
                   }`}
-                />
+                >
+                  Real Data
+                </button>
+                <button
+                  onClick={() => setUseMockData(true)}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                    useMockData
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Test Data
+                </button>
+              </div>
+
+              <div className="h-6 w-px bg-gray-300"></div>
+
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-gray-400" />
+                <select 
+                  value={selectedPeriod}
+                  onChange={(e) => setSelectedPeriod(e.target.value)}
+                  className="border-none bg-transparent text-sm font-medium text-gray-700 focus:outline-none cursor-pointer"
+                >
+                  <option value="7d">Last 7 Days</option>
+                  <option value="30d">Last 30 Days</option>
+                  <option value="90d">Last 90 Days</option>
+                  <option value="12m">Last 12 Months</option>
+                  <option value="custom">Custom Range</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={refreshData}
+                disabled={isLoading}
+                className="p-2 hover:bg-gray-100 rounded-md transition-colors group" 
+                title="Refresh Data"
+              >
+                <RefreshCw className={`w-4 h-4 text-gray-600 group-hover:text-flowdoors-blue ${isLoading ? 'animate-spin' : ''}`} />
               </button>
-              <span
-                className={`text-sm font-medium ${useMockData ? 'text-gray-500' : 'text-flowdoors-blue'}`}
+              <button 
+                onClick={handleExportCSV}
+                className="flex items-center gap-2 px-3 py-1.5 bg-flowdoors-blue hover:bg-flowdoors-blue-600 text-white rounded-md text-sm font-medium transition-colors"
               >
-                {useMockData ? 'Mock Data' : 'Real Data'}
-              </span>
+                <Download className="w-4 h-4" />
+                Export
+              </button>
             </div>
-            {!useMockData && (
-              <div className="flex items-center gap-2 mt-2">
-                <AlertCircle className="w-4 h-4 text-flowdoors-green" />
-                <p className="text-xs font-medium text-flowdoors-green-700">
-                  Loading ONLY real data from Firestore
-                </p>
-              </div>
-            )}
-            {useMockData && (
-              <div className="flex items-center gap-2 mt-2">
-                <AlertCircle className="w-4 h-4 text-amber-500" />
-                <p className="text-xs text-amber-700">
-                  Showing mock/demo data for testing
-                </p>
-              </div>
-            )}
           </div>
 
-          <div className="flex flex-wrap items-center space-x-4">
-            {/* Date Range Selector */}
-            <div className="flex items-center space-x-2">
-              <Calendar className="w-4 h-4 text-gray-500" />
-              <select
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="7d">Last 7 Days</option>
-                <option value="30d">Last 30 Days</option>
-                <option value="90d">Last 90 Days</option>
-                <option value="12m">Last 12 Months</option>
-                <option value="custom">Custom Range</option>
-              </select>
+          {!useMockData && (
+            <div className="px-4 py-2 bg-flowdoors-green-50 border-b border-flowdoors-green-200">
+              <p className="text-xs text-flowdoors-green-700 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-flowdoors-green rounded-full"></span>
+                Loading ONLY real data from Firestore
+              </p>
             </div>
-
-            {/* Custom Date Inputs */}
-            {selectedPeriod === 'custom' && (
-              <div className="flex items-center space-x-2">
-                <input
-                  type="date"
-                  value={customRange.from}
-                  onChange={(e) =>
-                    setCustomRange({ ...customRange, from: e.target.value })
-                  }
-                  className="border border-gray-300 rounded-lg px-2 py-2"
-                />
-                <span className="text-gray-500">to</span>
-                <input
-                  type="date"
-                  value={customRange.to}
-                  onChange={(e) =>
-                    setCustomRange({ ...customRange, to: e.target.value })
-                  }
-                  className="border border-gray-300 rounded-lg px-2 py-2"
-                />
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <button
-              onClick={refreshData}
-              disabled={isLoading}
-              className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`}
-              />
-              <span>Refresh</span>
-            </button>
-            <button
-              onClick={handleExportCSV}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              <Download className="w-4 h-4" />
-              <span>Export CSV</span>
-            </button>
-          </div>
+          )}
+          {useMockData && (
+            <div className="px-4 py-2 bg-amber-50 border-b border-amber-200">
+              <p className="text-xs text-amber-700 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                Showing mock/demo data for testing
+              </p>
+            </div>
+          )}
         </div>
+        
+        {/* Custom Date Inputs */}
+        {selectedPeriod === 'custom' && (
+          <div className="px-4 py-3 border-t border-gray-200">
+            <div className="flex items-center space-x-2">
+              <input
+                type="date"
+                value={customRange.from}
+                onChange={(e) =>
+                  setCustomRange({ ...customRange, from: e.target.value })
+                }
+                className="border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-flowdoors-blue focus:border-transparent"
+              />
+              <span className="text-gray-500">to</span>
+              <input
+                type="date"
+                value={customRange.to}
+                onChange={(e) =>
+                  setCustomRange({ ...customRange, to: e.target.value })
+                }
+                className="border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-flowdoors-blue focus:border-transparent"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Key Metrics */}
