@@ -1,27 +1,27 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
-  Users,
-  FileText,
-  DollarSign,
-  Target,
-  RefreshCw,
-  Download,
-  Calendar,
   AlertCircle,
+  Calendar,
+  DollarSign,
+  Download,
+  FileText,
+  RefreshCw,
+  Target,
+  Users,
 } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import MetricCard from '@/components/marketing/MetricCard'
-import KpiCard from '@/components/marketing/KpiCard'
-import SourceCard from '@/components/marketing/SourceCard'
-import RevenueBySourceChart from '@/components/marketing/RevenueBySourceChart'
-import LeadsOverTimeChart from '@/components/marketing/LeadsOverTimeChart'
 import ConversionFunnel from '@/components/marketing/ConversionFunnel'
-import DrilldownModal from '@/components/marketing/DrilldownModal'
-import { Skeleton } from '@/components/ui/skeleton'
-import { exportMarketingSummary, exportFunnelData } from '@/lib/exportUtils'
 import CustomerJourneyFunnel from '@/components/marketing/CustomerJourneyFunnel'
+import DrilldownModal from '@/components/marketing/DrilldownModal'
+import KpiCard from '@/components/marketing/KpiCard'
+import LeadsOverTimeChart from '@/components/marketing/LeadsOverTimeChart'
+import MetricCard from '@/components/marketing/MetricCard'
+import RevenueBySourceChart from '@/components/marketing/RevenueBySourceChart'
+import SourceCard from '@/components/marketing/SourceCard'
+import { Skeleton } from '@/components/ui/skeleton'
+import { exportFunnelData, exportMarketingSummary } from '@/lib/exportUtils'
 
 export default function MarketingPage() {
   const [lastUpdated, setLastUpdated] = useState(new Date())
@@ -419,7 +419,7 @@ export default function MarketingPage() {
               <button
                 onClick={() => setUseMockData(!useMockData)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  useMockData ? 'bg-gray-400' : 'bg-blue-600'
+                  useMockData ? 'bg-gray-400' : 'bg-flowdoors-blue'
                 }`}
                 aria-label={`Switch to ${useMockData ? 'real' : 'mock'} data`}
               >
@@ -430,7 +430,7 @@ export default function MarketingPage() {
                 />
               </button>
               <span
-                className={`text-sm font-medium ${useMockData ? 'text-gray-500' : 'text-blue-600'}`}
+                className={`text-sm font-medium ${useMockData ? 'text-gray-500' : 'text-flowdoors-blue'}`}
               >
                 {useMockData ? 'Mock Data' : 'Real Data'}
               </span>
