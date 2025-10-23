@@ -1,22 +1,22 @@
 'use client'
 
-import Link from 'next/link'
-import { useRouter, usePathname } from 'next/navigation'
-import { useCurrentUserRole } from '@/hooks/useCurrentUserRole'
 import { Button } from '@/components/ui/button'
+import { useCurrentUserRole } from '@/hooks/useCurrentUserRole'
 import {
+  BarChart3,
+  Bell,
+  FileText,
+  Home,
   LogOut,
   Menu,
-  X,
-  Home,
-  FileText,
   ShoppingCart,
-  BarChart3,
-  Users,
-  Bell,
   UserPlus,
+  Users,
+  X,
 } from 'lucide-react'
-import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import React, { useEffect, useState } from 'react'
 
 export default function AdminLayout({
   children,
@@ -183,7 +183,7 @@ export default function AdminLayout({
 
         {/* Page content */}
         <main className="flex-1">
-          <div className="px-4 py-6 sm:px-6 lg:px-6">{children}</div>
+          <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">{children}</div>
         </main>
       </div>
     </div>
