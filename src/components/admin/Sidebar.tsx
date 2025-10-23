@@ -16,58 +16,81 @@ import {
   X
 } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState } from 'react';
 
 function Sidebar() {
-  const [activeItem, setActiveItem] = useState('Dashboard');
+  const router = useRouter();
+  const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      const { getAuth, signOut } = await import('firebase/auth');
+      const auth = getAuth();
+      await signOut(auth);
+      localStorage.removeItem('salesRepId');
+      localStorage.removeItem('userRole');
+      router.push('/admin/login');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      router.push('/admin/login');
+    }
+  };
 
   const menuItems = [
     { 
       name: 'Dashboard', 
       icon: Home, 
       badge: null,
-      description: 'Overview & analytics'
+      description: 'Overview & analytics',
+      path: '/admin'
     },
     { 
       name: 'Quotes', 
       icon: FileText, 
       badge: 3,
       badgeColor: 'bg-flowdoors-blue-500',
-      description: 'Manage quotes'
+      description: 'Manage quotes',
+      path: '/admin/quotes'
     },
     { 
       name: 'Leads', 
       icon: Users, 
       badge: 12,
       badgeColor: 'bg-flowdoors-green-500',
-      description: 'Track prospects'
+      description: 'Track prospects',
+      path: '/admin/leads'
     },
     { 
       name: 'Orders', 
       icon: ShoppingCart, 
       badge: null,
-      description: 'Order management'
+      description: 'Order management',
+      path: '/admin/orders'
     },
     { 
       name: 'Marketing', 
       icon: TrendingUp, 
       badge: null,
-      description: 'Campaigns & analytics'
+      description: 'Campaigns & analytics',
+      path: '/admin/marketing'
     },
     { 
       name: 'Users', 
       icon: User, 
       badge: null,
-      description: 'User management'
+      description: 'User management',
+      path: '/admin/users'
     },
     { 
       name: 'Notifications', 
       icon: Bell, 
       badge: 5,
       badgeColor: 'bg-red-500',
-      description: 'Activity & alerts'
+      description: 'Activity & alerts',
+      path: '/admin/notifications'
     },
   ];
 
@@ -110,12 +133,12 @@ function Sidebar() {
           <div className="space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeItem === item.name;
+              const isActive = pathname === item.path || (item.path === '/admin' && pathname === '/admin/dashboard');
               
               return (
                 <button
                   key={item.name}
-                  onClick={() => setActiveItem(item.name)}
+                  onClick={() => router.push(item.path)}
                   className={`
                     w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
                     ${isActive 
@@ -161,18 +184,24 @@ function Sidebar() {
 
           {/* Secondary Actions */}
           <div className="space-y-1 mt-4">
-            <button className={`
-              w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
-              text-gray-700 hover:bg-gray-100
-            `}>
+            <button 
+              onClick={() => router.push('/admin/settings')}
+              className={`
+                w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
+                text-gray-700 hover:bg-gray-100
+              `}
+            >
               <Settings className="w-5 h-5 text-gray-500" />
               {!isCollapsed && <span className="text-sm font-medium">Settings</span>}
             </button>
             
-            <button className={`
-              w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
-              text-gray-700 hover:bg-gray-100
-            `}>
+            <button 
+              onClick={() => router.push('/admin/help')}
+              className={`
+                w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
+                text-gray-700 hover:bg-gray-100
+              `}
+            >
               <HelpCircle className="w-5 h-5 text-gray-500" />
               {!isCollapsed && <span className="text-sm font-medium">Help & Support</span>}
             </button>
@@ -207,16 +236,31 @@ function Sidebar() {
             {/* User Dropdown Menu */}
             {showUserMenu && !isCollapsed && (
               <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
-                <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                <button 
+                  onClick={() => {
+                    router.push('/admin/profile');
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                >
                   <User className="w-4 h-4 text-gray-500" />
                   <span className="text-sm text-gray-700">View Profile</span>
                 </button>
-                <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                <button 
+                  onClick={() => {
+                    router.push('/admin/settings');
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                >
                   <Settings className="w-4 h-4 text-gray-500" />
                   <span className="text-sm text-gray-700">Account Settings</span>
                 </button>
                 <div className="border-t border-gray-200"></div>
-                <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-red-600">
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-red-600"
+                >
                   <LogOut className="w-4 h-4" />
                   <span className="text-sm font-medium">Sign Out</span>
                 </button>
