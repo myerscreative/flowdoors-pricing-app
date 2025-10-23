@@ -339,13 +339,13 @@ export default function MarketingPage() {
       {
         label: 'Total Attempts',
         value: totalAttempts,
-        color: '#3B82F6',
+        color: '#00aeef',
         width: '100%',
       },
       {
         label: 'Completed Quotes',
         value: data.totals.quotes,
-        color: '#10B981',
+        color: '#8dc63f',
         width:
           totalAttempts > 0
             ? `${((data.totals.quotes / totalAttempts) * 100).toFixed(1)}%`
@@ -373,7 +373,7 @@ export default function MarketingPage() {
       {
         label: 'Website Visitors',
         value: Math.floor(totalAttempts * 15),
-        color: '#3B82F6',
+        color: '#00aeef',
       },
       {
         label: 'Quote Attempts',
@@ -383,7 +383,7 @@ export default function MarketingPage() {
       {
         label: 'Completed Quotes',
         value: data.totals.quotes,
-        color: '#10B981',
+        color: '#8dc63f',
       },
       {
         label: 'Orders Won',
@@ -393,90 +393,92 @@ export default function MarketingPage() {
       {
         label: 'Revenue',
         value: data.totals.amount,
-        color: '#EF4444',
+        color: '#2e2e2e',
       },
     ]
   }, [marketingData])
 
   return (
-    <div className="w-full">
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 space-y-4 md:space-y-0">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Marketing Dashboard
-          </h1>
-          <p className="text-gray-600">Attribution and performance metrics</p>
-          <div className="flex items-center space-x-2 mt-2">
-            <p className="text-sm text-gray-500">
-              Last updated: {mounted ? lastUpdated.toLocaleString() : ''}
-            </p>
-            {(isFetchingFresh || showStaleDataIndicator) && (
-              <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                {isFetchingFresh ? 'Updating...' : 'Cached data'}
-              </span>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center space-x-4">
-          {/* Date Range Selector */}
-          <div className="flex items-center space-x-2">
-            <Calendar className="w-4 h-4 text-gray-500" />
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Time</option>
-              <option value="7d">Last 7 Days</option>
-              <option value="30d">Last 30 Days</option>
-              <option value="90d">Last 90 Days</option>
-              <option value="12m">Last 12 Months</option>
-              <option value="custom">Custom Range</option>
-            </select>
-          </div>
-
-          {/* Custom Date Inputs */}
-          {selectedPeriod === 'custom' && (
-            <div className="flex items-center space-x-2">
-              <input
-                type="date"
-                value={customRange.from}
-                onChange={(e) =>
-                  setCustomRange({ ...customRange, from: e.target.value })
-                }
-                className="border border-gray-300 rounded-lg px-2 py-2"
-              />
-              <span className="text-gray-500">to</span>
-              <input
-                type="date"
-                value={customRange.to}
-                onChange={(e) =>
-                  setCustomRange({ ...customRange, to: e.target.value })
-                }
-                className="border border-gray-300 rounded-lg px-2 py-2"
-              />
+      <div className="bg-gradient-to-r from-flowdoors-blue-600 to-flowdoors-blue-500 rounded-2xl shadow-lg p-8 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+          <div>
+            <h1 className="text-3xl font-bold text-white">
+              Marketing Dashboard
+            </h1>
+            <p className="text-flowdoors-blue-100 mt-1">Attribution and performance metrics</p>
+            <div className="flex items-center space-x-2 mt-3">
+              <p className="text-sm text-flowdoors-blue-100">
+                Last updated: {mounted ? lastUpdated.toLocaleString() : ''}
+              </p>
+              {(isFetchingFresh || showStaleDataIndicator) && (
+                <span className="text-xs text-flowdoors-blue-900 bg-white/90 px-2 py-1 rounded-full font-medium">
+                  {isFetchingFresh ? 'Updating...' : 'Cached data'}
+                </span>
+              )}
             </div>
-          )}
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Date Range Selector */}
+            <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2">
+              <Calendar className="w-4 h-4 text-white" />
+              <select
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+                className="bg-transparent text-white border-none focus:ring-0 focus:outline-none cursor-pointer font-medium"
+              >
+                <option value="all" className="text-gray-900">All Time</option>
+                <option value="7d" className="text-gray-900">Last 7 Days</option>
+                <option value="30d" className="text-gray-900">Last 30 Days</option>
+                <option value="90d" className="text-gray-900">Last 90 Days</option>
+                <option value="12m" className="text-gray-900">Last 12 Months</option>
+                <option value="custom" className="text-gray-900">Custom Range</option>
+              </select>
+            </div>
 
-          {/* Action Buttons */}
-          <button
-            onClick={refreshData}
-            disabled={isLoading}
-            className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`}
-            />
-            <span>Refresh</span>
-          </button>
-          <button
-            onClick={handleExportCSV}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            <Download className="w-4 h-4" />
-            <span>Export CSV</span>
-          </button>
+            {/* Custom Date Inputs */}
+            {selectedPeriod === 'custom' && (
+              <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2">
+                <input
+                  type="date"
+                  value={customRange.from}
+                  onChange={(e) =>
+                    setCustomRange({ ...customRange, from: e.target.value })
+                  }
+                  className="bg-transparent text-white border-none focus:ring-0 focus:outline-none text-sm"
+                />
+                <span className="text-white">to</span>
+                <input
+                  type="date"
+                  value={customRange.to}
+                  onChange={(e) =>
+                    setCustomRange({ ...customRange, to: e.target.value })
+                  }
+                  className="bg-transparent text-white border-none focus:ring-0 focus:outline-none text-sm"
+                />
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <button
+              onClick={refreshData}
+              disabled={isLoading}
+              className="flex items-center space-x-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 disabled:opacity-50 transition-all font-medium"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`}
+              />
+              <span>Refresh</span>
+            </button>
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center space-x-2 px-4 py-2 bg-flowdoors-green-500 text-white rounded-lg hover:bg-flowdoors-green-600 shadow-lg transition-all font-medium"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export CSV</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -514,7 +516,7 @@ export default function MarketingPage() {
       </div>
 
       {/* Additional KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         {mounted && !isLoading ? (
           <>
             <KpiCard
@@ -535,13 +537,13 @@ export default function MarketingPage() {
                   : '$0.00'
               }
               icon={DollarSign}
-              colorClass="text-green-600"
+              colorClass="text-flowdoors-green-600"
             />
             <KpiCard
               title="Cost Per Lead"
               value="--"
               icon={Users}
-              colorClass="text-blue-600"
+              colorClass="text-flowdoors-blue-600"
             />
             <KpiCard
               title="ROI"
@@ -552,10 +554,10 @@ export default function MarketingPage() {
           </>
         ) : (
           <>
-            <Skeleton className="h-24 rounded-lg" />
-            <Skeleton className="h-24 rounded-lg" />
-            <Skeleton className="h-24 rounded-lg" />
-            <Skeleton className="h-24 rounded-lg" />
+            <Skeleton className="h-28 rounded-xl" />
+            <Skeleton className="h-28 rounded-xl" />
+            <Skeleton className="h-28 rounded-xl" />
+            <Skeleton className="h-28 rounded-xl" />
           </>
         )}
       </div>
@@ -577,7 +579,7 @@ export default function MarketingPage() {
 
       {/* Performance by Source */}
       <div className="mb-8">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">
+        <h3 className="text-2xl font-bold text-flowdoors-charcoal-800 mb-6">
           Performance by Source
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -600,21 +602,23 @@ export default function MarketingPage() {
                 sparklineData={getSparklineData()}
               />
             ) : (
-              <Skeleton key={source} className="h-40 rounded-lg" />
+              <Skeleton key={source} className="h-48 rounded-xl" />
             )
           )}
         </div>
       </div>
 
       {/* Conversion Funnel */}
-      {mounted && !isLoading ? (
-        <ConversionFunnel steps={conversionFunnelSteps} />
-      ) : (
-        <div className="bg-gray-100 rounded-lg h-40 animate-pulse" />
-      )}
+      <div className="mb-8">
+        {mounted && !isLoading ? (
+          <ConversionFunnel steps={conversionFunnelSteps} />
+        ) : (
+          <Skeleton className="h-64 rounded-xl" />
+        )}
+      </div>
 
       {/* Customer Journey Funnel */}
-      <div className="mt-8">
+      <div>
         {mounted && !isLoading ? (
           <CustomerJourneyFunnel
             steps={customerJourneySteps}
@@ -627,7 +631,7 @@ export default function MarketingPage() {
             }}
           />
         ) : (
-          <div className="bg-gray-100 rounded-lg h-40 animate-pulse" />
+          <Skeleton className="h-96 rounded-xl" />
         )}
       </div>
 

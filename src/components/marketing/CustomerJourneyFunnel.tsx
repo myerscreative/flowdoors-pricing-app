@@ -92,13 +92,13 @@ export default function CustomerJourneyFunnel({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-white rounded-xl border border-gray-100 p-8 shadow-md">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-xl font-bold text-flowdoors-charcoal-800">
             Customer Journey Funnel
           </h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-600 mt-2 font-medium">
             Track conversion rates through each stage of the customer journey
           </p>
         </div>
@@ -107,7 +107,7 @@ export default function CustomerJourneyFunnel({
             onClick={onExport}
             variant="outline"
             size="sm"
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 border-flowdoors-blue-300 text-flowdoors-blue-600 hover:bg-flowdoors-blue-50"
           >
             <Download className="w-4 h-4" />
             <span>Export CSV</span>
@@ -131,31 +131,31 @@ export default function CustomerJourneyFunnel({
               {/* Step header */}
               <button
                 onClick={() => handleStageClick(stageKey)}
-                className="w-full flex items-center justify-between mb-2 p-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                className="w-full flex items-center justify-between mb-3 p-3 rounded-xl hover:bg-gradient-to-r hover:from-flowdoors-blue-50 hover:to-flowdoors-green-50 transition-all duration-300 group border border-transparent hover:border-flowdoors-blue-200"
               >
                 <div className="flex items-center space-x-3">
                   <div
-                    className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
+                    className="w-5 h-5 rounded-full border-2 border-white shadow-md"
                     style={{ backgroundColor: step.color }}
                   />
-                  <span className="font-medium text-gray-900">
+                  <span className="font-semibold text-flowdoors-charcoal-800">
                     {step.label}
                   </span>
                   {i > 0 && dropOff > 0 && (
-                    <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded-full">
+                    <span className="text-xs text-red-600 bg-red-50 px-3 py-1 rounded-full font-bold">
                       -{dropOff.toFixed(1)}%
                     </span>
                   )}
                 </div>
                 <div className="text-right">
                   <div
-                    className="text-lg font-bold"
+                    className="text-xl font-bold"
                     style={{ color: step.color }}
                   >
                     {step.value.toLocaleString()}
                   </div>
                   {i > 0 && (
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 font-medium">
                       {((step.value / steps[0].value) * 100).toFixed(1)}% of
                       visitors
                     </div>
@@ -164,10 +164,10 @@ export default function CustomerJourneyFunnel({
               </button>
 
               {/* Progress bar */}
-              <div className="relative">
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+              <div className="relative mb-2">
+                <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden shadow-inner">
                   <div
-                    className="h-3 rounded-full transition-all duration-500 ease-out"
+                    className="h-4 rounded-full transition-all duration-500 ease-out shadow-sm"
                     style={{
                       backgroundColor: step.color,
                       width: `${Math.max(percentage, 2)}%`, // Minimum 2% width for visibility
@@ -178,8 +178,8 @@ export default function CustomerJourneyFunnel({
                 {/* Percentage label on bar */}
                 {percentage > 10 && (
                   <div
-                    className="absolute top-0 left-2 text-xs font-medium text-white"
-                    style={{ lineHeight: '12px' }}
+                    className="absolute top-0.5 left-3 text-xs font-bold text-white"
+                    style={{ lineHeight: '14px' }}
                   >
                     {percentage.toFixed(1)}%
                   </div>
@@ -188,7 +188,7 @@ export default function CustomerJourneyFunnel({
 
               {/* Conversion rate */}
               {i > 0 && (
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-gray-600 font-medium mb-1">
                   {((step.value / previousValue) * 100).toFixed(1)}% conversion
                   from {steps[i - 1].label}
                 </div>
@@ -199,31 +199,31 @@ export default function CustomerJourneyFunnel({
       </div>
 
       {/* Summary stats */}
-      <div className="mt-6 pt-6 border-t border-gray-100">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div>
-            <div className="text-2xl font-bold text-gray-900">
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-flowdoors-blue-50 to-flowdoors-blue-100">
+            <div className="text-2xl font-bold text-flowdoors-blue-600">
               {steps.length > 0 ? steps[0].value.toLocaleString() : 0}
             </div>
-            <div className="text-xs text-gray-500">Total Visitors</div>
+            <div className="text-xs text-flowdoors-blue-700 font-medium uppercase tracking-wide mt-1">Total Visitors</div>
           </div>
-          <div>
-            <div className="text-2xl font-bold text-gray-900">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100">
+            <div className="text-2xl font-bold text-purple-600">
               {steps.length > 1 ? steps[1].value.toLocaleString() : 0}
             </div>
-            <div className="text-xs text-gray-500">Leads Generated</div>
+            <div className="text-xs text-purple-700 font-medium uppercase tracking-wide mt-1">Leads Generated</div>
           </div>
-          <div>
-            <div className="text-2xl font-bold text-gray-900">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-flowdoors-green-50 to-flowdoors-green-100">
+            <div className="text-2xl font-bold text-flowdoors-green-600">
               {steps.length > 2 ? steps[2].value.toLocaleString() : 0}
             </div>
-            <div className="text-xs text-gray-500">Quotes Requested</div>
+            <div className="text-xs text-flowdoors-green-700 font-medium uppercase tracking-wide mt-1">Quotes Requested</div>
           </div>
-          <div>
-            <div className="text-2xl font-bold text-gray-900">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-orange-50 to-orange-100">
+            <div className="text-2xl font-bold text-orange-600">
               {steps.length > 3 ? steps[3].value.toLocaleString() : 0}
             </div>
-            <div className="text-xs text-gray-500">Orders Won</div>
+            <div className="text-xs text-orange-700 font-medium uppercase tracking-wide mt-1">Orders Won</div>
           </div>
         </div>
       </div>

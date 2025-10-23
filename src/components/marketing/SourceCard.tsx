@@ -48,20 +48,20 @@ export default function SourceCard({
 
   return (
     <div
-      className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-white rounded-xl border border-gray-100 p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:border-flowdoors-blue-200"
       onClick={onClick}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-5">
         <div className="flex items-center space-x-3">
           <div
-            className="p-2 rounded-lg"
-            style={{ backgroundColor: data.color + '20' }}
+            className="p-3 rounded-xl shadow-md"
+            style={{ backgroundColor: data.color + '15' }}
           >
             <div style={{ color: data.color }}>{getSourceIcon(source)}</div>
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900 capitalize">{source}</h3>
-            <p className="text-sm text-gray-500">
+            <h3 className="font-bold text-flowdoors-charcoal-800 capitalize text-lg">{source}</h3>
+            <p className="text-sm text-gray-500 font-medium">
               {percentage}% of total revenue
             </p>
           </div>
@@ -83,22 +83,34 @@ export default function SourceCard({
           </div>
         )}
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <p className="text-sm text-gray-600">Leads</p>
-          <p className="font-semibold">{data.leads}</p>
-          <p className="text-sm text-gray-600">Quotes</p>
-          <p className="font-semibold">{data.quotes}</p>
-          <p className="text-sm text-gray-600">Revenue</p>
-          <p className="font-semibold">${revenue.toLocaleString()}</p>
+      <div className="grid grid-cols-2 gap-5">
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Leads</p>
+            <p className="font-bold text-flowdoors-charcoal-800 text-lg">{data.leads}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Quotes</p>
+            <p className="font-bold text-flowdoors-charcoal-800 text-lg">{data.quotes}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Revenue</p>
+            <p className="font-bold text-flowdoors-charcoal-800 text-lg">${revenue.toLocaleString()}</p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm text-gray-600">Conv. Rate</p>
-          <p className="font-semibold text-blue-600">{conversionRate}%</p>
-          <p className="text-sm text-gray-600">Avg Quote</p>
-          <p className="font-semibold">${avgQuoteValue.toFixed(2)}</p>
-          <p className="text-sm text-gray-600">Cost/Lead</p>
-          <p className="font-semibold text-green-600">--</p>
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Conv. Rate</p>
+            <p className="font-bold text-flowdoors-blue-600 text-lg">{conversionRate}%</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Avg Quote</p>
+            <p className="font-bold text-flowdoors-charcoal-800 text-lg">${avgQuoteValue.toFixed(2)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Cost/Lead</p>
+            <p className="font-bold text-flowdoors-green-600 text-lg">--</p>
+          </div>
         </div>
       </div>
     </div>
