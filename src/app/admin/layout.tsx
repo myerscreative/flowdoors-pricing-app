@@ -166,7 +166,7 @@ export default function AdminLayout({
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64 flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col">
         {/* Mobile header */}
         <div className="sticky top-0 z-10 lg:hidden bg-white shadow-sm border-b border-gray-200">
           <div className="flex items-center justify-between h-16 px-4">
