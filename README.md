@@ -75,7 +75,20 @@ See `FLOWDOORS_FIREBASE_SETUP.md` for detailed Firebase setup instructions.
 
 ## Deployment
 
-This app is configured for deployment on Firebase Hosting or Vercel. See `docs/FLOWDOORS_DEPLOYMENT.md` for deployment instructions.
+This app is configured for deployment on Vercel with PostgreSQL database support.
+
+### Quick Deploy to Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/myerscreative/flowdoors-pricing-app)
+
+For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+### Key Requirements
+
+- PostgreSQL database (Vercel Postgres recommended)
+- Firebase project with authentication
+- Postmark account for email delivery
+- Environment variables (see [.env.production.example](./.env.production.example))
 
 ## License
 

@@ -1,1 +1,47 @@
+# Vercel Ignore - Exclude files from deployment to reduce upload size
+
+# Lock files (Vercel handles dependencies)
 pnpm-lock.yaml
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test files
+**/__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+jest.config.*
+
+# Documentation (optional - keep README.md)
+FLOWDOORS_*.md
+
+# Git
+.git/
+
+# Local environment
+.env.local
+.env.development
+.env*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.backup.*
+*.disabled
+
+# Scripts not needed in production
+scripts/setUserRole.ts
+scripts/listUsersWithRoles.ts
