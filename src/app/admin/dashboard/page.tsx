@@ -12,7 +12,7 @@ import {
   Users,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 interface ActivityItem {
   id: string | number
@@ -32,13 +32,6 @@ interface DashboardData {
   recentActivity: ActivityItem[]
 }
 
-interface StatCardProps {
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  value: string | number
-  bgColor: string
-  loading?: boolean
-}
 
 export default function AdminDashboard() {
   // Initialize useMockData from localStorage, default to false (real data)
@@ -335,31 +328,6 @@ export default function AdminDashboard() {
     }
   }
 
-  const StatCard = ({
-    icon: Icon,
-    label,
-    value,
-    bgColor,
-    loading: cardLoading,
-  }: StatCardProps) => (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-200">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-gray-600 text-sm font-medium mb-2">{label}</p>
-          <p className="text-3xl font-bold text-flowdoors-charcoal">
-            {cardLoading ? (
-              <span className="text-gray-400">Loading...</span>
-            ) : (
-              value
-            )}
-          </p>
-        </div>
-        <div className={`${bgColor} bg-opacity-10 p-3 rounded-lg`}>
-          <Icon className={`w-6 h-6 ${bgColor.replace('bg-', 'text-')}`} />
-        </div>
-      </div>
-    </div>
-  )
 
   return (
     <div>
@@ -418,67 +386,141 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Stats Grid - First Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <StatCard
-          icon={FileText}
-          label="Total Leads"
-          value={data.totalLeads}
-          bgColor="bg-flowdoors-blue"
-          loading={loading && !useMockData}
-        />
-        <StatCard
-          icon={FileText}
-          label="Total Quotes"
-          value={data.totalQuotes}
-          bgColor="bg-flowdoors-green"
-          loading={loading && !useMockData}
-        />
-        <StatCard
-          icon={DollarSign}
-          label="Total Quote Value"
-          value={`$${data.totalRevenue.toLocaleString()}`}
-          bgColor="bg-flowdoors-blue-600"
-          loading={loading && !useMockData}
-        />
-        <StatCard
-          icon={Clock}
-          label="Pending Orders"
-          value={data.pendingOrders}
-          bgColor="bg-amber-500"
-          loading={loading && !useMockData}
-        />
-      </div>
+      {/* Single unified grid for perfect alignment */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Row 1: 4 Metric Cards */}
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-200">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-gray-600 text-sm font-medium mb-2">Total Leads</p>
+              <p className="text-3xl font-bold text-flowdoors-charcoal">
+                {loading && !useMockData ? (
+                  <span className="text-gray-400">Loading...</span>
+                ) : (
+                  data.totalLeads
+                )}
+              </p>
+            </div>
+            <div className="bg-flowdoors-blue bg-opacity-10 p-3 rounded-lg">
+              <FileText className="w-6 h-6 text-flowdoors-blue" />
+            </div>
+          </div>
+        </div>
 
-      {/* Stats Grid - Second Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard
-          icon={ShoppingCart}
-          label="Total Orders"
-          value={data.totalOrders}
-          bgColor="bg-flowdoors-charcoal"
-          loading={loading && !useMockData}
-        />
-        <StatCard
-          icon={TrendingUp}
-          label="Conversion Rate"
-          value={`${data.conversionRate}%`}
-          bgColor="bg-flowdoors-green-600"
-          loading={loading && !useMockData}
-        />
-        <StatCard
-          icon={DollarSign}
-          label="Average Order Volume"
-          value={`$${data.averageOrderVolume.toLocaleString()}`}
-          bgColor="bg-flowdoors-blue-700"
-          loading={loading && !useMockData}
-        />
-      </div>
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-200">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-gray-600 text-sm font-medium mb-2">Total Quotes</p>
+              <p className="text-3xl font-bold text-flowdoors-charcoal">
+                {loading && !useMockData ? (
+                  <span className="text-gray-400">Loading...</span>
+                ) : (
+                  data.totalQuotes
+                )}
+              </p>
+            </div>
+            <div className="bg-flowdoors-green bg-opacity-10 p-3 rounded-lg">
+              <FileText className="w-6 h-6 text-flowdoors-green" />
+            </div>
+          </div>
+        </div>
 
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-200">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-gray-600 text-sm font-medium mb-2">Total Quote Value</p>
+              <p className="text-3xl font-bold text-flowdoors-charcoal">
+                {loading && !useMockData ? (
+                  <span className="text-gray-400">Loading...</span>
+                ) : (
+                  `$${data.totalRevenue.toLocaleString()}`
+                )}
+              </p>
+            </div>
+            <div className="bg-flowdoors-blue-600 bg-opacity-10 p-3 rounded-lg">
+              <DollarSign className="w-6 h-6 text-flowdoors-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-200">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-gray-600 text-sm font-medium mb-2">Pending Orders</p>
+              <p className="text-3xl font-bold text-flowdoors-charcoal">
+                {loading && !useMockData ? (
+                  <span className="text-gray-400">Loading...</span>
+                ) : (
+                  data.pendingOrders
+                )}
+              </p>
+            </div>
+            <div className="bg-amber-500 bg-opacity-10 p-3 rounded-lg">
+              <Clock className="w-6 h-6 text-amber-500" />
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: 3 Metric Cards */}
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-200">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-gray-600 text-sm font-medium mb-2">Total Orders</p>
+              <p className="text-3xl font-bold text-flowdoors-charcoal">
+                {loading && !useMockData ? (
+                  <span className="text-gray-400">Loading...</span>
+                ) : (
+                  data.totalOrders
+                )}
+              </p>
+            </div>
+            <div className="bg-flowdoors-charcoal bg-opacity-10 p-3 rounded-lg">
+              <ShoppingCart className="w-6 h-6 text-flowdoors-charcoal" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-200">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-gray-600 text-sm font-medium mb-2">Conversion Rate</p>
+              <p className="text-3xl font-bold text-flowdoors-charcoal">
+                {loading && !useMockData ? (
+                  <span className="text-gray-400">Loading...</span>
+                ) : (
+                  `${data.conversionRate}%`
+                )}
+              </p>
+            </div>
+            <div className="bg-flowdoors-green-600 bg-opacity-10 p-3 rounded-lg">
+              <TrendingUp className="w-6 h-6 text-flowdoors-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-200">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-gray-600 text-sm font-medium mb-2">Average Order Volume</p>
+              <p className="text-3xl font-bold text-flowdoors-charcoal">
+                {loading && !useMockData ? (
+                  <span className="text-gray-400">Loading...</span>
+                ) : (
+                  `$${data.averageOrderVolume.toLocaleString()}`
+                )}
+              </p>
+            </div>
+            <div className="bg-flowdoors-blue-700 bg-opacity-10 p-3 rounded-lg">
+              <DollarSign className="w-6 h-6 text-flowdoors-blue-700" />
+            </div>
+          </div>
+        </div>
+
+        {/* Empty cell to maintain grid alignment */}
+        <div></div>
+
+        {/* Row 3: Content panels that span across columns */}
+        <div className="lg:col-span-3 bg-white rounded-lg shadow-md border border-gray-200 p-6">
           <h2 className="text-xl font-bold text-flowdoors-charcoal mb-4">
             Recent Activity
           </h2>
@@ -512,8 +554,7 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+        <div className="lg:col-span-1 bg-white rounded-lg shadow-md border border-gray-200 p-6">
           <h2 className="text-xl font-bold text-flowdoors-charcoal mb-4">
             Quick Actions
           </h2>
