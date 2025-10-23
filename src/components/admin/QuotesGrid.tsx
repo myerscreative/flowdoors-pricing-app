@@ -472,7 +472,7 @@ const QuoteCard = ({
     const createdAt = coerceDate(quote.createdAt)
 
     return (
-      <div className="w-full min-w-0 max-w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+      <div className="w-full min-w-0 p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
         {/* Header Section */}
         <div className="mb-6">
           <div className="flex items-start justify-between mb-3">
@@ -686,7 +686,7 @@ const QuoteCard = ({
   const createdAt = coerceDate(quote.createdAt)
 
   return (
-    <div className="w-full min-w-0 max-w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+    <div className="w-full min-w-0 p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
       {/* Header Section */}
       <div className="mb-6">
         <div className="flex items-start justify-between mb-3">
@@ -915,7 +915,7 @@ function QuotesGrid({
     return (
       <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="min-w-0 flex">
+          <div key={i} className="min-w-0 w-full">
             <Skeleton className="w-full rounded-xl h-96" />
           </div>
         ))}
@@ -937,9 +937,9 @@ function QuotesGrid({
   }
 
   return (
-    <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+    <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 auto-rows-max">
       {quotes.map((quote) => (
-        <div key={quote.id} className="min-w-0 flex">
+        <div key={quote.id} className="min-w-0 w-full overflow-hidden">
           <QuoteCard
             quote={quote}
             visibleFields={visibleFields}
