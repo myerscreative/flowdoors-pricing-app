@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp, TrendingDown } from 'lucide-react'
+import { TrendingDown, TrendingUp } from 'lucide-react'
 import type { ElementType } from 'react'
 
 interface MetricCardProps {

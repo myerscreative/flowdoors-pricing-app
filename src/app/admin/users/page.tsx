@@ -1,38 +1,6 @@
 // src/app/admin/users/page.tsx
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import {
-  getFunctions,
-  httpsCallable,
-  connectFunctionsEmulator,
-} from 'firebase/functions'
-import { app } from '@/lib/firebaseClient'
-import { Label } from '@/components/ui/label'
-import {
-  getSalespeople,
-  updateSalesperson,
-  deleteSalesperson,
-  forceDeleteSalesperson,
-  getSalespersonAssociatedRecords,
-  reassignSalespersonRecords,
-  type Salesperson,
-} from '@/services/salesService'
-import {
-  Trash2,
-  AlertTriangle,
-  FileText,
-  ShoppingCart,
-  UserPlus,
-  Crown,
-  User,
-  Shield,
-} from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
-import { Badge } from '@/components/ui/badge'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +12,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -51,6 +24,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useToast } from '@/hooks/use-toast'
+import { app } from '@/lib/firebaseClient'
+import {
+  deleteSalesperson,
+  forceDeleteSalesperson,
+  getSalespeople,
+  getSalespersonAssociatedRecords,
+  reassignSalespersonRecords,
+  updateSalesperson,
+  type Salesperson,
+} from '@/services/salesService'
+import {
+  connectFunctionsEmulator,
+  getFunctions,
+  httpsCallable,
+} from 'firebase/functions'
+import {
+  AlertTriangle,
+  Crown,
+  FileText,
+  Shield,
+  ShoppingCart,
+  Trash2,
+  TrendingUp,
+  User,
+  UserPlus,
+  Users,
+} from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 
 /**
  * Local role union used for filters/sorting and UI.
@@ -512,11 +514,13 @@ export default function ManageUsersPage() {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'admin':
-        return <Shield className="h-4 w-4" />
+        return <Shield className="h-5 w-5 text-flowdoors-blue-600" />
       case 'manager':
-        return <Crown className="h-4 w-4" />
+        return <Crown className="h-5 w-5 text-purple-600" />
+      case 'marketing':
+        return <TrendingUp className="h-5 w-5 text-teal-600" />
       default:
-        return <User className="h-4 w-4" />
+        return <User className="h-5 w-5 text-flowdoors-green-600" />
     }
   }
 
@@ -559,13 +563,20 @@ export default function ManageUsersPage() {
 
   return (
     <main className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold">User Management</h1>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-flowdoors-charcoal-800 mb-2">User Management</h1>
+        <p className="text-gray-600">Manage team members, roles, and permissions</p>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Add User</CardTitle>
+      <Card className="shadow-md border-gray-200">
+        <CardHeader className="bg-gray-50 border-b border-gray-200">
+          <CardTitle className="text-flowdoors-charcoal-800 flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-flowdoors-blue-600" />
+            Add User
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 pt-6">
           {/* First line */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div>
@@ -685,19 +696,25 @@ export default function ManageUsersPage() {
             <Button
               disabled={saving || !form.name || !form.email}
               onClick={handleCreate}
+              className="bg-gradient-to-r from-flowdoors-blue-600 to-flowdoors-blue-500 hover:from-flowdoors-blue-700 hover:to-flowdoors-blue-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
             >
-              Create
+              {saving ? 'Creating...' : 'Create User'}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Users</CardTitle>
-          <div className="flex gap-4 items-center">
+      <Card className="shadow-md border-gray-200">
+        <CardHeader className="bg-gray-50 border-b border-gray-200">
+          <CardTitle className="text-flowdoors-charcoal-800 flex items-center gap-2">
+            <Users className="h-5 w-5 text-flowdoors-blue-600" />
+            Users
+          </CardTitle>
+        </CardHeader>
+        <div className="px-6 py-4 bg-white border-b border-gray-200">
+          <div className="flex gap-6 items-center">
             <div className="flex items-center gap-2">
-              <Label htmlFor="role-filter">Filter by Role:</Label>
+              <Label htmlFor="role-filter" className="text-gray-700 font-medium">Filter by Role:</Label>
               <Select
                 value={roleFilter}
                 onValueChange={(
@@ -709,7 +726,7 @@ export default function ManageUsersPage() {
                     | 'marketing'
                 ) => setRoleFilter(value)}
               >
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-36 bg-white border-gray-300">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -722,14 +739,14 @@ export default function ManageUsersPage() {
               </Select>
             </div>
             <div className="flex items-center gap-2">
-              <Label htmlFor="status-filter">Filter by Status:</Label>
+              <Label htmlFor="status-filter" className="text-gray-700 font-medium">Filter by Status:</Label>
               <Select
                 value={statusFilter}
                 onValueChange={(value: 'all' | 'active' | 'inactive') =>
                   setStatusFilter(value)
                 }
               >
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-36 bg-white border-gray-300">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -739,44 +756,58 @@ export default function ManageUsersPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="text-sm text-muted-foreground">
-              Showing {filteredAndSortedReps.length} of {reps.length}{' '}
-              salespeople
+            <div className="text-sm text-gray-600 ml-auto">
+              Showing {filteredAndSortedReps.length} of {reps.length} salespeople
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        </div>
+        <CardContent className="space-y-4 pt-6">
           {/* Summary section */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-muted/50 rounded-lg">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {reps.filter((r) => r.role === 'admin').length}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div className="bg-white rounded-xl border border-flowdoors-blue-200 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <div className="flex items-center justify-between mb-2">
+                <Shield className="h-5 w-5 text-flowdoors-blue-600" />
+                <div className="text-2xl font-bold text-flowdoors-blue-600">
+                  {reps.filter((r) => r.role === 'admin').length}
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground">Admin</div>
+              <div className="text-sm font-medium text-gray-600">Admin</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
-                {reps.filter((r) => r.role === 'manager').length}
+            <div className="bg-white rounded-xl border border-purple-200 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <div className="flex items-center justify-between mb-2">
+                <Crown className="h-5 w-5 text-purple-600" />
+                <div className="text-2xl font-bold text-purple-600">
+                  {reps.filter((r) => r.role === 'manager').length}
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground">Managers</div>
+              <div className="text-sm font-medium text-gray-600">Managers</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {reps.filter((r) => r.role === 'salesperson').length}
+            <div className="bg-white rounded-xl border border-flowdoors-green-200 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <div className="flex items-center justify-between mb-2">
+                <User className="h-5 w-5 text-flowdoors-green-600" />
+                <div className="text-2xl font-bold text-flowdoors-green-600">
+                  {reps.filter((r) => r.role === 'salesperson').length}
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground">Users</div>
+              <div className="text-sm font-medium text-gray-600">Sales</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-teal-600">
-                {reps.filter((r) => r.role === 'marketing').length}
+            <div className="bg-white rounded-xl border border-teal-200 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <div className="flex items-center justify-between mb-2">
+                <TrendingUp className="h-5 w-5 text-teal-600" />
+                <div className="text-2xl font-bold text-teal-600">
+                  {reps.filter((r) => r.role === 'marketing').length}
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground">Marketing</div>
+              <div className="text-sm font-medium text-gray-600">Marketing</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">
-                {reps.filter((r) => r.status === 'active').length}
+            <div className="bg-white rounded-xl border border-flowdoors-green-200 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-2 h-2 bg-flowdoors-green rounded-full"></div>
+                <div className="text-2xl font-bold text-flowdoors-green-700">
+                  {reps.filter((r) => r.status === 'active').length}
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground">Active</div>
+              <div className="text-sm font-medium text-gray-600">Active</div>
             </div>
           </div>
 
@@ -790,27 +821,45 @@ export default function ManageUsersPage() {
             </div>
           ) : (
             filteredAndSortedReps.map((rep) => (
-              <div key={rep.id} className="rounded-lg border p-3 space-y-3">
+              <div key={rep.id} className="rounded-xl border border-gray-200 p-4 space-y-4 bg-white shadow-sm hover:shadow-md transition-all duration-200">
                 {/* Header with name and role */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-semibold">{rep.name}</h3>
-                    <Badge
-                      variant={getRoleBadgeVariant(rep.role)}
-                      className="flex items-center gap-1"
-                    >
+                    <div className={`p-2 rounded-lg ${
+                      rep.role === 'admin' ? 'bg-flowdoors-blue-50' :
+                      rep.role === 'manager' ? 'bg-purple-50' :
+                      rep.role === 'marketing' ? 'bg-teal-50' :
+                      'bg-flowdoors-green-50'
+                    }`}>
                       {getRoleIcon(rep.role)}
-                      {rep.role === 'salesperson'
-                        ? 'Sales Person'
-                        : rep.role.charAt(0).toUpperCase() + rep.role.slice(1)}
-                    </Badge>
-                    <Badge
-                      variant={
-                        rep.status === 'active' ? 'default' : 'secondary'
-                      }
-                    >
-                      {rep.status === 'active' ? 'Active' : 'Inactive'}
-                    </Badge>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-flowdoors-charcoal-800">{rep.name}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge
+                          variant={getRoleBadgeVariant(rep.role)}
+                          className={`flex items-center gap-1 ${
+                            rep.role === 'admin' ? 'bg-flowdoors-blue-100 text-flowdoors-blue-700 hover:bg-flowdoors-blue-200' :
+                            rep.role === 'manager' ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' :
+                            rep.role === 'marketing' ? 'bg-teal-100 text-teal-700 hover:bg-teal-200' :
+                            'bg-flowdoors-green-100 text-flowdoors-green-700 hover:bg-flowdoors-green-200'
+                          }`}
+                        >
+                          {rep.role === 'salesperson'
+                            ? 'Sales Person'
+                            : rep.role.charAt(0).toUpperCase() + rep.role.slice(1)}
+                        </Badge>
+                        <Badge
+                          className={
+                            rep.status === 'active' 
+                              ? 'bg-flowdoors-green-100 text-flowdoors-green-700 hover:bg-flowdoors-green-200' 
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }
+                        >
+                          {rep.status === 'active' ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -949,18 +998,18 @@ export default function ManageUsersPage() {
                   <div className="col-span-2">{/* spacer */}</div>
                 </div>
 
-                <div className="flex gap-2 justify-end items-center">
+                <div className="flex gap-2 justify-end items-center pt-3 border-t border-gray-100">
                   {/* associated records */}
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mr-4">
+                  <div className="flex items-center gap-4 text-sm mr-4">
                     {associatedRecords[rep.id] && (
                       <>
-                        <div className="flex items-center gap-1">
-                          <FileText className="h-4 w-4" />
-                          <span>{associatedRecords[rep.id].quotes} quotes</span>
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-flowdoors-blue-50 rounded-lg">
+                          <FileText className="h-4 w-4 text-flowdoors-blue-600" />
+                          <span className="font-medium text-flowdoors-blue-700">{associatedRecords[rep.id].quotes} quotes</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <ShoppingCart className="h-4 w-4" />
-                          <span>{associatedRecords[rep.id].orders} orders</span>
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-flowdoors-green-50 rounded-lg">
+                          <ShoppingCart className="h-4 w-4 text-flowdoors-green-600" />
+                          <span className="font-medium text-flowdoors-green-700">{associatedRecords[rep.id].orders} orders</span>
                         </div>
                       </>
                     )}
@@ -973,6 +1022,11 @@ export default function ManageUsersPage() {
                         status: rep.status === 'active' ? 'inactive' : 'active',
                       })
                     }
+                    className={`border-2 ${
+                      rep.status === 'active' 
+                        ? 'border-gray-300 hover:border-gray-400 hover:bg-gray-50' 
+                        : 'border-flowdoors-green-300 hover:border-flowdoors-green-400 hover:bg-flowdoors-green-50 text-flowdoors-green-700'
+                    } transition-all duration-200`}
                   >
                     {rep.status === 'active' ? 'Deactivate' : 'Activate'}
                   </Button>
@@ -987,6 +1041,7 @@ export default function ManageUsersPage() {
                           setPasswordDialog({ email: rep.email, password: '' })
                         }
                         disabled={assigningPassword === rep.email}
+                        className="border-flowdoors-blue-300 text-flowdoors-blue-700 hover:bg-flowdoors-blue-50 hover:border-flowdoors-blue-400 transition-all duration-200"
                       >
                         {assigningPassword === rep.email
                           ? 'Assigning...'
@@ -996,9 +1051,10 @@ export default function ManageUsersPage() {
                       {/* Reset Password button – only for non-admin users */}
                       {rep.role !== 'admin' && (
                         <Button
-                          variant="secondary"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleResetPassword(rep.email)}
+                          className="border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400 transition-all duration-200"
                         >
                           Reset Password
                         </Button>
@@ -1007,7 +1063,7 @@ export default function ManageUsersPage() {
                       {/* Delete button wrapped in AlertDialogTrigger */}
                       <AlertDialogTrigger asChild>
                         <Button
-                          variant="destructive"
+                          variant="outline"
                           size="sm"
                           disabled={
                             deleting === rep.id ||
@@ -1016,6 +1072,7 @@ export default function ManageUsersPage() {
                               (associatedRecords[rep.id].quotes > 0 ||
                                 associatedRecords[rep.id].orders > 0))
                           }
+                          className="border-red-300 text-red-700 hover:bg-red-50 hover:border-red-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           {deleting === rep.id ? 'Deleting...' : 'Delete'}
@@ -1186,20 +1243,25 @@ export default function ManageUsersPage() {
 
       {/* Password Assignment Dialog */}
       {passwordDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Assign Password</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl border border-gray-200">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-gradient-to-br from-flowdoors-blue-500 to-flowdoors-blue-600 rounded-lg shadow-lg">
+                <Shield className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-flowdoors-charcoal-800">Assign Password</h3>
+            </div>
             <div className="space-y-4">
               <div>
-                <Label>Email</Label>
+                <Label className="text-gray-700 font-medium">Email</Label>
                 <Input
                   value={passwordDialog.email}
                   disabled
-                  className="bg-gray-100"
+                  className="bg-gray-50 border-gray-200 mt-1"
                 />
               </div>
               <div>
-                <Label>New Password</Label>
+                <Label className="text-gray-700 font-medium">New Password</Label>
                 <Input
                   type="password"
                   value={passwordDialog.password}
@@ -1210,17 +1272,19 @@ export default function ManageUsersPage() {
                     })
                   }
                   placeholder="Enter new password"
+                  className="mt-1 border-gray-300 focus:border-flowdoors-blue focus:ring-flowdoors-blue"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-2 bg-gray-50 p-2 rounded">
                   Password must be at least 8 characters with uppercase,
                   lowercase, number, and special character.
                 </p>
               </div>
-              <div className="flex gap-2 justify-end">
+              <div className="flex gap-2 justify-end pt-4">
                 <Button
                   variant="outline"
                   onClick={() => setPasswordDialog(null)}
                   disabled={assigningPassword === passwordDialog.email}
+                  className="border-gray-300 hover:bg-gray-50"
                 >
                   Cancel
                 </Button>
@@ -1235,6 +1299,7 @@ export default function ManageUsersPage() {
                     !passwordDialog.password ||
                     assigningPassword === passwordDialog.email
                   }
+                  className="bg-gradient-to-r from-flowdoors-blue-600 to-flowdoors-blue-500 hover:from-flowdoors-blue-700 hover:to-flowdoors-blue-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
                 >
                   {assigningPassword === passwordDialog.email
                     ? 'Assigning...'

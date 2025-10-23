@@ -1,25 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
-import { 
-  Book, 
-  MessageSquare, 
-  Video, 
-  Mail, 
-  Phone, 
-  FileText, 
-  HelpCircle, 
-  Search,
-  ExternalLink,
-  Download,
-  ChevronDown,
-  ChevronRight,
-  Send,
-  Bug,
-  Lightbulb,
-  Clock,
-  CheckCircle
+import {
+    Book,
+    Bug,
+    CheckCircle,
+    ChevronDown,
+    ChevronRight,
+    Clock,
+    Download,
+    ExternalLink,
+    FileText,
+    HelpCircle,
+    Lightbulb,
+    Mail,
+    MessageSquare,
+    Phone,
+    Search,
+    Send,
+    Video
 } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface QuickLink {
   title: string;
@@ -44,9 +44,24 @@ interface Tutorial {
 }
 
 export default function HelpAndSupport() {
+  const [activeTab, setActiveTab] = useState('getting-started');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [ticketSubmitted, setTicketSubmitted] = useState(false);
+
+  const tabs = [
+    { id: 'getting-started', label: 'Getting Started' },
+    { id: 'faqs', label: 'FAQs' },
+    { id: 'tutorials', label: 'Video Tutorials' },
+    { id: 'contact', label: 'Contact Support' },
+    { id: 'resources', label: 'Resources' },
+  ];
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    setMobileMenuOpen(false);
+  };
 
   const quickLinks: QuickLink[] = [
     {
@@ -155,281 +170,475 @@ export default function HelpAndSupport() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="w-full">
         
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">Help & Support</h1>
-          <p className="text-lg text-gray-600">We&apos;re here to help you get the most out of FlowDoors</p>
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Help & Support</h1>
+          <p className="text-sm md:text-base text-gray-600 mt-1">We&apos;re here to help you get the most out of FlowDoors</p>
         </div>
 
-        {/* Search Bar */}
-        <div className="max-w-2xl mx-auto">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for help articles, tutorials, or FAQs..."
-              className="w-full pl-12 pr-4 py-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none text-lg"
+        {/* Mobile Dropdown Menu */}
+        <div className="lg:hidden mb-4">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-lg"
+          >
+            <span className="font-semibold text-gray-900">
+              {tabs.find(tab => tab.id === activeTab)?.label}
+            </span>
+            <ChevronDown 
+              className={`w-5 h-5 transition-transform ${mobileMenuOpen ? 'rotate-180' : ''}`}
             />
-          </div>
-        </div>
-
-        {/* Quick Links */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {quickLinks.map((link) => {
-            const Icon = link.icon;
-            return (
-              <a
-                key={link.title}
-                href={link.link}
-                className={`p-6 rounded-xl border-2 transition-all hover:scale-105 hover:shadow-lg ${colorMap[link.color]}`}
-              >
-                <Icon className="w-8 h-8 mb-3" />
-                <h3 className="font-bold text-gray-900 mb-2">{link.title}</h3>
-                <p className="text-sm text-gray-600">{link.description}</p>
-                <div className="mt-4 flex items-center gap-2 font-medium">
-                  Learn more <ExternalLink className="w-4 h-4" />
-                </div>
-              </a>
-            );
-          })}
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          </button>
           
-          {/* Left Column - FAQs */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <HelpCircle className="w-6 h-6 text-teal-600" />
-                Frequently Asked Questions
-              </h2>
+          {mobileMenuOpen && (
+            <div className="mt-2 bg-white border border-gray-200 rounded-lg p-2">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`w-full text-left px-4 py-3 rounded-lg ${
+                    activeTab === tab.id 
+                      ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white' 
+                      : 'hover:bg-gray-100'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
-              {faqs.map((category, categoryIndex) => (
-                <div key={categoryIndex} className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
-                    {category.category}
-                  </h3>
-                  <div className="space-y-2">
-                    {category.questions.map((faq, faqIndex) => {
-                      const key = `${categoryIndex}-${faqIndex}`;
-                      const isExpanded = expandedFaq === key;
+        <div className="flex flex-col lg:flex-row gap-6">
+          
+          {/* Desktop Sidebar */}
+          <div className="hidden lg:block w-64 flex-shrink-0">
+            <div className="bg-white rounded-xl border border-gray-200 p-2 sticky top-6">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-all mb-1 ${
+                    activeTab === tab.id 
+                      ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-md' 
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1">
+            <div className="bg-white rounded-xl border border-gray-200">
+              
+              {/* Getting Started Tab */}
+              {activeTab === 'getting-started' && (
+                <div className="p-4 md:p-6 space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">Getting Started</h2>
+                    <p className="text-sm text-gray-600">Quick links to help you navigate FlowDoors</p>
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search for help articles, tutorials, or FAQs..."
+                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                    />
+                  </div>
+
+                  {/* Quick Links Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {quickLinks.map((link) => {
+                      const Icon = link.icon;
                       return (
-                        <div key={key} className="border border-gray-200 rounded-lg overflow-hidden">
-                          <button
-                            onClick={() => setExpandedFaq(isExpanded ? null : key)}
-                            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors text-left"
-                          >
-                            <span className="font-medium text-gray-900">{faq.q}</span>
-                            {isExpanded ? (
-                              <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                            ) : (
-                              <ChevronRight className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                            )}
-                          </button>
-                          {isExpanded && (
-                            <div className="px-4 pb-4 text-gray-700 bg-gray-50">
-                              {faq.a}
-                            </div>
-                          )}
-                        </div>
+                        <button
+                          key={link.title}
+                          onClick={() => {
+                            if (link.title === 'Video Tutorials') setActiveTab('tutorials');
+                            else if (link.title === 'Contact Support') setActiveTab('contact');
+                            else if (link.title === 'Documentation') setActiveTab('resources');
+                          }}
+                          className={`p-5 rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg text-left ${colorMap[link.color]}`}
+                        >
+                          <Icon className="w-7 h-7 mb-2" />
+                          <h3 className="font-bold text-gray-900 mb-1">{link.title}</h3>
+                          <p className="text-sm text-gray-600">{link.description}</p>
+                        </button>
                       );
                     })}
                   </div>
-                </div>
-              ))}
-            </div>
 
-            {/* Video Tutorials */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <Video className="w-6 h-6 text-teal-600" />
-                Video Tutorials
-              </h2>
-              <div className="space-y-3">
-                {tutorials.map((tutorial, index) => (
-                  <button
-                    key={index}
-                    className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-teal-300 hover:bg-teal-50 transition-all group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                        <Video className="w-5 h-5 text-red-600" />
+                  <div className="pt-4 border-t">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Common First Steps</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
+                        <div className="w-6 h-6 rounded-full bg-teal-500 text-white flex items-center justify-center flex-shrink-0 font-semibold text-sm">1</div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-1">Create Your First Quote</h4>
+                          <p className="text-sm text-gray-600">Navigate to Quotes and click &quot;New Quote&quot; to get started</p>
+                        </div>
                       </div>
-                      <div className="text-left">
-                        <h3 className="font-semibold text-gray-900 group-hover:text-teal-600">
-                          {tutorial.title}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {tutorial.duration} • {tutorial.views} views
-                        </p>
+                      <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
+                        <div className="w-6 h-6 rounded-full bg-teal-500 text-white flex items-center justify-center flex-shrink-0 font-semibold text-sm">2</div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-1">Manage Customer Leads</h4>
+                          <p className="text-sm text-gray-600">View and organize leads from the Leads section</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
+                        <div className="w-6 h-6 rounded-full bg-teal-500 text-white flex items-center justify-center flex-shrink-0 font-semibold text-sm">3</div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-1">Review Dashboard Analytics</h4>
+                          <p className="text-sm text-gray-600">Check your performance metrics on the Dashboard</p>
+                        </div>
                       </div>
                     </div>
-                    <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-teal-600" />
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Contact & Resources */}
-          <div className="space-y-6">
-            
-            {/* Contact Support */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-teal-600" />
-                Contact Support
-              </h2>
-              
-              {ticketSubmitted ? (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center gap-2 text-green-800 font-semibold mb-2">
-                    <CheckCircle className="w-5 h-5" />
-                    Ticket Submitted!
                   </div>
-                  <p className="text-sm text-green-700">
-                    We&apos;ve received your message and will respond within 24 hours.
-                  </p>
                 </div>
-              ) : (
-                <form id="contact" onSubmit={handleTicketSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Issue Type</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none bg-white">
-                      <option>Technical Issue</option>
-                      <option>Feature Request</option>
-                      <option>Bug Report</option>
-                      <option>Account Question</option>
-                      <option>Other</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
-                    <input 
-                      type="text"
-                      placeholder="Brief description of your issue"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <textarea 
-                      rows={4}
-                      placeholder="Please provide details about your issue..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
-                    />
-                  </div>
-                  
-                  <button 
-                    type="submit"
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-lg font-semibold hover:opacity-90 transition-all"
-                  >
-                    <Send className="w-4 h-4" />
-                    Submit Ticket
-                  </button>
-                </form>
               )}
-              
-              <div className="mt-6 pt-6 border-t border-gray-200 space-y-3">
-                <div className="flex items-center gap-3 text-sm text-gray-700">
-                  <Mail className="w-5 h-5 text-gray-400" />
-                  <span>support@flowdoors.com</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-gray-700">
-                  <Phone className="w-5 h-5 text-gray-400" />
-                  <span>(555) 123-4567</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-gray-700">
-                  <Clock className="w-5 h-5 text-gray-400" />
-                  <span>Mon-Fri, 9am-6pm PT</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-              <div className="space-y-3">
-                <button className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-teal-300 hover:bg-teal-50 transition-all">
-                  <Bug className="w-5 h-5 text-red-600" />
-                  <span className="font-medium text-gray-900">Report a Bug</span>
-                </button>
-                <button className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-teal-300 hover:bg-teal-50 transition-all">
-                  <Lightbulb className="w-5 h-5 text-yellow-600" />
-                  <span className="font-medium text-gray-900">Suggest a Feature</span>
-                </button>
-                <button className="w-full flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-teal-300 hover:bg-teal-50 transition-all">
-                  <Download className="w-5 h-5 text-blue-600" />
-                  <span className="font-medium text-gray-900">Download User Guide</span>
-                </button>
-              </div>
-            </div>
+              {/* FAQs Tab */}
+              {activeTab === 'faqs' && (
+                <div className="p-4 md:p-6 space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                      <HelpCircle className="w-6 h-6 text-teal-600" />
+                      Frequently Asked Questions
+                    </h2>
+                    <p className="text-sm text-gray-600">Find answers to common questions</p>
+                  </div>
 
-            {/* System Status */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">System Status</h2>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">API Status</span>
-                  <span className="flex items-center gap-2 text-sm text-green-600 font-medium">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    Operational
-                  </span>
+                  {faqs.map((category, categoryIndex) => (
+                    <div key={categoryIndex} className="space-y-3">
+                      <h3 className="text-lg font-semibold text-gray-900 pb-2 border-b border-gray-200">
+                        {category.category}
+                      </h3>
+                      <div className="space-y-2">
+                        {category.questions.map((faq, faqIndex) => {
+                          const key = `${categoryIndex}-${faqIndex}`;
+                          const isExpanded = expandedFaq === key;
+                          return (
+                            <div key={key} className="border border-gray-200 rounded-lg overflow-hidden">
+                              <button
+                                onClick={() => setExpandedFaq(isExpanded ? null : key)}
+                                className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors text-left"
+                              >
+                                <span className="font-medium text-gray-900">{faq.q}</span>
+                                {isExpanded ? (
+                                  <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                                ) : (
+                                  <ChevronRight className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                                )}
+                              </button>
+                              {isExpanded && (
+                                <div className="px-4 pb-4 text-gray-700 bg-gray-50">
+                                  {faq.a}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Database</span>
-                  <span className="flex items-center gap-2 text-sm text-green-600 font-medium">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    Operational
-                  </span>
+              )}
+
+              {/* Video Tutorials Tab */}
+              {activeTab === 'tutorials' && (
+                <div className="p-4 md:p-6 space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                      <Video className="w-6 h-6 text-teal-600" />
+                      Video Tutorials
+                    </h2>
+                    <p className="text-sm text-gray-600">Watch step-by-step guides to master FlowDoors</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {tutorials.map((tutorial, index) => (
+                      <button
+                        key={index}
+                        className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-teal-300 hover:bg-teal-50 transition-all group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Video className="w-6 h-6 text-red-600" />
+                          </div>
+                          <div className="text-left">
+                            <h3 className="font-semibold text-gray-900 group-hover:text-teal-600">
+                              {tutorial.title}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              {tutorial.duration} • {tutorial.views} views
+                            </p>
+                          </div>
+                        </div>
+                        <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-teal-600 flex-shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="bg-gradient-to-r from-cyan-50 to-teal-50 rounded-lg border border-teal-200 p-6 text-center">
+                    <Video className="w-10 h-10 text-teal-600 mx-auto mb-3" />
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">More Tutorials Coming Soon</h3>
+                    <p className="text-sm text-gray-600">
+                      We&apos;re constantly adding new video tutorials. Subscribe to get notified!
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Email Service</span>
-                  <span className="flex items-center gap-2 text-sm text-green-600 font-medium">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    Operational
-                  </span>
+              )}
+
+              {/* Contact Support Tab */}
+              {activeTab === 'contact' && (
+                <div className="p-4 md:p-6 space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                      <MessageSquare className="w-6 h-6 text-teal-600" />
+                      Contact Support
+                    </h2>
+                    <p className="text-sm text-gray-600">Get help from our support team</p>
+                  </div>
+
+                  {/* Contact Form */}
+                  {ticketSubmitted ? (
+                    <div className="p-6 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center gap-2 text-green-800 font-semibold mb-2">
+                        <CheckCircle className="w-6 h-6" />
+                        Ticket Submitted Successfully!
+                      </div>
+                      <p className="text-sm text-green-700 mb-4">
+                        We&apos;ve received your message and will respond within 24 hours. Check your email for a confirmation.
+                      </p>
+                      <button
+                        onClick={() => setTicketSubmitted(false)}
+                        className="text-sm text-green-700 font-medium underline hover:no-underline"
+                      >
+                        Submit another ticket
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleTicketSubmit} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Issue Type</label>
+                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none bg-white">
+                          <option>Technical Issue</option>
+                          <option>Feature Request</option>
+                          <option>Bug Report</option>
+                          <option>Account Question</option>
+                          <option>Billing Question</option>
+                          <option>Other</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                        <input 
+                          type="text"
+                          placeholder="Brief description of your issue"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea 
+                          rows={6}
+                          placeholder="Please provide details about your issue..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
+                        />
+                      </div>
+                      
+                      <button 
+                        type="submit"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-lg font-semibold hover:opacity-90 transition-all"
+                      >
+                        <Send className="w-4 h-4" />
+                        Submit Ticket
+                      </button>
+                    </form>
+                  )}
+
+                  {/* Contact Information */}
+                  <div className="pt-6 border-t space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Other Ways to Reach Us</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <Mail className="w-6 h-6 text-gray-400 mb-2" />
+                        <p className="text-sm font-medium text-gray-900 mb-1">Email</p>
+                        <p className="text-sm text-gray-600">support@flowdoors.com</p>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <Phone className="w-6 h-6 text-gray-400 mb-2" />
+                        <p className="text-sm font-medium text-gray-900 mb-1">Phone</p>
+                        <p className="text-sm text-gray-600">(555) 123-4567</p>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <Clock className="w-6 h-6 text-gray-400 mb-2" />
+                        <p className="text-sm font-medium text-gray-900 mb-1">Hours</p>
+                        <p className="text-sm text-gray-600">Mon-Fri, 9am-6pm PT</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Quick Actions</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-red-300 hover:bg-red-50 transition-all">
+                        <Bug className="w-5 h-5 text-red-600 flex-shrink-0" />
+                        <span className="font-medium text-gray-900 text-sm">Report a Bug</span>
+                      </button>
+                      <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-yellow-300 hover:bg-yellow-50 transition-all">
+                        <Lightbulb className="w-5 h-5 text-yellow-600 flex-shrink-0" />
+                        <span className="font-medium text-gray-900 text-sm">Suggest Feature</span>
+                      </button>
+                      <button className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all">
+                        <Download className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                        <span className="font-medium text-gray-900 text-sm">User Guide</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Resources Tab */}
+              {activeTab === 'resources' && (
+                <div className="p-4 md:p-6 space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">Resources & Documentation</h2>
+                    <p className="text-sm text-gray-600">Access guides, documentation, and system information</p>
+                  </div>
+
+                  {/* Documentation Links */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-gray-900">Documentation</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <a
+                        href="#"
+                        className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-teal-300 hover:bg-teal-50 transition-all group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <FileText className="w-5 h-5 text-teal-600" />
+                          <span className="font-medium text-gray-900">Complete Documentation</span>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
+                      </a>
+                      <a
+                        href="#"
+                        className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-teal-300 hover:bg-teal-50 transition-all group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Book className="w-5 h-5 text-teal-600" />
+                          <span className="font-medium text-gray-900">API Reference</span>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
+                      </a>
+                      <a
+                        href="#"
+                        className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-teal-300 hover:bg-teal-50 transition-all group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Download className="w-5 h-5 text-teal-600" />
+                          <span className="font-medium text-gray-900">Download User Guide (PDF)</span>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
+                      </a>
+                      <a
+                        href="#"
+                        className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-teal-300 hover:bg-teal-50 transition-all group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <MessageSquare className="w-5 h-5 text-teal-600" />
+                          <span className="font-medium text-gray-900">Community Forum</span>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* System Status */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">System Status</h3>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">API Status</span>
+                        <span className="flex items-center gap-2 text-sm text-green-600 font-medium">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          Operational
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">Database</span>
+                        <span className="flex items-center gap-2 text-sm text-green-600 font-medium">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          Operational
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">Email Service</span>
+                        <span className="flex items-center gap-2 text-sm text-green-600 font-medium">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          Operational
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">File Storage</span>
+                        <span className="flex items-center gap-2 text-sm text-green-600 font-medium">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          Operational
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Resources */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Resources</h3>
+                    <div className="bg-gradient-to-r from-cyan-50 to-teal-50 rounded-lg border border-teal-200 p-6">
+                      <div className="flex items-start gap-4">
+                        <Book className="w-10 h-10 text-teal-600 flex-shrink-0" />
+                        <div>
+                          <h4 className="text-lg font-bold text-gray-900 mb-2">Need More Help?</h4>
+                          <p className="text-sm text-gray-700 mb-4">
+                            Check out our complete documentation for detailed guides, API references, and best practices.
+                          </p>
+                          <div className="flex flex-wrap gap-3">
+                            <a
+                              href="#"
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-lg font-semibold hover:opacity-90 transition-all text-sm"
+                            >
+                              View Documentation
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                            <a
+                              href="#"
+                              className="inline-flex items-center gap-2 px-4 py-2 border-2 border-teal-500 text-teal-600 rounded-lg font-semibold hover:bg-teal-50 transition-all text-sm"
+                            >
+                              Join Community
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
-
-        {/* Documentation Links */}
-        <div className="bg-gradient-to-r from-cyan-50 to-teal-50 rounded-xl border-2 border-teal-200 p-8">
-          <div className="text-center">
-            <Book className="w-12 h-12 text-teal-600 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Need More Help?</h2>
-            <p className="text-gray-700 mb-6">
-              Check out our complete documentation for detailed guides and API references
-            </p>
-            <div className="flex justify-center gap-4">
-              <a
-                href="#"
-                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-lg font-semibold hover:opacity-90 transition-all inline-flex items-center gap-2"
-              >
-                View Documentation
-                <ExternalLink className="w-4 h-4" />
-              </a>
-              <a
-                href="#"
-                className="px-6 py-3 border-2 border-teal-500 text-teal-600 rounded-lg font-semibold hover:bg-teal-50 transition-all"
-              >
-                Join Community Forum
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
+
 

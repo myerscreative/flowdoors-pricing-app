@@ -16,7 +16,7 @@ import {
   X
 } from 'lucide-react';
 import Image from 'next/image';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 function Sidebar() {

@@ -1,13 +1,18 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { toast } from '@/hooks/use-toast'
 import { useCurrentUserRole } from '@/hooks/useCurrentUserRole'
 import {
   getLeadRecipients,
   getQuoteRecipients,
   setAllNotificationRecipients,
 } from '@/lib/notificationSettings'
-import { toast } from '@/hooks/use-toast'
+import { Bell, Mail, Plus, Save, X } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 
 export default function NotificationsPage() {
   const { role, loading } = useCurrentUserRole()
@@ -118,7 +123,7 @@ export default function NotificationsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading...</div>
+        <div className="text-lg text-gray-600">Loading...</div>
       </div>
     )
   }
@@ -139,120 +144,138 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8">Notification Settings</h1>
+    <main className="p-6 space-y-6">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-flowdoors-charcoal-800 mb-2">Notification Settings</h1>
+        <p className="text-gray-600">Manage email notifications for leads and quotes</p>
+      </div>
 
       {isLoading ? (
         <div className="text-center py-8">
-          <div className="text-lg">Loading notification settings...</div>
+          <div className="text-lg text-gray-600">Loading notification settings...</div>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Lead Notification Emails */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4">
-              Lead Notification Emails
-            </h2>
-            <p className="text-gray-600 mb-4">
-              These emails will receive notifications when a new lead is
-              completed.
-            </p>
+          <Card className="shadow-md border-gray-200">
+            <CardHeader className="bg-gray-50 border-b border-gray-200">
+              <CardTitle className="text-flowdoors-charcoal-800 flex items-center gap-2">
+                <Mail className="h-5 w-5 text-flowdoors-blue-600" />
+                Lead Notification Emails
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <p className="text-gray-600 mb-6">
+                These emails will receive notifications when a new lead is completed.
+              </p>
 
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  value={leadInputValue}
-                  onChange={(e) => setLeadInputValue(e.target.value)}
-                  onKeyPress={(e) => handleKeyPress(e, 'lead')}
-                  placeholder="Enter email address and press Enter or comma"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  onClick={() => addEmail('lead')}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Add
-                </button>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {leadEmails.map((email) => (
-                  <div
-                    key={email}
-                    className="flex items-center bg-gray-200 rounded-full px-3 py-1"
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    type="email"
+                    value={leadInputValue}
+                    onChange={(e) => setLeadInputValue(e.target.value)}
+                    onKeyPress={(e) => handleKeyPress(e, 'lead')}
+                    placeholder="Enter email address and press Enter or comma"
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={() => addEmail('lead')}
+                    className="bg-gradient-to-r from-flowdoors-blue-600 to-flowdoors-blue-500 hover:from-flowdoors-blue-700 hover:to-flowdoors-blue-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
                   >
-                    <span className="text-sm">{email}</span>
-                    <button
-                      onClick={() => removeEmail(email, 'lead')}
-                      className="ml-2 text-xs text-red-600 hover:text-red-800"
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add
+                  </Button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {leadEmails.map((email) => (
+                    <Badge
+                      key={email}
+                      variant="secondary"
+                      className="flex items-center gap-2 bg-flowdoors-blue-50 text-flowdoors-blue-700 hover:bg-flowdoors-blue-100 px-3 py-1"
                     >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                      <span className="text-sm">{email}</span>
+                      <button
+                        onClick={() => removeEmail(email, 'lead')}
+                        className="hover:text-red-600 transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Quote Notification Emails */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4">
-              Quote Notification Emails
-            </h2>
-            <p className="text-gray-600 mb-4">
-              These emails will receive notifications when a quote is completed.
-            </p>
+          <Card className="shadow-md border-gray-200">
+            <CardHeader className="bg-gray-50 border-b border-gray-200">
+              <CardTitle className="text-flowdoors-charcoal-800 flex items-center gap-2">
+                <Bell className="h-5 w-5 text-flowdoors-green-600" />
+                Quote Notification Emails
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <p className="text-gray-600 mb-6">
+                These emails will receive notifications when a quote is completed.
+              </p>
 
-            <div className="space-y-4">
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  value={quoteInputValue}
-                  onChange={(e) => setQuoteInputValue(e.target.value)}
-                  onKeyPress={(e) => handleKeyPress(e, 'quote')}
-                  placeholder="Enter email address and press Enter or comma"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  onClick={() => addEmail('quote')}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Add
-                </button>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {quoteEmails.map((email) => (
-                  <div
-                    key={email}
-                    className="flex items-center bg-gray-200 rounded-full px-3 py-1"
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    type="email"
+                    value={quoteInputValue}
+                    onChange={(e) => setQuoteInputValue(e.target.value)}
+                    onKeyPress={(e) => handleKeyPress(e, 'quote')}
+                    placeholder="Enter email address and press Enter or comma"
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={() => addEmail('quote')}
+                    className="bg-gradient-to-r from-flowdoors-green-600 to-flowdoors-green-500 hover:from-flowdoors-green-700 hover:to-flowdoors-green-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
                   >
-                    <span className="text-sm">{email}</span>
-                    <button
-                      onClick={() => removeEmail(email, 'quote')}
-                      className="ml-2 text-xs text-red-600 hover:text-red-800"
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add
+                  </Button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {quoteEmails.map((email) => (
+                    <Badge
+                      key={email}
+                      variant="secondary"
+                      className="flex items-center gap-2 bg-flowdoors-green-50 text-flowdoors-green-700 hover:bg-flowdoors-green-100 px-3 py-1"
                     >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                      <span className="text-sm">{email}</span>
+                      <button
+                        onClick={() => removeEmail(email, 'quote')}
+                        className="hover:text-red-600 transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Save Button */}
-          <div className="flex justify-end">
-            <button
+          <div className="flex justify-end pt-4">
+            <Button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-gradient-to-r from-flowdoors-blue-600 to-flowdoors-blue-500 hover:from-flowdoors-blue-700 hover:to-flowdoors-blue-600 text-white shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
+              <Save className="h-4 w-4 mr-2" />
               {isSaving ? 'Saving...' : 'Save Changes'}
-            </button>
+            </Button>
           </div>
         </div>
       )}
-    </div>
+    </main>
   )
 }
