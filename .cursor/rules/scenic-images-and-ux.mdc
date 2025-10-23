@@ -1,0 +1,16 @@
+---
+description: Scenic Pricing — Images & UX specifics
+globs: ["src/app/**", "src/components/**"]
+alwaysApply: false
+---
+
+# Images & UX
+
+## Images
+- Use Next `<Image />` for local/static assets
+- For dynamic/external sources where `<Image />` is not viable, document why and add a **targeted** disable for the `no-img-element` rule
+
+## UX Consistency
+- Apple-clean aesthetic for quoting UI
+- Keep rounded corners and clean spacing
+- Avoid drive-by visual changes in lint/type fixes

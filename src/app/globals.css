@@ -1,0 +1,163 @@
+/* src/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== Base Theme Tokens ===== */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
+  }
+}
+
+/* Custom font variables */
+.font-body {
+  font-family: var(--font-dm-sans), sans-serif;
+}
+.font-heading {
+  font-family: var(--font-playfair-display), serif;
+}
+
+/* TODO: Add custom component styles for door configurator, pricing tables, etc. */
+
+/* ============================================================================
+   Quote PDF — Screen Preview + Print (STRICTLY SCOPED TO #quote-pdf-root)
+   -------------------------------------------------------------------------- */
+
+/* Global print fidelity + base type inside the printable root */
+#quote-pdf-root {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  font-size: 11pt;
+  line-height: 1.35;
+  color: #0f172a; /* slate-900 */
+}
+
+/* Common helpers (apply both screen & print) */
+#quote-pdf-root .print-grid {
+  display: grid;
+  grid-template-columns: 22% 56% 22%;
+  gap: 1.25rem; /* ~20px */
+}
+
+#quote-pdf-root .print-avoid-break {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+#quote-pdf-root h3 {
+  font-size: 15pt;
+  line-height: 1.2;
+  margin: 0;
+}
+
+/* ---- Screen-only page canvas so users see “real pages” ---- */
+@media screen {
+  #quote-pdf-root {
+    background: #f8fafc; /* subtle app bg */
+    padding: 24px;
+  }
+  #quote-pdf-root .print-page {
+    width: 8.5in;
+    min-height: 11in;
+    margin: 0 auto 24px;
+    background: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.6); /* slate-300 */
+    border-radius: 12px;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.05),
+      0 8px 24px rgba(0, 0, 0, 0.08);
+    overflow: hidden; /* only for the on-screen card look */
+  }
+  #quote-pdf-root .screen-only {
+    display: inline-flex !important;
+  }
+}
+
+/* ---- Real print/PDF rules ---- */
+@media print {
+  /* Paper size + margins (global at print time) */
+  @page {
+    size: Letter;
+    margin: 0.5in;
+  }
+
+  #quote-pdf-root .print-page {
+    /* Ensure one item per page */
+    break-after: page;
+    page-break-after: always; /* legacy */
+    margin: 0 !important; /* rely on @page margins */
+    border: 1px solid #cbd5e1; /* subtle frame */
+    box-shadow: none !important;
+    overflow: visible !important; /* avoid clipping across page boundaries */
+    min-height: auto;
+    background: #ffffff;
+  }
+  #quote-pdf-root .print-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  /* Slightly tighter grid spacing in print */
+  #quote-pdf-root .print-grid {
+    gap: 18px;
+  }
+
+  /* Hide preview-only UI */
+  #quote-pdf-root .screen-only {
+    display: none !important;
+  }
+}

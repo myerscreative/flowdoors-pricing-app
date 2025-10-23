@@ -1,0 +1,862 @@
+// src/components/admin/QuotesGrid.tsx
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { format, addDays } from 'date-fns'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
+import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
+import { User, Calendar, Notebook, Search, CheckCircle } from 'lucide-react'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Calendar as CalendarComponent } from '@/components/ui/calendar'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Checkbox } from '@/components/ui/checkbox'
+import type { Quote as QuoteType, QuoteTask } from '@/types/quote'
+import { Salesperson } from '@/services/salesService'
+import {
+  STATUS_FILTERS,
+  type Status,
+} from '@/components/admin/quotes-constants'
+import NotesPanel, {
+  type Note as NotesPanelNote,
+} from '@/components/notes/NotesPanel'
+import { listNotes, type Note as NotesApiNote } from '@/lib/notesApi'
+
+/* ---------- Small runtime-safe helpers (no `any`) ---------- */
+function coerceDate(value: unknown): Date | undefined {
+  if (value instanceof Date) return value
+  if (
+    value &&
+    typeof value === 'object' &&
+    'toDate' in (value as Record<string, unknown>)
+  ) {
+    const fn = (value as { toDate?: () => Date }).toDate
+    if (typeof fn === 'function') return fn()
+  }
+  if (typeof value === 'string' || typeof value === 'number') {
+    const d = new Date(value)
+    if (!Number.isNaN(d.getTime())) return d
+  }
+  return undefined
+}
+function getNumberProp(obj: unknown, key: string): number | undefined {
+  if (obj && typeof obj === 'object') {
+    const v = (obj as Record<string, unknown>)[key]
+    if (typeof v === 'number') return v
+  }
+  return undefined
+}
+function getFirstString(obj: unknown, keys: string[]): string | undefined {
+  if (!obj || typeof obj !== 'object') return undefined
+  const rec = obj as Record<string, unknown>
+  for (const k of keys) {
+    const v = rec[k]
+    if (typeof v === 'string') return v
+  }
+  return undefined
+}
+
+/** Rep helpers: resolve name or ID consistently */
+const normalizeId = (s: string) => s.replace(/^PS-/i, 'SP-')
+function repNameFromQuote(
+  quote: QuoteType,
+  salespeople: Salesperson[]
+): string {
+  const raw = (quote as unknown as { salesRep?: string }).salesRep ?? ''
+  const str = typeof raw === 'string' ? raw.trim() : ''
+  if (!str) return 'Unassigned'
+  // If it's already a human name, prefer it
+  const byName = salespeople.find((sp) => sp.name === str)
+  if (byName) return byName.name
+  // Try ID matches (supports PS- → SP- normalization)
+  const candidates = [str, normalizeId(str)]
+  for (const cand of candidates) {
+    const hit = salespeople.find(
+      (sp) =>
+        sp.salesperson_id === cand ||
+        (sp as unknown as { id?: string }).id === cand
+    )
+    if (hit) return hit.name
+  }
+  return str // graceful fallback
+}
+function repIdFromQuote(
+  quote: QuoteType,
+  salespeople: Salesperson[]
+): string | undefined {
+  const raw = (quote as unknown as { salesRep?: string }).salesRep ?? ''
+  const str = typeof raw === 'string' ? raw.trim() : ''
+  if (!str) return undefined
+  // If name is stored, map to its salesperson_id
+  const byName = salespeople.find((sp) => sp.name === str)
+  if (byName) return byName.salesperson_id
+  // If ID is stored, normalize and return the canonical salesperson_id if found
+  const candidates = [str, normalizeId(str)]
+  for (const cand of candidates) {
+    const byId = salespeople.find(
+      (sp) =>
+        sp.salesperson_id === cand ||
+        (sp as unknown as { id?: string }).id === cand
+    )
+    if (byId) return byId.salesperson_id
+  }
+  return undefined
+}
+/* ----------------------------------------------------------- */
+
+interface VisibleFields {
+  company: boolean
+  phone: boolean
+  zip: boolean
+  lastContact: boolean
+  nextFollowUp: boolean
+  notes: boolean
+  tasks: boolean
+  numberOfItems: boolean
+}
+
+interface QuotesGridProps {
+  quotes: QuoteType[]
+  isLoading: boolean
+  salespeople: Salesperson[]
+  visibleFields: VisibleFields
+  isMinimized: boolean
+  onUpdateFollowUp: (_quoteId: string, _newDate: Date) => void
+  onUpdateStatus: (_quoteId: string, _newStatus: Status) => void
+  onUpdateSalesRep: (
+    _quoteId: string,
+    _salesRepId: string,
+    _salesRepName: string
+  ) => void
+  onAddNote: (_quoteId: string, _noteContent: string) => void
+  onAddTask: (_quoteId: string, _taskContent: string, _dueDate: Date) => void
+  onToggleTask: (
+    _quoteId: string,
+    _taskId: string,
+    _isCompleted: boolean
+  ) => void
+  onDeleteQuote?: (_quoteId: string) => void
+}
+
+// Convert NotesApiNote → NotesPanelNote (shape expected by NotesPanel)
+const convertToNotesPanelNote = (apiNote: NotesApiNote): NotesPanelNote => ({
+  id: apiNote.id,
+  content: apiNote.content,
+  createdAt:
+    getFirstString(apiNote, ['createdAt', 'timestamp', 'created_at']) ??
+    new Date().toISOString(),
+})
+
+export const getStatusClasses = (status: string) => {
+  const statusLower = status.toLowerCase()
+  switch (statusLower) {
+    case 'new':
+      return {
+        customClass: 'bg-blue-100 text-blue-800 border-blue-200',
+        buttonColorClass: 'bg-blue-600',
+      }
+    case 'hot':
+      return {
+        customClass: 'bg-red-100 text-red-800 border-red-200',
+        buttonColorClass: 'bg-red-600',
+      }
+    case 'warm':
+      return {
+        customClass: 'bg-amber-100 text-amber-800 border-amber-200',
+        buttonColorClass: 'bg-yellow-400',
+      }
+    case 'cold':
+      return {
+        customClass: 'bg-green-100 text-green-800 border-green-200',
+        buttonColorClass: 'bg-green-500',
+      }
+    case 'hold':
+      return {
+        customClass: 'bg-gray-100 text-gray-800 border-gray-200',
+        buttonColorClass: 'bg-gray-500',
+      }
+    case 'archived':
+      return {
+        customClass: 'bg-gray-100 text-gray-500 border-gray-200',
+        buttonColorClass: 'bg-gray-800',
+      }
+    default:
+      return {
+        customClass: 'bg-gray-100 text-gray-700 border-gray-200',
+        buttonColorClass: 'bg-gray-400',
+      }
+  }
+}
+
+const StatusBadge = ({ status }: { status: string }) => {
+  const { customClass } = getStatusClasses(status)
+  return (
+    <span
+      className={cn(
+        'px-2.5 py-1 rounded-full text-[11px] font-semibold border uppercase tracking-wide',
+        customClass
+      )}
+    >
+      {status}
+    </span>
+  )
+}
+
+/** Unified "Activity" dialog: search + view + add Notes/Tasks */
+const ActivityDialog = ({
+  quote,
+  onAddTask,
+  onToggleTask,
+}: {
+  quote: QuoteType
+  onAddTask: QuotesGridProps['onAddTask']
+  onToggleTask: QuotesGridProps['onToggleTask']
+}) => {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [taskDraft, setTaskDraft] = useState('')
+  const [dueDate, setDueDate] = useState<Date | undefined>(
+    addDays(new Date(), 1)
+  )
+
+  const tasks: QuoteTask[] = quote.tasks || []
+  const filteredTasks = tasks.filter((t: QuoteTask) =>
+    t.content.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+  const tasksCount = tasks.length
+
+  // Robust NotesPanel initial data (global for now)
+  const [initialNotes, setInitialNotes] = useState<NotesPanelNote[]>([])
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const data = await listNotes()
+        if (mounted && data) {
+          const convertedNotes = data.map(convertToNotesPanelNote)
+          setInitialNotes(convertedNotes)
+        }
+      } catch (err) {
+        // Non-fatal; NotesPanel can start empty
+        console.error('Failed to load notes:', err)
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="rounded-lg gap-2">
+          <Notebook className="h-4 w-4" />
+          <span className="text-xs text-gray-600">
+            Notes · Tasks ({tasksCount})
+          </span>
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Activity for Quote {quote.quoteNumber}</DialogTitle>
+        </DialogHeader>
+
+        <div className="relative my-2">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search notes and tasks…"
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <Tabs defaultValue="notes">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="notes">Notes</TabsTrigger>
+            <TabsTrigger value="tasks">
+              Tasks ({filteredTasks.length}/{tasksCount})
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Notes tab: robust NotesPanel (Prisma/SQLite) */}
+          <TabsContent value="notes" className="mt-4 space-y-4">
+            <NotesPanel initialNotes={initialNotes} />
+          </TabsContent>
+
+          {/* Tasks tab: add + list */}
+          <TabsContent value="tasks" className="mt-4 space-y-4">
+            <div className="grid gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="task-draft">Task Description</Label>
+                <Input
+                  id="task-draft"
+                  value={taskDraft}
+                  onChange={(e) => setTaskDraft(e.target.value)}
+                  placeholder="e.g. Follow up on quote"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Due Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="justify-start text-left font-normal"
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {dueDate ? (
+                        format(dueDate, 'PPP')
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <CalendarComponent
+                      mode="single"
+                      selected={dueDate}
+                      onSelect={setDueDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  onClick={() => {
+                    if (!taskDraft.trim() || !dueDate) return
+                    onAddTask(quote.id, taskDraft.trim(), dueDate)
+                    setTaskDraft('')
+                    setDueDate(addDays(new Date(), 1))
+                  }}
+                  disabled={!taskDraft.trim() || !dueDate}
+                >
+                  Save Task
+                </Button>
+              </div>
+            </div>
+
+            <div className="max-h-[360px] overflow-y-auto">
+              {filteredTasks.length ? (
+                <div className="space-y-4">
+                  {filteredTasks
+                    .sort(
+                      (a: QuoteTask, b: QuoteTask) =>
+                        new Date(a.dueDate).getTime() -
+                        new Date(b.dueDate).getTime()
+                    )
+                    .map((task: QuoteTask) => (
+                      <div
+                        key={task.id}
+                        className="flex items-center space-x-4"
+                      >
+                        <Checkbox
+                          id={`task-${task.id}`}
+                          checked={task.completed}
+                          onCheckedChange={(checked) =>
+                            onToggleTask(quote.id, task.id, !!checked)
+                          }
+                        />
+                        <div className="flex-grow">
+                          <Label
+                            htmlFor={`task-${task.id}`}
+                            className={cn(
+                              'font-medium',
+                              task.completed &&
+                                'line-through text-muted-foreground'
+                            )}
+                          >
+                            {task.content}
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Due:{' '}
+                            {format(
+                              coerceDate(task.dueDate) ?? new Date(),
+                              'PPP'
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground py-10">
+                  No tasks found.
+                </p>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+type QuoteCardProps = {
+  quote: QuoteType
+  salespeople: Salesperson[]
+  visibleFields: VisibleFields
+  isMinimized: boolean
+  onUpdateStatus: QuotesGridProps['onUpdateStatus']
+  onUpdateFollowUp: QuotesGridProps['onUpdateFollowUp']
+  onUpdateSalesRep: QuotesGridProps['onUpdateSalesRep']
+  onAddNote: QuotesGridProps['onAddNote']
+  onAddTask: QuotesGridProps['onAddTask']
+  onToggleTask: QuotesGridProps['onToggleTask']
+  onDeleteQuote?: QuotesGridProps['onDeleteQuote']
+}
+
+const QuoteCard = ({
+  quote,
+  salespeople,
+  visibleFields,
+  isMinimized,
+  onUpdateStatus,
+  onUpdateFollowUp,
+  onUpdateSalesRep,
+  // NOTE: intentionally not destructuring onAddNote to avoid an unused local variable
+  onAddTask,
+  onToggleTask,
+  onDeleteQuote,
+}: QuoteCardProps) => {
+  const { customClass } = getStatusClasses(quote.status)
+  const customerName = `${quote.firstName ?? ''} ${quote.lastName ?? ''}`.trim()
+
+  if (isMinimized) {
+    // Compact, fixed set of fields (Customize View has no effect here)
+    const amount = getNumberProp(quote, 'quoteAmount')
+    const followUp = coerceDate(quote.followUpDate)
+
+    return (
+      <div className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-xs font-mono text-gray-500">
+            Quote #:{' '}
+            <span className="font-semibold text-gray-700">
+              {quote.quoteNumber ?? '—'}
+            </span>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button>
+                <StatusBadge status={quote.status} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {STATUS_FILTERS.map((statusOption: Status) => (
+                <DropdownMenuItem
+                  key={statusOption}
+                  onClick={() => onUpdateStatus(quote.id, statusOption)}
+                >
+                  <CheckCircle
+                    className={cn(
+                      'mr-2 h-4 w-4',
+                      quote.status === statusOption
+                        ? 'opacity-100'
+                        : 'opacity-0'
+                    )}
+                  />
+                  {statusOption}
+                </DropdownMenuItem>
+              ))}
+              {onDeleteQuote && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-red-600"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      const ok = window.confirm(
+                        'Delete this quote? This will move it to Deleted Quotes.'
+                      )
+                      if (ok) onDeleteQuote(quote.id)
+                    }}
+                  >
+                    Delete
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <h3 className="text-lg font-semibold tracking-tight text-gray-900 mb-1">
+          {customerName || '—'}
+        </h3>
+        {quote.referralCodeCustomer && (
+          <div className="mb-2">
+            <span className="text-[10px] px-2 py-1 rounded bg-slate-100 border text-slate-700">
+              Ref: {quote.referralCodeCustomer}
+            </span>
+          </div>
+        )}
+
+        <div className="text-xl font-bold tracking-tight text-gray-900 mb-3">
+          {typeof amount === 'number'
+            ? amount.toLocaleString('en-US', {
+                style: 'currency',
+                currency: 'USD',
+              })
+            : '—'}
+        </div>
+
+        <div className="text-sm text-gray-700 space-y-1.5 mb-4">
+          <div className="flex items-center gap-2">
+            <User className="w-4 h-4 text-gray-400" />
+            <span>Salesperson: {repNameFromQuote(quote, salespeople)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-gray-400" />
+            <span>Follow-up: {followUp ? format(followUp, 'PP') : 'N/A'}</span>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <ActivityDialog
+            quote={quote}
+            onAddTask={onAddTask}
+            onToggleTask={onToggleTask}
+          />
+          <Button asChild variant="secondary" className="ml-auto">
+            <Link href={`/admin/quotes/${quote.id}`}>View</Link>
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // Expanded card with optional fields controlled by visibleFields
+  const amount = getNumberProp(quote, 'quoteAmount')
+  return (
+    <div className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-200 border border-gray-100">
+      {/* Header row (status + created date + entered-stage date) */}
+      <div className="flex justify-between items-center mb-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button>
+              <span
+                className={cn(
+                  'px-2.5 py-1 rounded-full text-[11px] font-semibold border uppercase tracking-wide',
+                  customClass
+                )}
+              >
+                {quote.status}
+              </span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {STATUS_FILTERS.map((statusOption: Status) => (
+              <DropdownMenuItem
+                key={statusOption}
+                onClick={() => onUpdateStatus(quote.id, statusOption)}
+              >
+                <CheckCircle
+                  className={cn(
+                    'mr-2 h-4 w-4',
+                    quote.status === statusOption ? 'opacity-100' : 'opacity-0'
+                  )}
+                />
+                {statusOption}
+              </DropdownMenuItem>
+            ))}
+            {onDeleteQuote && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-red-600"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const ok = window.confirm(
+                      'Delete this quote? This will move it to Deleted Quotes.'
+                    )
+                    if (ok) onDeleteQuote(quote.id)
+                  }}
+                >
+                  Delete
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <div className="text-right">
+          <div className="text-xs text-gray-400 font-medium">
+            {quote.createdAt
+              ? format(coerceDate(quote.createdAt) ?? new Date(), 'PP')
+              : '—'}
+          </div>
+          <div className="text-[11px] text-gray-400">
+            {(() => {
+              try {
+                const status = String(quote.status || '')
+                const stageDates = (
+                  quote as unknown as { stageDates?: Record<string, unknown> }
+                ).stageDates
+                if (stageDates && typeof stageDates === 'object') {
+                  const val = stageDates[status]
+                  const d = coerceDate(val)
+                  if (d) return `Entered: ${format(d, 'PP')}`
+                }
+                return null
+              } catch {
+                return null
+              }
+            })()}
+          </div>
+        </div>
+      </div>
+
+      {/* Quote number + customer */}
+      <div className="text-[11px] font-mono text-gray-500 mb-1">
+        Quote #:{' '}
+        <span className="font-semibold text-gray-700">
+          {quote.quoteNumber ?? '—'}
+        </span>
+      </div>
+      <h3 className="text-xl font-semibold tracking-tight text-gray-900 mb-2">
+        {customerName || '—'}
+      </h3>
+      {quote.referralCodeCustomer && (
+        <div className="mb-3">
+          <span className="text-[10px] px-2 py-1 rounded bg-slate-100 border text-slate-700">
+            Ref: {quote.referralCodeCustomer}
+          </span>
+        </div>
+      )}
+
+      {/* Amount */}
+      <div className="text-2xl font-bold tracking-tight text-gray-900 mb-4">
+        {typeof amount === 'number'
+          ? amount.toLocaleString('en-US', {
+              style: 'currency',
+              currency: 'USD',
+            })
+          : '—'}
+      </div>
+
+      {/* Rep (always shown in expanded) */}
+      <div className="space-y-2 text-sm text-gray-700 mb-3">
+        <div className="flex items-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 cursor-pointer hover:text-blue-600">
+                <User className="w-4 h-4 text-gray-400" />
+                <span className="font-medium">Rep:</span>
+                <span className="font-normal">
+                  {repNameFromQuote(quote, salespeople)}
+                </span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>Assign Sales Rep</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup
+                value={repIdFromQuote(quote, salespeople)}
+                onValueChange={(spId) =>
+                  onUpdateSalesRep(
+                    quote.id,
+                    spId,
+                    salespeople.find((sp) => sp.salesperson_id === spId)
+                      ?.name || 'Unassigned'
+                  )
+                }
+              >
+                {salespeople.map((sp) => (
+                  <DropdownMenuRadioItem key={sp.id} value={sp.salesperson_id}>
+                    {sp.name}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Follow-up editor shown only if enabled in Customize View */}
+        {visibleFields.nextFollowUp && (
+          <div className="flex items-center">
+            <Popover>
+              <PopoverContent className="w-auto p-0">
+                {(() => {
+                  const followUpSelected = coerceDate(quote.followUpDate)
+                  return (
+                    <CalendarComponent
+                      mode="single"
+                      selected={followUpSelected}
+                      onSelect={(date) =>
+                        date && onUpdateFollowUp(quote.id, date)
+                      }
+                      initialFocus
+                    />
+                  )
+                })()}
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
+      </div>
+
+      {/* Optional details list */}
+      {(() => {
+        const showAny =
+          visibleFields.company ||
+          visibleFields.phone ||
+          visibleFields.zip ||
+          visibleFields.lastContact ||
+          visibleFields.notes ||
+          visibleFields.tasks ||
+          visibleFields.numberOfItems
+
+        if (!showAny) return null
+
+        const openTasks = (quote.tasks ?? []).filter(
+          (t: QuoteTask) => !t.completed
+        ).length
+
+        return (
+          <ul className="text-sm text-muted-foreground space-x-3 flex flex-wrap">
+            {visibleFields.company && <li>Company: {quote.company}</li>}
+            {visibleFields.phone && <li>Phone: {quote.phone}</li>}
+            {visibleFields.zip && <li>ZIP: {quote.zip}</li>}
+            {visibleFields.lastContact && (
+              <li>
+                Last contact:{' '}
+                {quote.lastContact
+                  ? typeof quote.lastContact === 'string'
+                    ? quote.lastContact
+                    : (coerceDate(quote.lastContact)?.toLocaleDateString() ??
+                      'Never')
+                  : 'Never'}
+              </li>
+            )}
+            {visibleFields.notes && <li>Notes: {quote.notes?.length ?? 0}</li>}
+            {visibleFields.tasks && <li>Open tasks: {openTasks}</li>}
+            {visibleFields.numberOfItems && (
+              <li>Items: {quote.numberOfItems ?? 0}</li>
+            )}
+          </ul>
+        )
+      })()}
+
+      {/* Activity + CTA */}
+      <div className="mb-2 flex items-center justify-between">
+        <ActivityDialog
+          quote={quote}
+          onAddTask={onAddTask}
+          onToggleTask={onToggleTask}
+        />
+        {onDeleteQuote && (
+          <button
+            className="text-xs text-red-600 hover:underline"
+            onClick={(e) => {
+              e.preventDefault()
+              const ok = window.confirm(
+                'Delete this quote? This will move it to Deleted Quotes.'
+              )
+              if (ok) onDeleteQuote(quote.id)
+            }}
+          >
+            Delete
+          </button>
+        )}
+      </div>
+
+      <Button
+        asChild
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors duration-200 h-auto"
+      >
+        <Link href={`/admin/quotes/${quote.id}`}>View Details</Link>
+      </Button>
+    </div>
+  )
+}
+
+export function QuotesGrid({
+  quotes,
+  isLoading,
+  salespeople,
+  visibleFields,
+  onUpdateFollowUp,
+  onUpdateStatus,
+  onUpdateSalesRep,
+  onAddNote,
+  onAddTask,
+  onToggleTask,
+  isMinimized,
+  onDeleteQuote,
+}: QuotesGridProps) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Skeleton key={i} className="w-full rounded-2xl h-80" />
+        ))}
+      </div>
+    )
+  }
+
+  if (quotes.length === 0) {
+    return (
+      <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm py-32">
+        <div className="flex flex-col items-center gap-1 text-center">
+          <h3 className="text-2xl font-bold tracking-tight">No Quotes Found</h3>
+          <p className="text-sm text-muted-foreground">
+            No quotes match your current search and filter criteria.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className={cn(
+        'grid gap-6',
+        isMinimized
+          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+          : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+      )}
+    >
+      {quotes.map((quote) => (
+        <QuoteCard
+          key={quote.id}
+          quote={quote}
+          visibleFields={visibleFields}
+          isMinimized={isMinimized}
+          onUpdateFollowUp={onUpdateFollowUp}
+          onUpdateStatus={onUpdateStatus}
+          onUpdateSalesRep={onUpdateSalesRep}
+          onAddNote={onAddNote}
+          onAddTask={onAddTask}
+          onToggleTask={onToggleTask}
+          salespeople={salespeople}
+          onDeleteQuote={onDeleteQuote}
+        />
+      ))}
+    </div>
+  )
+}

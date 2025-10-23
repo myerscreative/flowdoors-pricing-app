@@ -1,0 +1,76 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && 
+             request.auth.token.role in ['administrator', 'manager'];
+    }
+    
+    function isSalesOrAdmin() {
+      return isSignedIn() && 
+             request.auth.token.role in ['administrator', 'manager', 'salesperson'];
+    }
+    
+    function isMarketing() {
+      return isSignedIn() && 
+             request.auth.token.role in ['administrator', 'manager', 'marketing'];
+    }
+    
+    // Quotes collection
+    match /quotes/{quoteId} {
+      // Anyone can create quotes (for the quoter tool)
+      allow create: if true;
+      
+      // Sales and admin can read and update quotes
+      allow read: if isSalesOrAdmin();
+      allow update: if isSalesOrAdmin();
+      
+      // Only admins can delete
+      allow delete: if isAdmin();
+    }
+    
+    // Quote counters
+    match /quote_counters/{counterId} {
+      allow read: if true;
+      allow write: if true; // Controlled by server logic
+    }
+    
+    // Deleted quotes
+    match /deleted_quotes/{quoteId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // Leads collection
+    match /leads/{leadId} {
+      allow create: if true; // Public form submissions
+      allow read: if isMarketing();
+      allow update: if isMarketing();
+      allow delete: if isAdmin();
+    }
+    
+    // Salespeople collection
+    match /salespeople/{salespersonId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || request.auth.uid == userId;
+    }
+    
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

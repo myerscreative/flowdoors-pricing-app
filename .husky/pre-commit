@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Run lint-staged (auto-fix staged files)
+pnpm lint-staged
+
+# Run lint and typecheck – block commit if they fail
+pnpm lint && pnpm typecheck

@@ -1,0 +1,26 @@
+---
+description: Scenic Pricing — Core rules (Next.js 15, providers, hygiene)
+globs: ["src/app/**", "next.config.*", "package.json"]
+alwaysApply: true
+---
+
+# Scenic Doors Pricing App — Core
+
+## Stack & Scripts
+- **Next.js 15 (App Router) + TypeScript + Tailwind**, Firebase optional
+- Scripts: `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm typecheck`
+
+## Providers
+- `src/app/providers.tsx` **must** mount `QuoteProvider`
+
+## Lint/Type Hygiene
+- No `any`; prefix intentionally unused variables/params with `_`
+- Correct hook deps; fix stale state
+- Prefer Next `<Image />` for local assets; for legit external/dynamic `<img>`, add a **targeted** `/* eslint-disable-next-line @next/next/no-img-element */` only above that line
+
+## Acceptance (each step)
+- Dev/build run clean
+- Provide explicit URLs/log lines/tests for verification
+
+## Notes
+- Dashboard charts populate only when `quotes` collection has data; seed 2–3 quotes if empty

@@ -1,0 +1,43 @@
+{
+  "extends": ["next/core-web-vitals", "next/typescript"],
+  "ignorePatterns": [
+    ".next/**",
+    "dist/**",
+    "out/**",
+    "node_modules/**",
+    "src/generated/**"
+  ],
+  "rules": {
+    /* Too noisy while refactoring — re-enable later per file if needed */
+    "@typescript-eslint/no-explicit-any": "off",
+
+    /* Keep unused vars visible but non-blocking; allow prefixed underscores to silence */
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+
+    /* These create lots of false positives in content-heavy JSX */
+    "react/no-unescaped-entities": "off",
+
+    /* Useful but not fatal during iteration */
+    "react-hooks/exhaustive-deps": "warn",
+    "@next/next/no-img-element": "warn",
+    "jsx-a11y/alt-text": "warn",
+
+    /* Reasonable relaxation */
+    "@typescript-eslint/no-empty-object-type": "off",
+    "@typescript-eslint/no-require-imports": "warn",
+    "@typescript-eslint/ban-ts-comment": [
+      "warn",
+      {
+        "ts-expect-error": "allow-with-description",
+        "minimumDescriptionLength": 5
+      }
+    ]
+  }
+}

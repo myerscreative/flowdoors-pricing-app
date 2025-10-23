@@ -1,0 +1,108 @@
+// src/lib/attribution.ts
+
+export type Attribution = Record<string, string | number | boolean | null>
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
+}
+
+function coerceValue(v: unknown): string | number | boolean | null | undefined {
+  if (v === null) return null
+  const t = typeof v
+  if (t === 'string' || t === 'number' || t === 'boolean')
+    return v as string | number | boolean
+  return undefined // ignore nested objects/arrays/functions
+}
+
+function parseCookieMap(): Record<string, string> {
+  if (typeof document === 'undefined') return {}
+  const out: Record<string, string> = {}
+  const raw = document.cookie || ''
+  for (const part of raw.split(';')) {
+    const [k, ...rest] = part.split('=')
+    if (!k) continue
+    const key = k.trim()
+    const val = rest.join('=').trim()
+    if (!key) continue
+    try {
+      out[key] = decodeURIComponent(val)
+    } catch {
+      out[key] = val
+    }
+  }
+  return out
+}
+
+function safeParseJSON(input: string): unknown {
+  try {
+    return JSON.parse(input)
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Reads attribution info on the client.
+ * Looks for:
+ *  1) localStorage["sc_attrib"] (JSON)
+ *  2) cookie "sc_attrib" (JSON)
+ *  3) falls back to current URL params and referrer
+ */
+export function readAttributionClient(): Attribution {
+  if (typeof window === 'undefined') return {}
+
+  const out: Attribution = {}
+
+  // 1) localStorage
+  try {
+    const ls = window.localStorage.getItem('sc_attrib')
+    const parsed = ls ? safeParseJSON(ls) : undefined
+    if (isRecord(parsed)) {
+      for (const [k, v] of Object.entries(parsed)) {
+        const cv = coerceValue(v)
+        if (cv !== undefined) out[k] = cv
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+
+  // 2) cookie
+  const cookies = parseCookieMap()
+  if (cookies.sc_attrib) {
+    const parsed = safeParseJSON(cookies.sc_attrib)
+    if (isRecord(parsed)) {
+      for (const [k, v] of Object.entries(parsed)) {
+        const cv = coerceValue(v)
+        if (cv !== undefined && out[k] === undefined) out[k] = cv
+      }
+    }
+  }
+
+  // 3) URL params (fallback)
+  try {
+    const url = new URL(window.location.href)
+    const p = url.searchParams
+    const possible = [
+      'utm_source',
+      'utm_medium',
+      'utm_campaign',
+      'utm_term',
+      'utm_content',
+    ]
+    for (const key of possible) {
+      const val = p.get(key)
+      if (val && out[key] === undefined) out[key] = val
+    }
+    if (out.referrer === undefined && document.referrer) {
+      out.referrer = document.referrer
+    }
+    if (out.landing_path === undefined) {
+      out.landing_path = window.location.pathname || '/'
+    }
+  } catch {
+    /* ignore */
+  }
+
+  return out
+}

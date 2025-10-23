@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+pnpm typecheck
+# pnpm lint   # uncomment if you also want linting

@@ -1,0 +1,34 @@
+// FlowDoors Prisma Schema
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL")
+}
+
+// --- Notes persistence ---
+model Note {
+  id          String           @id @default(cuid())
+  content     String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  attachments NoteAttachment[]
+}
+
+model NoteAttachment {
+  id        String   @id @default(cuid())
+  noteId    String
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  name      String
+  type      String
+  size      Int
+  url       String
+  isImage   Boolean
+  createdAt DateTime @default(now())
+}

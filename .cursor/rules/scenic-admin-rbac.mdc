@@ -1,0 +1,23 @@
+---
+description: Scenic Pricing — Admin RBAC (roles, routes, claims)
+globs: ["src/app/admin/**", "functions/src/**"]
+alwaysApply: false
+---
+
+# Admin RBAC
+
+## Roles & Access
+- **Salesperson**: see own quotes/sales; cannot access user creation
+- **Manager**: see all quotes/sales + access `/admin/create-user`
+- No role selector on login; infer roles from Firebase **custom claims**
+
+## Routes of Interest
+- `/admin/login` — role-aware
+- `/admin/create-user` — **manager-only** via `httpsCallable('createUserWithRole')`
+- `/admin` — manager dashboard + Salespeople management
+
+## Enforcement
+- Client-side guards (redirects)
+- Server-side/middleware checks where applicable
+- Do not leak unauthorized data in loaders/props
+
