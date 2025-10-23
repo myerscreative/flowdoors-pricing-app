@@ -472,7 +472,7 @@ const QuoteCard = ({
     const createdAt = coerceDate(quote.createdAt)
 
     return (
-      <div className="w-full min-w-0 p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+      <div className="w-full min-w-[320px] max-w-md p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
         {/* Header Section */}
         <div className="mb-6">
           <div className="flex items-start justify-between mb-3">
@@ -686,7 +686,7 @@ const QuoteCard = ({
   const createdAt = coerceDate(quote.createdAt)
 
   return (
-    <div className="w-full min-w-[320px] p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+    <div className="w-full min-w-[320px] max-w-md p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
       {/* Header Section */}
       <div className="mb-6">
         <div className="flex items-start justify-between mb-3">
