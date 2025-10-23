@@ -1,42 +1,6 @@
 // src/components/admin/QuotesGrid.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { format, addDays } from 'date-fns'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu'
-import { Skeleton } from '@/components/ui/skeleton'
-import { cn } from '@/lib/utils'
-import { Calendar, Notebook, Search, CheckCircle, Send } from 'lucide-react'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { Calendar as CalendarComponent } from '@/components/ui/calendar'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Checkbox } from '@/components/ui/checkbox'
-import type { Quote as QuoteType, QuoteTask } from '@/types/quote'
-import { Salesperson } from '@/services/salesService'
 import {
   STATUS_FILTERS,
   type Status,
@@ -44,7 +8,43 @@ import {
 import NotesPanel, {
   type Note as NotesPanelNote,
 } from '@/components/notes/NotesPanel'
+import { Button } from '@/components/ui/button'
+import { Calendar as CalendarComponent } from '@/components/ui/calendar'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { listNotes, type Note as NotesApiNote } from '@/lib/notesApi'
+import { cn } from '@/lib/utils'
+import { Salesperson } from '@/services/salesService'
+import type { QuoteTask, Quote as QuoteType } from '@/types/quote'
+import { addDays, format } from 'date-fns'
+import { Calendar, CheckCircle, Notebook, Search, Send } from 'lucide-react'
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 /* ---------- Small runtime-safe helpers (no `any`) ---------- */
 function coerceDate(value: unknown): Date | undefined {
@@ -274,12 +274,13 @@ const ActivityDialog = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="rounded-lg gap-2">
-          <Notebook className="h-4 w-4" />
-          <span className="text-xs text-gray-600">
+        <button className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Notebook className="w-4 h-4" />
             Notes · Tasks ({tasksCount})
           </span>
-        </Button>
+          <span className="text-xs text-gray-400">→</span>
+        </button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-xl">
@@ -459,246 +460,83 @@ const QuoteCard = ({
     const createdAt = coerceDate(quote.createdAt)
 
     return (
-      <div className="bg-white rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200">
-        {/* Header: Status badge (top-left) and Date (top-right) */}
-        <div className="flex items-start justify-between mb-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button>
-                <StatusBadge status={quote.status} />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              {STATUS_FILTERS.map((statusOption: Status) => (
-                <DropdownMenuItem
-                  key={statusOption}
-                  onClick={() => onUpdateStatus(quote.id, statusOption)}
-                >
-                  <CheckCircle
-                    className={cn(
-                      'mr-2 h-4 w-4',
-                      quote.status === statusOption
-                        ? 'opacity-100'
-                        : 'opacity-0'
-                    )}
-                  />
-                  {statusOption}
-                </DropdownMenuItem>
-              ))}
-              {onDeleteQuote && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-red-600"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      const ok = window.confirm(
-                        'Delete this quote? This will move it to Deleted Quotes.'
-                      )
-                      if (ok) onDeleteQuote(quote.id)
-                    }}
-                  >
-                    Delete
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <div className="text-right">
-            <div className="text-xs text-gray-500 font-medium">
-              {createdAt ? format(createdAt, 'MMM d, yyyy') : '—'}
-            </div>
-            <div className="text-[10px] text-gray-400 mt-0.5">
-              #{quote.quoteNumber ?? '—'}
+      <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+        {/* Header Section */}
+        <div className="mb-6">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <h2 className="text-2xl font-bold text-flowdoors-charcoal">
+                  {customerName || '—'}
+                </h2>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className={cn(
+                      'px-2.5 py-0.5 text-xs font-semibold rounded-full uppercase tracking-wide transition-colors',
+                      customClass
+                    )}>
+                      {quote.status}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {STATUS_FILTERS.map((statusOption: Status) => (
+                      <DropdownMenuItem
+                        key={statusOption}
+                        onClick={() => onUpdateStatus(quote.id, statusOption)}
+                      >
+                        <CheckCircle
+                          className={cn(
+                            'mr-2 h-4 w-4',
+                            quote.status === statusOption
+                              ? 'opacity-100'
+                              : 'opacity-0'
+                          )}
+                        />
+                        {statusOption}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <p className="text-sm text-gray-500 flex items-center gap-1.5 flex-wrap">
+                <Notebook className="w-3.5 h-3.5" />
+                <span className="font-mono">#{quote.quoteNumber ?? '—'}</span>
+                <span className="mx-1">•</span>
+                <Calendar className="w-3.5 h-3.5" />
+                {createdAt ? format(createdAt, 'MMM d, yyyy') : '—'}
+              </p>
             </div>
           </div>
-        </div>
 
-      {/* Customer Name */}
-      <h3 className="text-lg font-bold text-flowdoors-charcoal mb-2 leading-tight">
-        {customerName || '—'}
-      </h3>
-
-        {quote.referralCodeCustomer && (
-          <div className="mb-2">
-            <span className="text-[10px] px-2 py-1 rounded bg-slate-100 border text-slate-700">
-              Ref: {quote.referralCodeCustomer}
-            </span>
-          </div>
-        )}
-
-      {/* Price */}
-      <div className="text-2xl font-extrabold text-flowdoors-charcoal mb-4">
-        {typeof amount === 'number'
-          ? amount.toLocaleString('en-US', {
-              style: 'currency',
-              currency: 'USD',
-            })
-          : '—'}
-      </div>
-
-        {/* Rep and Company info */}
-        <div className="text-sm text-gray-600 space-y-1.5 mb-4">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-500">Rep:</span>
-            <span className="font-medium text-flowdoors-charcoal">
-              {repNameFromQuote(quote, salespeople)}
-            </span>
-          </div>
-          {quote.company && (
-            <div className="flex items-center justify-between">
-              <span className="text-gray-500">Company:</span>
-              <span className="font-medium text-flowdoors-charcoal truncate max-w-[180px]">
-                {quote.company}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Footer: Notes/Tasks count and action buttons */}
-        <div className="pt-4 border-t border-gray-100">
-          <div className="flex items-center justify-between mb-3">
-            <ActivityDialog
-              quote={quote}
-              onAddNote={onAddNote}
-              onAddTask={onAddTask}
-              onToggleTask={onToggleTask}
-            />
-          </div>
-          <div className="flex gap-2">
-            <Button
-              asChild
-              className="flex-1 bg-flowdoors-blue hover:bg-flowdoors-blue-700 text-white h-9 rounded-lg font-medium"
-            >
-              <Link href={`/admin/quotes/${quote.id}`}>View Details</Link>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="px-3 h-9 rounded-lg"
-              onClick={async () => {
-                try {
-                  const response = await fetch('/api/quotes/resend-email', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ quoteId: quote.id }),
+          {/* Amount - Most prominent */}
+          <div className="bg-gradient-to-br from-flowdoors-blue-50 to-indigo-50 rounded-lg p-4 border border-flowdoors-blue-100">
+            <p className="text-sm font-medium text-gray-600 mb-1">Quote Amount</p>
+            <p className="text-3xl font-bold text-flowdoors-charcoal">
+              {typeof amount === 'number'
+                ? amount.toLocaleString('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
                   })
-                  const result = await response.json()
-                  if (result.success) {
-                    alert('Quote email sent successfully!')
-                  } else {
-                    alert(`Failed to send email: ${result.message}`)
-                  }
-                } catch (error) {
-                  console.error('Resend email error:', error)
-                  alert('Failed to send email')
-                }
-              }}
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+                : '—'}
+            </p>
           </div>
         </div>
-      </div>
-    )
-  }
 
-  // Expanded card with optional fields controlled by visibleFields
-  const amount = getNumberProp(quote, 'quoteAmount')
-  const createdAt = coerceDate(quote.createdAt)
+        {/* Divider */}
+        <div className="border-t border-gray-100 my-6"></div>
 
-  return (
-    <div className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200">
-      {/* Header: Status badge (top-left) and Date (top-right) */}
-      <div className="flex justify-between items-start mb-3">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button>
-              <span
-                className={cn(
-                  'px-2.5 py-1 rounded-full text-[11px] font-semibold border uppercase tracking-wide',
-                  customClass
-                )}
-              >
-                {quote.status}
-              </span>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {STATUS_FILTERS.map((statusOption: Status) => (
-              <DropdownMenuItem
-                key={statusOption}
-                onClick={() => onUpdateStatus(quote.id, statusOption)}
-              >
-                <CheckCircle
-                  className={cn(
-                    'mr-2 h-4 w-4',
-                    quote.status === statusOption ? 'opacity-100' : 'opacity-0'
-                  )}
-                />
-                {statusOption}
-              </DropdownMenuItem>
-            ))}
-            {onDeleteQuote && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-red-600"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    const ok = window.confirm(
-                      'Delete this quote? This will move it to Deleted Quotes.'
-                    )
-                    if (ok) onDeleteQuote(quote.id)
-                  }}
-                >
-                  Delete
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <div className="text-right">
-          <div className="text-xs text-gray-500 font-medium">
-            {createdAt ? format(createdAt, 'MMM d, yyyy') : '—'}
-          </div>
-          <div className="text-[10px] text-gray-400 mt-0.5">
-            #{quote.quoteNumber ?? '—'}
-          </div>
-        </div>
-      </div>
-
-      {/* Customer Name */}
-      <h3 className="text-xl font-bold text-flowdoors-charcoal mb-2 leading-tight">
-        {customerName || '—'}
-      </h3>
-      {quote.referralCodeCustomer && (
-        <div className="mb-3">
-          <span className="text-[10px] px-2 py-1 rounded bg-slate-100 border text-slate-700">
-            Ref: {quote.referralCodeCustomer}
-          </span>
-        </div>
-      )}
-
-      {/* Price */}
-      <div className="text-3xl font-extrabold text-flowdoors-charcoal mb-4">
-        {typeof amount === 'number'
-          ? amount.toLocaleString('en-US', {
-              style: 'currency',
-              currency: 'USD',
-            })
-          : '—'}
-      </div>
-
-      {/* Rep and Company info */}
-      <div className="space-y-2 text-sm text-gray-600 mb-4">
-        <div className="flex items-center justify-between">
-          <span className="text-gray-500">Rep:</span>
+        {/* Details Grid */}
+        <div className="space-y-3 mb-6">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="font-medium text-gray-900 hover:text-flowdoors-blue">
-                {repNameFromQuote(quote, salespeople)}
+              <button className="w-full flex items-center gap-3 text-sm hover:bg-gray-50 rounded-lg p-2 -mx-2 transition-colors">
+                <div className="flex items-center gap-2 w-24 text-gray-500 font-medium">
+                  <CheckCircle className="w-4 h-4" />
+                  Rep
+                </div>
+                <div className="flex-1 text-left text-flowdoors-charcoal font-medium">
+                  {repNameFromQuote(quote, salespeople)}
+                </div>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -723,76 +561,88 @@ const QuoteCard = ({
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {quote.company && (
+            <div className="flex items-center gap-3 text-sm">
+              <div className="flex items-center gap-2 w-24 text-gray-500 font-medium">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                Company
+              </div>
+              <div className="flex-1 text-flowdoors-charcoal truncate">
+                {quote.company}
+              </div>
+            </div>
+          )}
+
+          {quote.phone && (
+            <div className="flex items-center gap-3 text-sm">
+              <div className="flex items-center gap-2 w-24 text-gray-500 font-medium">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                Phone
+              </div>
+              <div className="flex-1 text-flowdoors-charcoal">
+                {quote.phone}
+              </div>
+            </div>
+          )}
+
+          {quote.zip && (
+            <div className="flex items-center gap-3 text-sm">
+              <div className="flex items-center gap-2 w-24 text-gray-500 font-medium">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                ZIP
+              </div>
+              <div className="flex-1 text-flowdoors-charcoal">
+                {quote.zip}
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-2 w-24 text-gray-500 font-medium">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+              Items
+            </div>
+            <div className="flex-1">
+              <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-semibold text-flowdoors-blue-700 bg-flowdoors-blue-100 rounded-full">
+                {quote.numberOfItems ?? 0}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {visibleFields.company && quote.company && (
-          <div className="flex items-center justify-between">
-            <span className="text-gray-500">Company:</span>
-            <span className="font-medium text-flowdoors-charcoal truncate max-w-[200px]">
-              {quote.company}
-            </span>
-          </div>
-        )}
-
-        {visibleFields.phone && quote.phone && (
-          <div className="flex items-center justify-between">
-            <span className="text-gray-500">Phone:</span>
-            <span className="font-medium text-flowdoors-charcoal">{quote.phone}</span>
-          </div>
-        )}
-
-        {visibleFields.zip && quote.zip && (
-          <div className="flex items-center justify-between">
-            <span className="text-gray-500">ZIP:</span>
-            <span className="font-medium text-flowdoors-charcoal">{quote.zip}</span>
-          </div>
-        )}
-
-        {visibleFields.numberOfItems && (
-          <div className="flex items-center justify-between">
-            <span className="text-gray-500">Items:</span>
-            <span className="font-medium text-flowdoors-charcoal">
-              {quote.numberOfItems ?? 0}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Footer: Notes/Tasks count and action buttons */}
-      <div className="pt-4 border-t border-gray-100">
-        <div className="flex items-center justify-between mb-3">
+        {/* Notes Section */}
+        <div className="mb-6">
           <ActivityDialog
             quote={quote}
             onAddNote={onAddNote}
             onAddTask={onAddTask}
             onToggleTask={onToggleTask}
           />
-          {onDeleteQuote && (
-            <button
-              className="text-xs text-red-600 hover:underline"
-              onClick={(e) => {
-                e.preventDefault()
-                const ok = window.confirm(
-                  'Delete this quote? This will move it to Deleted Quotes.'
-                )
-                if (ok) onDeleteQuote(quote.id)
-              }}
-            >
-              Delete
-            </button>
-          )}
         </div>
-        <div className="flex gap-2">
+
+        {/* Action Buttons */}
+        <div className="flex gap-3">
           <Button
             asChild
-            className="flex-1 bg-flowdoors-blue hover:bg-flowdoors-blue-700 text-white h-10 rounded-lg font-medium"
+            className="flex-1 bg-flowdoors-blue hover:bg-flowdoors-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-sm"
           >
-            <Link href={`/admin/quotes/${quote.id}`}>View Details</Link>
+            <Link href={`/admin/quotes/${quote.id}`}>
+              <span>View Details</span>
+            </Link>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="px-3 h-10 rounded-lg"
+          
+          <button
+            className="p-3 border-2 border-gray-200 hover:border-flowdoors-blue hover:bg-flowdoors-blue-50 text-gray-700 hover:text-flowdoors-blue rounded-lg transition-colors"
             onClick={async () => {
               try {
                 const response = await fetch('/api/quotes/resend-email', {
@@ -812,9 +662,258 @@ const QuoteCard = ({
               }
             }}
           >
-            <Send className="h-4 w-4" />
-          </Button>
+            <Send className="w-5 h-5" />
+          </button>
+          
+          {onDeleteQuote && (
+            <button
+              className="p-3 border-2 border-gray-200 hover:border-red-600 hover:bg-red-50 text-gray-700 hover:text-red-700 rounded-lg transition-colors"
+              onClick={(e) => {
+                e.preventDefault()
+                const ok = window.confirm(
+                  'Delete this quote? This will move it to Deleted Quotes.'
+                )
+                if (ok) onDeleteQuote(quote.id)
+              }}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          )}
         </div>
+      </div>
+    )
+  }
+
+  // Expanded card with optional fields controlled by visibleFields
+  const amount = getNumberProp(quote, 'quoteAmount')
+  const createdAt = coerceDate(quote.createdAt)
+
+  return (
+    <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 p-6">
+      {/* Header Section */}
+      <div className="mb-6">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h2 className="text-2xl font-bold text-flowdoors-charcoal">
+                {customerName || '—'}
+              </h2>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className={cn(
+                    'px-2.5 py-0.5 text-xs font-semibold rounded-full uppercase tracking-wide transition-colors',
+                    customClass
+                  )}>
+                    {quote.status}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {STATUS_FILTERS.map((statusOption: Status) => (
+                    <DropdownMenuItem
+                      key={statusOption}
+                      onClick={() => onUpdateStatus(quote.id, statusOption)}
+                    >
+                      <CheckCircle
+                        className={cn(
+                          'mr-2 h-4 w-4',
+                          quote.status === statusOption
+                            ? 'opacity-100'
+                            : 'opacity-0'
+                        )}
+                      />
+                      {statusOption}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <p className="text-sm text-gray-500 flex items-center gap-1.5 flex-wrap">
+              <Notebook className="w-3.5 h-3.5" />
+              <span className="font-mono">#{quote.quoteNumber ?? '—'}</span>
+              <span className="mx-1">•</span>
+              <Calendar className="w-3.5 h-3.5" />
+              {createdAt ? format(createdAt, 'MMM d, yyyy') : '—'}
+            </p>
+          </div>
+        </div>
+
+        {/* Amount - Most prominent */}
+        <div className="bg-gradient-to-br from-flowdoors-blue-50 to-indigo-50 rounded-lg p-4 border border-flowdoors-blue-100">
+          <p className="text-sm font-medium text-gray-600 mb-1">Quote Amount</p>
+          <p className="text-3xl font-bold text-flowdoors-charcoal">
+            {typeof amount === 'number'
+              ? amount.toLocaleString('en-US', {
+                  style: 'currency',
+                  currency: 'USD',
+                })
+              : '—'}
+          </p>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-gray-100 my-6"></div>
+
+      {/* Details Grid */}
+      <div className="space-y-3 mb-6">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="w-full flex items-center gap-3 text-sm hover:bg-gray-50 rounded-lg p-2 -mx-2 transition-colors">
+              <div className="flex items-center gap-2 w-24 text-gray-500 font-medium">
+                <CheckCircle className="w-4 h-4" />
+                Rep
+              </div>
+              <div className="flex-1 text-left text-flowdoors-charcoal font-medium">
+                {repNameFromQuote(quote, salespeople)}
+              </div>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuLabel>Assign Sales Rep</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuRadioGroup
+              value={repIdFromQuote(quote, salespeople)}
+              onValueChange={(spId) =>
+                onUpdateSalesRep(
+                  quote.id,
+                  spId,
+                  salespeople.find((sp) => sp.salesperson_id === spId)
+                    ?.name || 'Unassigned'
+                )
+              }
+            >
+              {salespeople.map((sp) => (
+                <DropdownMenuRadioItem key={sp.id} value={sp.salesperson_id}>
+                  {sp.name}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {visibleFields.company && quote.company && (
+          <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-2 w-24 text-gray-500 font-medium">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              Company
+            </div>
+            <div className="flex-1 text-flowdoors-charcoal truncate">
+              {quote.company}
+            </div>
+          </div>
+        )}
+
+        {visibleFields.phone && quote.phone && (
+          <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-2 w-24 text-gray-500 font-medium">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              Phone
+            </div>
+            <div className="flex-1 text-flowdoors-charcoal">
+              {quote.phone}
+            </div>
+          </div>
+        )}
+
+        {visibleFields.zip && quote.zip && (
+          <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-2 w-24 text-gray-500 font-medium">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              ZIP
+            </div>
+            <div className="flex-1 text-flowdoors-charcoal">
+              {quote.zip}
+            </div>
+          </div>
+        )}
+
+        {visibleFields.numberOfItems && (
+          <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-2 w-24 text-gray-500 font-medium">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+              Items
+            </div>
+            <div className="flex-1">
+              <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-semibold text-flowdoors-blue-700 bg-flowdoors-blue-100 rounded-full">
+                {quote.numberOfItems ?? 0}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Notes Section */}
+      <div className="mb-6">
+        <ActivityDialog
+          quote={quote}
+          onAddNote={onAddNote}
+          onAddTask={onAddTask}
+          onToggleTask={onToggleTask}
+        />
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-3">
+        <Button
+          asChild
+          className="flex-1 bg-flowdoors-blue hover:bg-flowdoors-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-sm"
+        >
+          <Link href={`/admin/quotes/${quote.id}`}>
+            <span>View Details</span>
+          </Link>
+        </Button>
+        
+        <button
+          className="p-3 border-2 border-gray-200 hover:border-flowdoors-blue hover:bg-flowdoors-blue-50 text-gray-700 hover:text-flowdoors-blue rounded-lg transition-colors"
+          onClick={async () => {
+            try {
+              const response = await fetch('/api/quotes/resend-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quoteId: quote.id }),
+              })
+              const result = await response.json()
+              if (result.success) {
+                alert('Quote email sent successfully!')
+              } else {
+                alert(`Failed to send email: ${result.message}`)
+              }
+            } catch (error) {
+              console.error('Resend email error:', error)
+              alert('Failed to send email')
+            }
+          }}
+        >
+          <Send className="w-5 h-5" />
+        </button>
+        
+        {onDeleteQuote && (
+          <button
+            className="p-3 border-2 border-gray-200 hover:border-red-600 hover:bg-red-50 text-gray-700 hover:text-red-700 rounded-lg transition-colors"
+            onClick={(e) => {
+              e.preventDefault()
+              const ok = window.confirm(
+                'Delete this quote? This will move it to Deleted Quotes.'
+              )
+              if (ok) onDeleteQuote(quote.id)
+            }}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        )}
       </div>
     </div>
   )
