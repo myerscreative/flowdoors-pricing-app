@@ -176,8 +176,8 @@ export const getStatusClasses = (status: string) => {
   switch (statusLower) {
     case 'new':
       return {
-        customClass: 'bg-blue-100 text-blue-800 border-blue-200',
-        buttonColorClass: 'bg-blue-600',
+        customClass: 'bg-flowdoors-blue-100 text-flowdoors-blue-800 border-flowdoors-blue-200',
+        buttonColorClass: 'bg-flowdoors-blue',
       }
     case 'hot':
       return {
@@ -191,8 +191,8 @@ export const getStatusClasses = (status: string) => {
       }
     case 'cold':
       return {
-        customClass: 'bg-green-100 text-green-800 border-green-200',
-        buttonColorClass: 'bg-green-500',
+        customClass: 'bg-flowdoors-green-100 text-flowdoors-green-800 border-flowdoors-green-200',
+        buttonColorClass: 'bg-flowdoors-green',
       }
     case 'hold':
       return {
@@ -515,10 +515,10 @@ const QuoteCard = ({
           </div>
         </div>
 
-        {/* Customer Name */}
-        <h3 className="text-lg font-bold text-gray-900 mb-2 leading-tight">
-          {customerName || '—'}
-        </h3>
+      {/* Customer Name */}
+      <h3 className="text-lg font-bold text-flowdoors-charcoal mb-2 leading-tight">
+        {customerName || '—'}
+      </h3>
 
         {quote.referralCodeCustomer && (
           <div className="mb-2">
@@ -528,28 +528,28 @@ const QuoteCard = ({
           </div>
         )}
 
-        {/* Price */}
-        <div className="text-2xl font-extrabold text-gray-900 mb-4">
-          {typeof amount === 'number'
-            ? amount.toLocaleString('en-US', {
-                style: 'currency',
-                currency: 'USD',
-              })
-            : '—'}
-        </div>
+      {/* Price */}
+      <div className="text-2xl font-extrabold text-flowdoors-charcoal mb-4">
+        {typeof amount === 'number'
+          ? amount.toLocaleString('en-US', {
+              style: 'currency',
+              currency: 'USD',
+            })
+          : '—'}
+      </div>
 
         {/* Rep and Company info */}
         <div className="text-sm text-gray-600 space-y-1.5 mb-4">
           <div className="flex items-center justify-between">
             <span className="text-gray-500">Rep:</span>
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-flowdoors-charcoal">
               {repNameFromQuote(quote, salespeople)}
             </span>
           </div>
           {quote.company && (
             <div className="flex items-center justify-between">
               <span className="text-gray-500">Company:</span>
-              <span className="font-medium text-gray-900 truncate max-w-[180px]">
+              <span className="font-medium text-flowdoors-charcoal truncate max-w-[180px]">
                 {quote.company}
               </span>
             </div>
@@ -569,7 +569,7 @@ const QuoteCard = ({
           <div className="flex gap-2">
             <Button
               asChild
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white h-9 rounded-lg font-medium"
+              className="flex-1 bg-flowdoors-blue hover:bg-flowdoors-blue-700 text-white h-9 rounded-lg font-medium"
             >
               <Link href={`/admin/quotes/${quote.id}`}>View Details</Link>
             </Button>
@@ -670,7 +670,7 @@ const QuoteCard = ({
       </div>
 
       {/* Customer Name */}
-      <h3 className="text-xl font-bold text-gray-900 mb-2 leading-tight">
+      <h3 className="text-xl font-bold text-flowdoors-charcoal mb-2 leading-tight">
         {customerName || '—'}
       </h3>
       {quote.referralCodeCustomer && (
@@ -682,7 +682,7 @@ const QuoteCard = ({
       )}
 
       {/* Price */}
-      <div className="text-3xl font-extrabold text-gray-900 mb-4">
+      <div className="text-3xl font-extrabold text-flowdoors-charcoal mb-4">
         {typeof amount === 'number'
           ? amount.toLocaleString('en-US', {
               style: 'currency',
@@ -697,7 +697,7 @@ const QuoteCard = ({
           <span className="text-gray-500">Rep:</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="font-medium text-gray-900 hover:text-blue-600">
+              <button className="font-medium text-gray-900 hover:text-flowdoors-blue">
                 {repNameFromQuote(quote, salespeople)}
               </button>
             </DropdownMenuTrigger>
@@ -728,7 +728,7 @@ const QuoteCard = ({
         {visibleFields.company && quote.company && (
           <div className="flex items-center justify-between">
             <span className="text-gray-500">Company:</span>
-            <span className="font-medium text-gray-900 truncate max-w-[200px]">
+            <span className="font-medium text-flowdoors-charcoal truncate max-w-[200px]">
               {quote.company}
             </span>
           </div>
@@ -737,21 +737,21 @@ const QuoteCard = ({
         {visibleFields.phone && quote.phone && (
           <div className="flex items-center justify-between">
             <span className="text-gray-500">Phone:</span>
-            <span className="font-medium text-gray-900">{quote.phone}</span>
+            <span className="font-medium text-flowdoors-charcoal">{quote.phone}</span>
           </div>
         )}
 
         {visibleFields.zip && quote.zip && (
           <div className="flex items-center justify-between">
             <span className="text-gray-500">ZIP:</span>
-            <span className="font-medium text-gray-900">{quote.zip}</span>
+            <span className="font-medium text-flowdoors-charcoal">{quote.zip}</span>
           </div>
         )}
 
         {visibleFields.numberOfItems && (
           <div className="flex items-center justify-between">
             <span className="text-gray-500">Items:</span>
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-flowdoors-charcoal">
               {quote.numberOfItems ?? 0}
             </span>
           </div>
@@ -785,7 +785,7 @@ const QuoteCard = ({
         <div className="flex gap-2">
           <Button
             asChild
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white h-10 rounded-lg font-medium"
+            className="flex-1 bg-flowdoors-blue hover:bg-flowdoors-blue-700 text-white h-10 rounded-lg font-medium"
           >
             <Link href={`/admin/quotes/${quote.id}`}>View Details</Link>
           </Button>

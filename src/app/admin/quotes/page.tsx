@@ -768,10 +768,10 @@ export default function AdminQuotesPage() {
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            <h1 className="text-3xl font-bold tracking-tight text-flowdoors-charcoal">
               Quotes
             </h1>
-            <p className="text-gray-500">
+            <p className="text-gray-600">
               Manage and view all customer quotes.
             </p>
           </div>
@@ -892,7 +892,7 @@ export default function AdminQuotesPage() {
             <Button
               size="sm"
               asChild
-              className="h-9 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
+              className="h-9 rounded-lg bg-flowdoors-blue hover:bg-flowdoors-blue-700 text-white"
             >
               <Link href="/quote/start">
                 <PlusCircle className="h-4 w-4 mr-2" />
@@ -910,7 +910,7 @@ export default function AdminQuotesPage() {
             <Input
               type="search"
               placeholder="Search by name, quote #, status, notes, tasks..."
-              className="pl-10 h-11 bg-white border-gray-200 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="pl-10 h-11 bg-white border-gray-200 rounded-lg shadow-sm focus:border-flowdoors-blue focus:ring-flowdoors-blue"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               aria-label="Search quotes"
@@ -946,24 +946,24 @@ export default function AdminQuotesPage() {
                 onClick={() => handleStatusClick(status)}
                 className={cn(
                   'flex-shrink-0 min-w-[90px] h-9 rounded-lg overflow-hidden transition-all duration-200',
-                  'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1',
+                  'focus:outline-none focus:ring-2 focus:ring-flowdoors-blue focus:ring-offset-1',
                   'border-2',
                   isActive
-                    ? 'border-blue-600 shadow-md scale-105'
+                    ? 'border-flowdoors-blue shadow-md scale-105'
                     : 'border-gray-200 hover:border-gray-300 shadow-sm'
                 )}
               >
                 <div
                   className={cn(
                     'h-full flex flex-col',
-                    isActive ? 'bg-blue-50' : 'bg-white'
+                    isActive ? 'bg-flowdoors-blue-50' : 'bg-white'
                   )}
                 >
                   <div className="flex-1 flex items-center justify-center px-2">
                     <span
                       className={cn(
                         'font-semibold text-xs uppercase tracking-wide',
-                        isActive ? 'text-blue-900' : 'text-gray-700'
+                        isActive ? 'text-flowdoors-blue-900' : 'text-gray-700'
                       )}
                     >
                       {status}
@@ -982,7 +982,7 @@ export default function AdminQuotesPage() {
             className={cn(
               'h-9 min-w-[90px] font-semibold text-xs uppercase tracking-wide transition-all duration-200',
               filterMode === 'all' && !activeStatus
-                ? 'bg-blue-600 hover:bg-blue-700 shadow-md scale-105'
+                ? 'bg-flowdoors-blue hover:bg-flowdoors-blue-700 shadow-md scale-105'
                 : 'hover:border-gray-300'
             )}
             onClick={() => handleStatusClick(null)}
@@ -995,7 +995,7 @@ export default function AdminQuotesPage() {
             className={cn(
               'h-9 px-4 gap-2 transition-all duration-200 relative font-medium',
               filterMode === 'dueToday'
-                ? 'border-orange-500 bg-orange-50 text-orange-900 shadow-md scale-105'
+                ? 'border-flowdoors-green bg-flowdoors-green-50 text-flowdoors-green-900 shadow-md scale-105'
                 : 'hover:border-gray-300'
             )}
             onClick={() => {
@@ -1007,8 +1007,8 @@ export default function AdminQuotesPage() {
               className={cn(
                 'h-4 w-4',
                 filterMode === 'dueToday'
-                  ? 'text-orange-600'
-                  : 'text-orange-500'
+                  ? 'text-flowdoors-green-700'
+                  : 'text-flowdoors-green'
               )}
             />
             <span>Due Today</span>
@@ -1288,7 +1288,7 @@ function InlinePipeline({
                   )}
 
                   {/* Rep + Follow-up */}
-                  <div className="text-xs text-gray-700 flex items-center gap-6 mb-2">
+                  <div className="text-xs text-flowdoors-charcoal-500 flex items-center gap-6 mb-2">
                     <div>
                       Rep:{' '}
                       <span className="font-medium">
@@ -1381,7 +1381,7 @@ function InlinePipeline({
 
                   <div className="flex items-center justify-between">
                     <button
-                      className="text-[11px] text-blue-600 hover:underline"
+                      className="text-[11px] text-flowdoors-blue hover:underline"
                       onClick={async () => {
                         const cur = (lq.tags || []).join(', ')
                         const next = window.prompt(
@@ -1401,7 +1401,7 @@ function InlinePipeline({
                     </button>
                     <Link
                       href={`/admin/quotes/${q.id}`}
-                      className="text-xs bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700"
+                      className="text-xs bg-flowdoors-blue text-white px-3 py-2 rounded-lg hover:bg-flowdoors-blue-700"
                     >
                       View Details
                     </Link>
