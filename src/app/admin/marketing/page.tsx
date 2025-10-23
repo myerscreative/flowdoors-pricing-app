@@ -437,8 +437,8 @@ export default function MarketingPage() {
             </div>
             {!useMockData && (
               <div className="flex items-center gap-2 mt-2">
-                <AlertCircle className="w-4 h-4 text-green-500" />
-                <p className="text-xs font-medium text-green-700">
+                <AlertCircle className="w-4 h-4 text-flowdoors-green" />
+                <p className="text-xs font-medium text-flowdoors-green-700">
                   Loading ONLY real data from Firestore
                 </p>
               </div>
