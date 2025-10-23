@@ -1,18 +1,18 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useToast } from '@/hooks/use-toast'
 import {
-  FileText,
+  AlertCircle,
   Clock,
   DollarSign,
-  AlertCircle,
   Download,
-  Users,
-  TrendingUp,
+  FileText,
   ShoppingCart,
+  TrendingUp,
+  Users,
 } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
 import { useRouter } from 'next/navigation'
+import React, { useEffect, useState } from 'react'
 
 interface ActivityItem {
   id: string | number
@@ -362,9 +362,9 @@ export default function AdminDashboard() {
   )
 
   return (
-    <div className="container mx-auto">
+    <main className="flex-1 p-6 md:p-8 space-y-8">
       {/* Header with Toggle */}
-      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-8">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
         <div>
           <h1 className="text-3xl font-bold text-flowdoors-charcoal mb-2">
             Admin Dashboard
@@ -419,7 +419,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Grid - First Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           icon={FileText}
           label="Total Leads"
@@ -451,7 +451,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Grid - Second Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard
           icon={ShoppingCart}
           label="Total Orders"
@@ -542,6 +542,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }
