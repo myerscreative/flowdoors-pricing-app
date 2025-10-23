@@ -10,8 +10,8 @@ import { toast } from '@/hooks/use-toast'
 import { useCurrentUserRole } from '@/hooks/useCurrentUserRole'
 import type { Order } from '@/services/orderService'; // service Order type
 import { orderService } from '@/services/orderService'; // keep your existing service object
+import { FileDown, LayoutGrid, List, Minimize2, PlusCircle, Search, Settings } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { FileDown, Settings, LayoutGrid, List, Columns, Minimize2, PlusCircle, Search, AlertCircle } from 'lucide-react'
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])

@@ -1,25 +1,24 @@
 'use client'
 
-import Link from 'next/link'
-import { format } from 'date-fns'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
-import { 
-  Trash2, 
-  Send, 
-  Notebook, 
-  Calendar, 
-  User, 
-  Building2, 
-  Phone, 
-  MapPin, 
-  Package,
-  ChevronDown,
-  MoreHorizontal
-} from 'lucide-react'
 import type { Order } from '@/lib/types'
+import { cn } from '@/lib/utils'
+import { format } from 'date-fns'
+import {
+  Building2,
+  Calendar,
+  ChevronDown,
+  MapPin,
+  Notebook,
+  Package,
+  Phone,
+  Send,
+  Trash2,
+  User
+} from 'lucide-react'
+import Link from 'next/link'
 
 const statusStyles: Record<string, { bg: string; text: string; border: string; buttonColor: string }> = {
   pending: {

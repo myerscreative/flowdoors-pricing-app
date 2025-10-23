@@ -1,34 +1,22 @@
 /* src/app/admin/quotes/page.tsx */
 'use client'
 
-import { useEffect, useMemo, useState, useCallback } from 'react'
-import type { Quote, QuoteNote, QuoteTask } from '@/types/quote'
+import CustomizeViewDialog from '@/components/admin/CustomizeViewDialog'
 import {
-  getQuotes,
-  updateQuoteFollowUpDate,
-  updateQuoteStatus,
-  addNoteToQuote,
-  addTaskToQuote,
-  toggleTaskCompletion,
-  deleteQuote,
-  updateQuoteSalesRep,
-  moveQuotePipeline,
-  updateQuoteTags,
-} from '@/services/quoteService'
-import { getSalespeople, Salesperson } from '@/services/salesService'
+  STATUS_FILTERS,
+  type Status,
+} from '@/components/admin/quotes-constants'
+import QuotesGrid, { getStatusClasses } from '@/components/admin/QuotesGrid'
+import { QuotesTable } from '@/components/admin/QuotesTable'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
-  File,
-  PlusCircle,
-  Search,
-  Settings,
-  AlertCircle,
-  LayoutGrid,
-  List,
-  Columns,
-  Minimize as MinimizeIcon,
-} from 'lucide-react'
-import Link from 'next/link'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -37,31 +25,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import QuotesGrid, { getStatusClasses } from '@/components/admin/QuotesGrid'
-import { QuotesTable } from '@/components/admin/QuotesTable'
-import { cn } from '@/lib/utils'
-import { useToast } from '@/hooks/use-toast'
-import { isToday, isPast } from 'date-fns'
-import { Badge } from '@/components/ui/badge'
-import {
-  STATUS_FILTERS,
-  type Status,
-} from '@/components/admin/quotes-constants'
-import { useQuotesGridPrefs } from '@/hooks/useQuotesGridPrefs'
-import CustomizeViewDialog from '@/components/admin/CustomizeViewDialog'
 import {
   Tooltip,
+  TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-  TooltipContent,
 } from '@/components/ui/tooltip'
+import { useToast } from '@/hooks/use-toast'
+import { useQuotesGridPrefs } from '@/hooks/useQuotesGridPrefs'
+import { cn } from '@/lib/utils'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  addNoteToQuote,
+  addTaskToQuote,
+  deleteQuote,
+  getQuotes,
+  moveQuotePipeline,
+  toggleTaskCompletion,
+  updateQuoteFollowUpDate,
+  updateQuoteSalesRep,
+  updateQuoteStatus,
+  updateQuoteTags,
+} from '@/services/quoteService'
+import { getSalespeople, Salesperson } from '@/services/salesService'
+import type { Quote, QuoteNote, QuoteTask } from '@/types/quote'
+import { isPast, isToday } from 'date-fns'
+import {
+  AlertCircle,
+  Columns,
+  File,
+  LayoutGrid,
+  List,
+  Minimize as MinimizeIcon,
+  PlusCircle,
+  Search,
+  Settings,
+} from 'lucide-react'
+import Link from 'next/link'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 /* ===================== Minimal helper types used here ===================== */
 
@@ -936,54 +936,32 @@ export default function AdminQuotesPage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           {(STATUS_FILTERS ?? []).map((status: Status) => {
-            const { buttonColorClass } = getStatusClasses(status)
+            const { buttonColorClass, textColor } = getStatusClasses(status)
             const isActive = filterMode === 'status' && activeStatus === status
             return (
               <button
                 key={status}
                 onClick={() => handleStatusClick(status)}
                 className={cn(
-                  'flex-shrink-0 min-w-[90px] h-9 rounded-lg overflow-hidden transition-all duration-200',
-                  'focus:outline-none focus:ring-2 focus:ring-flowdoors-blue focus:ring-offset-1',
-                  'border-2',
-                  isActive
-                    ? 'border-flowdoors-blue shadow-md scale-105'
-                    : 'border-gray-200 hover:border-gray-300 shadow-sm'
+                  'px-6 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200',
+                  isActive 
+                    ? `${buttonColorClass} text-white shadow-lg scale-105` 
+                    : `bg-gray-100 ${textColor} hover:bg-gray-200`
                 )}
               >
-                <div
-                  className={cn(
-                    'h-full flex flex-col',
-                    isActive ? 'bg-flowdoors-blue-50' : 'bg-white'
-                  )}
-                >
-                  <div className="flex-1 flex items-center justify-center px-2">
-                    <span
-                      className={cn(
-                        'font-semibold text-xs uppercase tracking-wide',
-                        isActive ? 'text-flowdoors-blue-900' : 'text-gray-700'
-                      )}
-                    >
-                      {status}
-                    </span>
-                  </div>
-                  <div className={cn('h-1', buttonColorClass)} />
-                </div>
+                {status}
               </button>
             )
           })}
           <Button
             size="sm"
-            variant={
-              filterMode === 'all' && !activeStatus ? 'default' : 'outline'
-            }
             className={cn(
-              'h-9 min-w-[90px] font-semibold text-xs uppercase tracking-wide transition-all duration-200',
+              'px-6 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200',
               filterMode === 'all' && !activeStatus
-                ? 'bg-flowdoors-blue hover:bg-flowdoors-blue-700 shadow-md scale-105'
-                : 'hover:border-gray-300'
+                ? 'bg-flowdoors-blue-500 hover:bg-flowdoors-blue-600 text-white shadow-lg scale-105'
+                : 'bg-gray-100 text-flowdoors-blue-600 hover:bg-gray-200'
             )}
             onClick={() => handleStatusClick(null)}
           >

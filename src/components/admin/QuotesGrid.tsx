@@ -188,38 +188,45 @@ export const getStatusClasses = (status: string) => {
   switch (statusLower) {
     case 'new':
       return {
-        customClass: 'bg-flowdoors-blue-100 text-flowdoors-blue-800 border-flowdoors-blue-200',
-        buttonColorClass: 'bg-flowdoors-blue',
+        customClass: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        buttonColorClass: 'bg-emerald-500',
+        textColor: 'text-emerald-600',
       }
     case 'hot':
       return {
-        customClass: 'bg-red-100 text-red-800 border-red-200',
-        buttonColorClass: 'bg-red-600',
+        customClass: 'bg-red-100 text-red-700 border-red-200',
+        buttonColorClass: 'bg-red-500',
+        textColor: 'text-red-600',
       }
     case 'warm':
       return {
-        customClass: 'bg-amber-100 text-amber-800 border-amber-200',
-        buttonColorClass: 'bg-yellow-400',
+        customClass: 'bg-amber-100 text-amber-700 border-amber-200',
+        buttonColorClass: 'bg-amber-500',
+        textColor: 'text-amber-600',
       }
     case 'cold':
       return {
-        customClass: 'bg-flowdoors-green-100 text-flowdoors-green-800 border-flowdoors-green-200',
-        buttonColorClass: 'bg-flowdoors-green',
+        customClass: 'bg-sky-100 text-sky-700 border-sky-200',
+        buttonColorClass: 'bg-sky-400',
+        textColor: 'text-sky-500',
       }
     case 'hold':
       return {
-        customClass: 'bg-gray-100 text-gray-800 border-gray-200',
-        buttonColorClass: 'bg-gray-500',
+        customClass: 'bg-gray-100 text-gray-500 border-gray-200',
+        buttonColorClass: 'bg-gray-400',
+        textColor: 'text-gray-500',
       }
     case 'archived':
       return {
         customClass: 'bg-gray-100 text-gray-500 border-gray-200',
-        buttonColorClass: 'bg-gray-800',
+        buttonColorClass: 'bg-gray-500',
+        textColor: 'text-gray-600',
       }
     default:
       return {
         customClass: 'bg-gray-100 text-gray-700 border-gray-200',
         buttonColorClass: 'bg-gray-400',
+        textColor: 'text-gray-600',
       }
   }
 }
