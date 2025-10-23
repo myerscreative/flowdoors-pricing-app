@@ -102,19 +102,23 @@ export default function AdminSettings() {
         
         {mobileMenuOpen && (
           <div className="mt-2 bg-white border border-gray-200 rounded-lg p-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={`w-full text-left px-4 py-3 rounded-lg ${
-                  activeTab === tab.id 
-                    ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white' 
-                    : 'hover:bg-gray-100'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+            {tabs.map((tab) => {
+              const Icon = tab.icon
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`w-full flex items-center gap-3 text-left px-4 py-3 rounded-lg transition-all ${
+                    activeTab === tab.id 
+                      ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-md' 
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="font-medium text-sm">{tab.label}</span>
+                </button>
+              )
+            })}
           </div>
         )}
       </div>
