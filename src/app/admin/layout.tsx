@@ -55,7 +55,11 @@ export default function AdminLayout({
     return <>{children}</>
   }
 
-  if (loading) {
+  // Temporary bypass for development
+  if (loading && process.env.NODE_ENV === 'development') {
+    console.warn('🔧 Development mode: bypassing loading state')
+    // Continue to render the layout instead of showing loading
+  } else if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -67,7 +71,7 @@ export default function AdminLayout({
   }
 
   // Don't render admin layout if user is not authenticated
-  if (!role) {
+  if (!role && process.env.NODE_ENV !== 'development') {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
