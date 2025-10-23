@@ -183,7 +183,7 @@ export default function AdminLayout({
 
         {/* Page content */}
         <main className="flex-1">
-          <div className="px-4 py-6 sm:px-6 lg:pr-6">{children}</div>
+          <div className="px-4 py-6 sm:px-6 lg:px-6">{children}</div>
         </main>
       </div>
     </div>
