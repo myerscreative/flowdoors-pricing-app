@@ -243,7 +243,8 @@ function swatchClasses(name?: string, code?: string): string {
 
 function computePanelWidthIn(totalWidthIn?: number, panelCount?: number) {
   if (!totalWidthIn || !panelCount || panelCount <= 0) return undefined
-  return Math.round((totalWidthIn / panelCount) * 100) / 100
+  const usable = Math.max(totalWidthIn - 5, 0)
+  return Math.round((usable / panelCount) * 100) / 100
 }
 
 /** Inch-based layout: what you see is what you print (8.5in × 11in) */

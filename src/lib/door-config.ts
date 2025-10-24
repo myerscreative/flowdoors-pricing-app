@@ -7,7 +7,7 @@ export const SIZE_LIMITS = {
 }
 
 // Frame deduct before dividing by panel count
-export const PANEL_GAP_IN = 3
+export const PANEL_GAP_IN = 5
 
 export function perPanelWidth(
   totalWidthIn: number,

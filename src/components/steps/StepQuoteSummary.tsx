@@ -87,7 +87,8 @@ function toCurrency(n: number): string {
 // mirror PDF logic
 function computePanelWidthIn(totalWidthIn?: number, panelCount?: number) {
   if (!totalWidthIn || !panelCount || panelCount <= 0) return undefined
-  return Math.round((totalWidthIn / panelCount) * 100) / 100
+  const usable = Math.max(totalWidthIn - 5, 0)
+  return Math.round((usable / panelCount) * 100) / 100
 }
 
 function parseTotalPanelsFromConfiguration(
