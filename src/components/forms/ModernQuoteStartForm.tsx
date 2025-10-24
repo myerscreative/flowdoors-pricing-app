@@ -23,6 +23,7 @@ import type { Customer, CustomerType, Timeline } from '@/lib/types'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Building2, CheckCircle, Clock, Hammer, Home, Lock, Mail, MapPin, Shield, Store } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
@@ -499,6 +500,15 @@ export function ModernQuoteStartForm({ onSubmit }: ModernQuoteStartFormProps) {
                       className="h-11 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-flowdoors-blue/20 focus:border-flowdoors-blue"
                     />
                     <p className="mt-1.5 text-xs text-slate-500">Have a code? Enter it for special savings</p>
+                  </div>
+
+                  <div className="pt-2">
+                    <Link 
+                      href="/admin/login" 
+                      className="text-sm text-slate-600 hover:text-flowdoors-blue transition-colors"
+                    >
+                      Admin Login
+                    </Link>
                   </div>
                 </div>
               </div>
