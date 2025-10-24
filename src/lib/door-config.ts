@@ -3,7 +3,7 @@ export type SystemType = 'multi-slide' | 'pocket'
 // Correct limits
 export const SIZE_LIMITS = {
   minPanelWidth: 37,
-  maxPanelWidth: 60,
+  maxPanelWidth: 48,
 }
 
 // Frame deduct before dividing by panel count
