@@ -743,6 +743,10 @@ export async function getQuotes(
         if (response.ok) {
           const quotes = await response.json()
           return quotes as Array<Record<string, unknown>>
+        } else {
+          const errorData = await response.json().catch(() => ({}))
+          console.error('API fallback failed:', response.status, errorData)
+          throw new Error(errorData.error || 'Failed to fetch quotes from API')
         }
       }
       

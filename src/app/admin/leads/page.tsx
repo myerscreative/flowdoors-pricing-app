@@ -1,20 +1,8 @@
 'use client'
 
-import React, { useEffect, useState, useMemo } from 'react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Users,
-  Search,
-  Filter,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  Clock,
-  AlertCircle,
-  CheckCircle,
-  Eye,
-} from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -23,10 +11,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Eye,
+  Filter,
+  Mail,
+  MapPin,
+  Phone,
+  Search,
+  Users,
+} from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 
 interface Lead {
   id: string
