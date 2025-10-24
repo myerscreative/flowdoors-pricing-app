@@ -75,7 +75,7 @@ const PROJECT_TYPE_CARDS = [
     description: 'Renovating or upgrading existing home',
   },
   {
-    value: 'builder',
+    value: 'homeowner',
     icon: Building2,
     title: 'Building New Home',
     description: 'New construction or custom build',
