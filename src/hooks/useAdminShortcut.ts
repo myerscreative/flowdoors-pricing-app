@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useCurrentUserRole } from './useCurrentUserRole'
 
 /**
@@ -31,7 +31,16 @@ export function useAdminShortcut() {
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [isActivated, setIsActivated] = useState(false)
 
+  // Function to handle the actual redirect with current role check
+  const handleRedirect = useCallback(() => {
+    const targetPath = role ? '/admin' : '/admin/login'
+    console.log(`🔑 Admin shortcut activated - redirecting to ${targetPath} (role: ${role || 'none'})`)
+    router.push(targetPath)
+  }, [role, router])
+
   useEffect(() => {
+    console.log('🔧 Admin shortcut hook initialized')
+    
     // Keyboard sequence handler
     const handleKeyPress = (event: KeyboardEvent) => {
       // Ignore keypresses when user is typing in input/textarea fields
@@ -51,15 +60,13 @@ export function useAdminShortcut() {
 
       // Add character to sequence
       sequenceRef.current += event.key.toLowerCase()
+      console.log(`🔑 Admin shortcut sequence: "${sequenceRef.current}"`)
 
       // Check if sequence matches "admin"
       if (sequenceRef.current === ADMIN_SEQUENCE) {
         console.log('🔑 Admin shortcut activated via keyboard sequence')
         setIsActivated(true)
-        // Redirect to login if not logged in, otherwise to admin dashboard
-        const targetPath = role ? '/admin' : '/admin/login'
-        console.log(`📋 Redirecting to ${targetPath} (role: ${role || 'none'})`)
-        router.push(targetPath)
+        handleRedirect()
         sequenceRef.current = ''
       } else if (sequenceRef.current.length >= ADMIN_SEQUENCE.length) {
         // Reset if sequence gets too long
@@ -81,15 +88,13 @@ export function useAdminShortcut() {
 
       // Increment click counter
       clickCountRef.current += 1
+      console.log(`🔑 Logo clicked ${clickCountRef.current} times`)
 
       // Check if threshold reached
       if (clickCountRef.current >= LOGO_CLICK_THRESHOLD) {
         console.log('🔑 Admin shortcut activated via logo clicks')
         setIsActivated(true)
-        // Redirect to login if not logged in, otherwise to admin dashboard
-        const targetPath = role ? '/admin' : '/admin/login'
-        console.log(`📋 Redirecting to ${targetPath} (role: ${role || 'none'})`)
-        router.push(targetPath)
+        handleRedirect()
         clickCountRef.current = 0
       }
 
@@ -101,17 +106,34 @@ export function useAdminShortcut() {
 
     // Attach keyboard listener
     window.addEventListener('keypress', handleKeyPress)
+    console.log('✅ Keyboard listener attached')
+
+    // Store logo references for cleanup
+    const logoElements: HTMLElement[] = []
 
     // Attach click listener to logo images
-    const logos = document.querySelectorAll('img[alt*="FlowDoors Logo"], img[alt*="flowdoors-logo"]')
-    logos.forEach((logo) => {
-      logo.addEventListener('click', handleLogoClick)
-    })
+    const attachLogoListeners = () => {
+      const logos = document.querySelectorAll('img[alt*="FlowDoors Logo"], img[alt*="flowdoors-logo"]')
+      console.log(`🔍 Found ${logos.length} logo(s)`)
+      logos.forEach((logo) => {
+        logo.addEventListener('click', handleLogoClick)
+        logoElements.push(logo as HTMLElement)
+      })
+    }
+
+    // Try to attach immediately
+    attachLogoListeners()
+
+    // Also try after a delay in case logos load late
+    const delayTimer = setTimeout(() => {
+      attachLogoListeners()
+    }, 1000)
 
     // Cleanup on unmount
     return () => {
       window.removeEventListener('keypress', handleKeyPress)
-      logos.forEach((logo) => {
+      clearTimeout(delayTimer)
+      logoElements.forEach((logo) => {
         logo.removeEventListener('click', handleLogoClick)
       })
       if (timeoutRef.current) {
@@ -121,7 +143,7 @@ export function useAdminShortcut() {
         clearTimeout(clickTimeoutRef.current)
       }
     }
-  }, [router, role])
+  }, [router, role, handleRedirect])
 
   return { isActivated }
 }
