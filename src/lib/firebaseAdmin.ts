@@ -14,14 +14,14 @@ if (!getApps().length) {
       initializeApp({
         credential: cert(serviceAccount),
         projectId:
-          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'scenic-doors-quoter',
+          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'flowdoors-pricing-app',
       })
       console.warn('✅ Firebase Admin initialized with service account key')
     } else {
       // For development, try default credentials
       initializeApp({
         projectId:
-          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'scenic-doors-quoter',
+          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'flowdoors-pricing-app',
       })
       console.warn('✅ Firebase Admin initialized with default credentials')
     }

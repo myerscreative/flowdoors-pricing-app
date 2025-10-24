@@ -34,7 +34,7 @@ firebase login:list || firebase login
 # Deploy indexes
 echo ""
 echo "📤 Deploying Firestore indexes..."
-firebase deploy --only firestore:indexes --project scenic-doors-quoter
+firebase deploy --only firestore:indexes --project flowdoors-pricing-app
 
 echo ""
 echo "✅ Deployment complete!"

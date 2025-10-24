@@ -9,9 +9,9 @@ The following Firebase credentials were added to enable password reset functiona
 ```
 FIREBASE_SERVICE_ACCOUNT_KEY='...'  # Admin SDK service account
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyDzzpdpzRfM2n-TJYP2W_L2Q5DKq9Ix8pg
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=scenic-doors-quoter.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=scenic-doors-quoter
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=scenic-doors-quoter.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=flowdoors-pricing-app.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=flowdoors-pricing-app
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=flowdoors-pricing-app.firebasestorage.app
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=593997843062
 NEXT_PUBLIC_FIREBASE_APP_ID=1:593997843062:web:130eb085ae949b1df0ad57
 ```
@@ -116,7 +116,7 @@ curl -X POST http://localhost:3000/api/users/password-reset \
 
 Password reset emails are sent by Firebase with:
 
-- **From:** noreply@scenic-doors-quoter.firebaseapp.com
+- **From:** noreply@flowdoors-pricing-app.firebaseapp.com
 - **Continue URL:** `${baseUrl}/admin/login`
 - **Email Template:** Firebase's default password reset template
 

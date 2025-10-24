@@ -74,7 +74,7 @@ if (!getApps().length) {
       // For development, try default credentials
       initializeApp({
         projectId:
-          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'scenic-doors-quoter',
+          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'flowdoors-pricing-app',
       })
       console.warn(
         '[Firebase Admin] No service account key found - using default credentials'

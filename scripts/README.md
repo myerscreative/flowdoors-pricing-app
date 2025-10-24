@@ -10,7 +10,7 @@ This directory contains scripts for managing Firebase user roles and permissions
 Your `.env.local` should contain:
 
 ```env
-FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account","project_id":"scenic-doors-quoter","private_key":"-----BEGIN PRIVATE KEY-----\n...","client_email":"firebase-adminsdk-xxxxx@scenic-doors-quoter.iam.gserviceaccount.com",...}
+FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account","project_id":"flowdoors-pricing-app","private_key":"-----BEGIN PRIVATE KEY-----\n...","client_email":"firebase-adminsdk-xxxxx@flowdoors-pricing-app.iam.gserviceaccount.com",...}
 ```
 
 ### Getting Firebase Service Account Credentials

@@ -11,7 +11,7 @@ The Marketing dashboard and other admin features use the Firebase Admin SDK to q
 ### Step 1: Go to Firebase Console
 
 1. Visit: https://console.firebase.google.com/
-2. Select your project: **scenic-doors-quoter**
+2. Select your project: **flowdoors-pricing-app**
 
 ### Step 2: Navigate to Service Accounts
 
@@ -24,7 +24,7 @@ The Marketing dashboard and other admin features use the Firebase Admin SDK to q
 1. Scroll down to the "Firebase Admin SDK" section
 2. Click **"Generate new private key"**
 3. Click **"Generate key"** in the confirmation dialog
-4. A JSON file will download to your computer (e.g., `scenic-doors-quoter-abc123.json`)
+4. A JSON file will download to your computer (e.g., `flowdoors-pricing-app-abc123.json`)
 
 ⚠️ **Keep this file secure!** It provides full admin access to your Firebase project.
 
@@ -38,7 +38,7 @@ The Marketing dashboard and other admin features use the Firebase Admin SDK to q
 4. Add the following line:
 
 ```bash
-FIREBASE_SERVICE_ACCOUNT_KEY='{"type":"service_account","project_id":"scenic-doors-quoter",...PASTE_ENTIRE_JSON_HERE...}'
+FIREBASE_SERVICE_ACCOUNT_KEY='{"type":"service_account","project_id":"flowdoors-pricing-app",...PASTE_ENTIRE_JSON_HERE...}'
 ```
 
 **Important formatting rules:**
@@ -50,7 +50,7 @@ FIREBASE_SERVICE_ACCOUNT_KEY='{"type":"service_account","project_id":"scenic-doo
 #### Example:
 
 ```bash
-FIREBASE_SERVICE_ACCOUNT_KEY='{"type":"service_account","project_id":"scenic-doors-quoter","private_key_id":"abc123...","private_key":"-----BEGIN PRIVATE KEY-----\nMIIE...","client_email":"firebase-adminsdk-xyz@scenic-doors-quoter.iam.gserviceaccount.com","client_id":"123456789","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url":"https://www.googleapis.com/robot/v1/metadata/x509/..."}'
+FIREBASE_SERVICE_ACCOUNT_KEY='{"type":"service_account","project_id":"flowdoors-pricing-app","private_key_id":"abc123...","private_key":"-----BEGIN PRIVATE KEY-----\nMIIE...","client_email":"firebase-adminsdk-xyz@flowdoors-pricing-app.iam.gserviceaccount.com","client_id":"123456789","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url":"https://www.googleapis.com/robot/v1/metadata/x509/..."}'
 ```
 
 #### For Production (Vercel/Firebase Hosting):
@@ -123,7 +123,7 @@ pnpm dev
 
 **Solution:**
 
-- Ensure you downloaded the key from the correct Firebase project (`scenic-doors-quoter`)
+- Ensure you downloaded the key from the correct Firebase project (`flowdoors-pricing-app`)
 - Verify the `project_id` in the JSON matches your actual project
 - Check that the JSON hasn't been truncated or corrupted
 
@@ -164,10 +164,10 @@ If you have separate Firebase projects for staging and production:
 
 ```bash
 # .env.local (development)
-FIREBASE_SERVICE_ACCOUNT_KEY='{"project_id":"scenic-doors-quoter-dev",...}'
+FIREBASE_SERVICE_ACCOUNT_KEY='{"project_id":"flowdoors-pricing-app-dev",...}'
 
 # .env.production (production - DO NOT COMMIT)
-FIREBASE_SERVICE_ACCOUNT_KEY='{"project_id":"scenic-doors-quoter",...}'
+FIREBASE_SERVICE_ACCOUNT_KEY='{"project_id":"flowdoors-pricing-app",...}'
 ```
 
 Set the appropriate variable in each hosting environment.

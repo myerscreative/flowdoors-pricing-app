@@ -8,12 +8,12 @@ import { getFunctions, connectFunctionsEmulator } from 'firebase/functions'
 // Fallback config for production when env vars aren't injected
 // These are the actual values from your Firebase project
 const fallbackConfig = {
-  apiKey: 'AIzaSyDzzpdpzRfM2n-TJYP2W_L2Q5DKq9Ix8pg',
-  authDomain: 'scenic-doors-quoter.firebaseapp.com',
-  projectId: 'scenic-doors-quoter',
-  storageBucket: 'scenic-doors-quoter.firebasestorage.app',
-  messagingSenderId: '593997843062',
-  appId: '1:593997843062:web:130eb085ae949b1df0ad57',
+  apiKey: 'AIzaSyCOB4dOLeNJH3A5kAnv1gUP4_R4pv1gpIU',
+  authDomain: 'flowdoors-pricing-app.firebaseapp.com',
+  projectId: 'flowdoors-pricing-app',
+  storageBucket: 'flowdoors-pricing-app.firebasestorage.app',
+  messagingSenderId: '24155624451',
+  appId: '1:24155624451:web:266437e9836aac3c07ea36',
 }
 
 const firebaseConfig = {

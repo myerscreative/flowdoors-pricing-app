@@ -3,7 +3,7 @@
 ## Step 1: Get Your Firebase Service Account Credentials
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Select your project (probably "scenic-doors-quoter")
+2. Select your project (probably "flowdoors-pricing-app")
 3. Click the **⚙️ gear icon** → **Project Settings**
 4. Click the **Service Accounts** tab
 5. Click **Generate New Private Key** button
@@ -16,10 +16,10 @@ Open the downloaded JSON file. You'll see something like:
 ```json
 {
   "type": "service_account",
-  "project_id": "scenic-doors-quoter",
+  "project_id": "flowdoors-pricing-app",
   "private_key_id": "abc123...",
   "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIB...\n-----END PRIVATE KEY-----\n",
-  "client_email": "firebase-adminsdk-xxxxx@scenic-doors-quoter.iam.gserviceaccount.com",
+  "client_email": "firebase-adminsdk-xxxxx@flowdoors-pricing-app.iam.gserviceaccount.com",
   ...
 }
 ```

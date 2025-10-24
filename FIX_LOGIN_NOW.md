@@ -21,10 +21,10 @@ pnpm tsx scripts/fixUserAuth.ts robert@scenicdoors.com "YourNewPassword123!"
 ### Step 1: Configure Firebase Admin SDK
 
 1. **Get your Firebase Service Account Key:**
-   - Visit: https://console.firebase.google.com/project/scenic-doors-quoter/settings/serviceaccounts/adminsdk
+   - Visit: https://console.firebase.google.com/project/flowdoors-pricing-app/settings/serviceaccounts/adminsdk
    - Click the **"Generate new private key"** button
    - Click **"Generate key"** in the confirmation dialog
-   - A JSON file will download (e.g., `scenic-doors-quoter-xxxxx.json`)
+   - A JSON file will download (e.g., `flowdoors-pricing-app-xxxxx.json`)
 
 2. **Create `.env.local` file:**
 
@@ -44,7 +44,7 @@ pnpm tsx scripts/fixUserAuth.ts robert@scenicdoors.com "YourNewPassword123!"
    Open the downloaded JSON file and copy ALL the contents. Then paste into `.env.local`:
 
    ```bash
-   FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account","project_id":"scenic-doors-quoter","private_key_id":"abc123...","private_key":"-----BEGIN PRIVATE KEY-----\nMIIE...","client_email":"firebase-adminsdk-xxxxx@scenic-doors-quoter.iam.gserviceaccount.com",...}
+   FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account","project_id":"flowdoors-pricing-app","private_key_id":"abc123...","private_key":"-----BEGIN PRIVATE KEY-----\nMIIE...","client_email":"firebase-adminsdk-xxxxx@flowdoors-pricing-app.iam.gserviceaccount.com",...}
    ```
 
    **CRITICAL:** The entire JSON must be on ONE LINE!

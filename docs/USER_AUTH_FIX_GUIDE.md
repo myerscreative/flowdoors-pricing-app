@@ -20,7 +20,7 @@ If these are out of sync (user exists in Firestore but not in Firebase Auth), lo
 The fix requires Firebase Admin SDK to be properly configured with a service account key.
 
 1. **Get your Firebase Service Account Key:**
-   - Go to: https://console.firebase.google.com/project/scenic-doors-quoter/settings/serviceaccounts/adminsdk
+   - Go to: https://console.firebase.google.com/project/flowdoors-pricing-app/settings/serviceaccounts/adminsdk
    - Click **"Generate new private key"**
    - Download the JSON file (it will contain your private key)
 
@@ -36,7 +36,7 @@ The fix requires Firebase Admin SDK to be properly configured with a service acc
    ```bash
    # Open the downloaded JSON file and copy the entire contents
    # Paste it on ONE LINE in .env.local like this:
-   FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account","project_id":"scenic-doors-quoter",...}
+   FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account","project_id":"flowdoors-pricing-app",...}
    ```
 
    **Important:** The entire JSON object must be on a single line!
@@ -211,7 +211,7 @@ To prevent future authentication issues:
 
 3. **Verify environment:** Ensure `.env.local` has `FIREBASE_SERVICE_ACCOUNT_KEY` configured on all environments (dev, staging, production)
 
-4. **Monitor Firebase console:** Check https://console.firebase.google.com/project/scenic-doors-quoter/authentication/users to see all authenticated users
+4. **Monitor Firebase console:** Check https://console.firebase.google.com/project/flowdoors-pricing-app/authentication/users to see all authenticated users
 
 ## Need Help?
 

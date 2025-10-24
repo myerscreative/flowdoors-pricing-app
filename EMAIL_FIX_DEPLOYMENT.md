@@ -52,16 +52,16 @@ POSTMARK_API_TOKEN_DEV="your-dev-postmark-server-api-token"
 ```bash
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
 FIREBASE_CLIENT_EMAIL="firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com"
-FIREBASE_PROJECT_ID="scenic-doors-quoter"
+FIREBASE_PROJECT_ID="flowdoors-pricing-app"
 ```
 
 ### Firebase Client SDK (public vars - if not already set)
 
 ```bash
 NEXT_PUBLIC_FIREBASE_API_KEY="AIzaSyDzzpdpzRfM2n-TJYP2W_L2Q5DKq9Ix8pg"
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="scenic-doors-quoter.firebaseapp.com"
-NEXT_PUBLIC_FIREBASE_PROJECT_ID="scenic-doors-quoter"
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="scenic-doors-quoter.firebasestorage.app"
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="flowdoors-pricing-app.firebaseapp.com"
+NEXT_PUBLIC_FIREBASE_PROJECT_ID="flowdoors-pricing-app"
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="flowdoors-pricing-app.firebasestorage.app"
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="593997843062"
 NEXT_PUBLIC_FIREBASE_APP_ID="1:593997843062:web:130eb085ae949b1df0ad57"
 ```

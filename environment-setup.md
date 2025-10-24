@@ -53,7 +53,7 @@ NEXT_PUBLIC_BASE_URL=https://app.scenicdoors.co
 
 # Firebase Configuration (Production)
 FIREBASE_SERVICE_ACCOUNT_KEY=your_prod_firebase_service_account_key_here
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=scenic-doors-quoter
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=flowdoors-pricing-app
 
 # Production environment
 NODE_ENV=production

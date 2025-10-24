@@ -73,7 +73,7 @@ if (!admin.apps.length) {
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         projectId:
-          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'scenic-doors-quoter',
+          process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'flowdoors-pricing-app',
       })
       console.log('✅ Firebase Admin initialized with service account key')
     } catch (error) {
