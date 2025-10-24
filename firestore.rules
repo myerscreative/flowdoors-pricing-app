@@ -11,12 +11,12 @@ service cloud.firestore {
     
     function isAdmin() {
       return isSignedIn() && 
-             request.auth.token.role in ['administrator', 'manager'];
+             request.auth.token.role in ['administrator', 'manager', 'admin'];
     }
     
     function isSalesOrAdmin() {
       return isSignedIn() && 
-             request.auth.token.role in ['administrator', 'manager', 'salesperson'];
+             request.auth.token.role in ['administrator', 'manager', 'admin', 'salesperson'];
     }
     
     function isMarketing() {

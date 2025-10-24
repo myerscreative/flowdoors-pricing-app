@@ -1262,7 +1262,26 @@ export async function deleteQuote(quoteId: string): Promise<void> {
       expiresAt,
     })
     await deleteDoc(refQ)
-  } catch (error) {
+  } catch (error: unknown) {
+    // Check if this is a permission error
+    const isPermissionError = error instanceof Error && 
+      (error.message.includes('permission') || error.message.includes('Missing'))
+    
+    if (isPermissionError) {
+      console.warn('⚠️ Permission error deleting quote, falling back to API route')
+      // Fall back to API route that uses Firebase Admin
+      const response = await fetch(`/api/quotes?id=${encodeURIComponent(quoteId)}`, {
+        method: 'DELETE',
+      })
+      if (response.ok) {
+        return // Success
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('API fallback failed:', response.status, errorData)
+        throw new Error(errorData.error || 'Failed to delete quote from API')
+      }
+    }
+    
     console.error('Error deleting quote: ', error)
     throw new Error('Failed to delete quote from the database.')
   }
