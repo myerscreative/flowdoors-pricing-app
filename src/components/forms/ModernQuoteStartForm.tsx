@@ -555,6 +555,17 @@ export function ModernQuoteStartForm({ onSubmit }: ModernQuoteStartFormProps) {
               <span className="font-semibold text-flowdoors-charcoal">4.9 out of 5 stars</span> from over 250 happy customers
             </p>
           </div>
+
+          {/* Admin Login */}
+          <div className="bg-white px-6 py-4 text-center border-t border-slate-200">
+            <a
+              href="/admin"
+              className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <Lock className="w-3 h-3" />
+              <span>Admin Login</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>
