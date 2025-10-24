@@ -1,9 +1,7 @@
 'use client'
 
 import { useQuote } from '@/context/QuoteContext'
-import { PRODUCT_TYPES } from '@/lib/constants'
 import { PANEL_GAP_IN } from '@/lib/door-config'
-import type { ProductTypeInfo } from '@/lib/types'
 import { CheckCircle2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -203,10 +201,9 @@ export default function SlideStackBuilder() {
   // ---- Panel count math (Bi-Fold rules reused) ----
   // usable opening = width - 5"
   const opening = typeof width === 'number' ? Math.max(width - PANEL_GAP_IN, 0) : null
-  // Use constraints from PRODUCT_TYPES
-  const slideStackType = PRODUCT_TYPES.find((p: ProductTypeInfo) => p.id === 'Slide-and-Stack')
-  const minPanelWidth = slideStackType?.sizeConstraints?.minPanelWidth ?? 28
-  const maxPanelWidth = slideStackType?.sizeConstraints?.maxPanelWidth ?? 48
+  // Per-panel constraints for Slide-and-Stack (28"-48")
+  const minPanelWidth = 28
+  const maxPanelWidth = 48
   // per-panel must be within configured range; allow 2..8 panels
   const validPanelOptions = useMemo(() => {
     if (opening == null || opening <= 0)
@@ -217,7 +214,7 @@ export default function SlideStackBuilder() {
       if (per >= minPanelWidth && per <= maxPanelWidth) opts.push({ n, per })
     }
     return opts
-  }, [opening, minPanelWidth, maxPanelWidth])
+  }, [opening])
 
   // Check if form is complete (after panel/layout state exists)
   const isFormComplete = useMemo(() => {
