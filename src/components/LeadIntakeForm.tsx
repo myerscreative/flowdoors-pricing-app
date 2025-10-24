@@ -527,16 +527,6 @@ export function LeadIntakeForm({ onSubmit }: LeadIntakeFormProps) {
           <TrustBadge icon={Trophy} text="947 Projects Completed" />
           <TrustBadge icon={BadgeCheck} text="Licensed & Insured" />
         </div>
-
-        {/* Admin Login Link */}
-        <div className="mt-6 text-center">
-          <a
-            href="/admin/login"
-            className="text-sm text-muted-foreground hover:text-primary transition-colors"
-          >
-            Admin Login
-          </a>
-        </div>
       </div>
     </div>
   )

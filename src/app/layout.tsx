@@ -1,3 +1,4 @@
+import { Footer } from '@/components/Footer'
 import { Toaster } from '@/components/ui/toaster'
 import type { Metadata } from 'next'
 import { DM_Sans, Inter, Playfair_Display, Poppins } from 'next/font/google'
@@ -101,7 +102,10 @@ export default function RootLayout({
             style={{ display: 'none', visibility: 'hidden' }}
           />
         </noscript>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Footer />
+        </Providers>
         <Toaster />
       </body>
     </html>
