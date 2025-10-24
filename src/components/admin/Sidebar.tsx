@@ -17,13 +17,16 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [quotesCount, setQuotesCount] = useState<number | null>(null);
+  const [leadsCount, setLeadsCount] = useState<number | null>(null);
+  const [notificationsCount, setNotificationsCount] = useState<number | null>(null);
 
   const handleLogout = async () => {
     try {
@@ -39,6 +42,30 @@ function Sidebar() {
     }
   };
 
+  // Fetch counts for sidebar badges
+  useEffect(() => {
+    async function fetchCounts() {
+      try {
+        // Fetch quotes count
+        const { getQuotes } = await import('@/services/quoteService');
+        const quotes = await getQuotes();
+        setQuotesCount(quotes.length);
+
+        // Fetch leads count
+        const { getLeads } = await import('@/services/leadService');
+        const leads = await getLeads();
+        setLeadsCount(leads.length);
+
+        // Notifications count - for now set to null (no badge shown)
+        setNotificationsCount(null);
+      } catch (error) {
+        console.error('Error fetching sidebar counts:', error);
+      }
+    }
+
+    fetchCounts();
+  }, []);
+
   const menuItems = [
     { 
       name: 'Dashboard', 
@@ -50,7 +77,7 @@ function Sidebar() {
     { 
       name: 'Quotes', 
       icon: FileText, 
-      badge: 3,
+      badge: quotesCount,
       badgeColor: 'bg-flowdoors-blue-500',
       description: 'Manage quotes',
       path: '/admin/quotes'
@@ -58,7 +85,7 @@ function Sidebar() {
     { 
       name: 'Leads', 
       icon: Users, 
-      badge: 12,
+      badge: leadsCount,
       badgeColor: 'bg-flowdoors-green-500',
       description: 'Track prospects',
       path: '/admin/leads'
@@ -87,7 +114,7 @@ function Sidebar() {
     { 
       name: 'Notifications', 
       icon: Bell, 
-      badge: 5,
+      badge: notificationsCount,
       badgeColor: 'bg-red-500',
       description: 'Activity & alerts',
       path: '/admin/notifications'
