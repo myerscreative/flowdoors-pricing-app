@@ -1,19 +1,19 @@
 'use client'
 
 import {
-    Bell,
-    ChevronDown,
-    FileText,
-    HelpCircle,
-    Home,
-    LogOut,
-    Menu,
-    Settings,
-    ShoppingCart,
-    TrendingUp,
-    User,
-    Users,
-    X
+  Bell,
+  ChevronDown,
+  FileText,
+  HelpCircle,
+  Home,
+  LogOut,
+  Menu,
+  Settings,
+  ShoppingCart,
+  TrendingUp,
+  User,
+  Users,
+  X
 } from 'lucide-react';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -174,14 +174,7 @@ function Sidebar() {
                     }
                   `}
                 >
-                  <div className="relative">
-                    <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-flowdoors-blue-600'} transition-colors`} />
-                    {item.badge && (
-                      <span className={`absolute -top-1 -right-1 ${item.badgeColor} text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center`}>
-                        {item.badge}
-                      </span>
-                    )}
-                  </div>
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-flowdoors-blue-600'} transition-colors`} />
                   
                   {!isCollapsed && (
                     <div className="flex-1 text-left">
