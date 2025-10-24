@@ -112,6 +112,47 @@ export async function getSalespeople(): Promise<Salesperson[]> {
 
     return salespeople
   } catch (error) {
+    // Check if this is a permission error
+    const isPermissionError = error instanceof Error && 
+      (error.message.includes('permission') || error.message.includes('Missing'))
+    
+    if (isPermissionError) {
+      console.warn('⚠️ Permission error accessing Firestore, falling back to API route')
+      // Fall back to API route that uses Firebase Admin
+      const response = await fetch('/api/salespeople')
+      if (response.ok) {
+        const salespeople = await response.json()
+        // Transform the API response to match the expected format
+        return salespeople.map((d: Record<string, unknown>) => ({
+          id: d.id,
+          salesperson_id: String(d.salesperson_id ?? ''),
+          firebase_uid: (d.firebase_uid as string | undefined) ?? '',
+          name: String(d.name ?? ''),
+          email: String(d.email ?? ''),
+          location_code: String(d.location_code ?? ''),
+          role: String(d.role ?? ''),
+          status: String(d.status ?? ''),
+          prefix: (d.prefix as string | undefined) ?? '',
+          zipcodes: (Array.isArray(d.zipcodes)
+            ? (d.zipcodes as unknown[])
+            : []
+          ).map((z) => String(z)),
+          phone: String(d.phone ?? ''),
+          homeZip: String(d.homeZip ?? ''),
+          referralCodes: (Array.isArray(d.referralCodes)
+            ? (d.referralCodes as unknown[])
+            : []
+          ).map((c) => String(c)),
+          created_at: toMaybeDate(d.created_at) ?? new Date(),
+          updated_at: toMaybeDate(d.updated_at) ?? new Date(),
+        } as Salesperson))
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('API fallback failed:', response.status, errorData)
+        throw new Error(errorData.error || 'Failed to fetch salespeople from API')
+      }
+    }
+    
     console.error('Error getting salespeople:', error)
     throw error
   }
