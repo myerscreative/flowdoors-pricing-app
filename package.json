@@ -23,7 +23,8 @@
     "prepare": "husky",
     "format": "prettier --write .",
     "set-role": "tsx scripts/setUserRole.ts",
-    "list-users": "tsx scripts/listUsersWithRoles.ts"
+    "list-users": "tsx scripts/listUsersWithRoles.ts",
+    "create-admin": "tsx scripts/create-admin-login.ts"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm typecheck"
