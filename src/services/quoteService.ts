@@ -2,10 +2,10 @@
 
 // Type-only imports for Firebase typings
 import type {
-  QueryDocumentSnapshot,
-  DocumentData,
-  Transaction,
-  Firestore,
+    DocumentData,
+    Firestore,
+    QueryDocumentSnapshot,
+    Transaction,
 } from 'firebase/firestore'
 import type { FirebaseStorage } from 'firebase/storage'
 import { z } from 'zod'
@@ -213,12 +213,12 @@ function requireStorage(): FirebaseStorage {
   return storage as FirebaseStorage
 }
 
-import { kanbanService } from './kanbanService'
 import { getSalespersonById } from '@/services/salesService'
+import { kanbanService } from './kanbanService'
 
 // Canonical types
-import type { QuoteNote as Note, QuoteTask as Task } from '@/types/quote'
 import type { Quote as QuoteContextState } from '@/lib/types'
+import type { QuoteNote as Note, QuoteTask as Task } from '@/types/quote'
 
 /* ========================= Local Types & Helpers ========================= */
 
@@ -732,6 +732,20 @@ export async function getQuotes(
         console.warn('✓ Loaded quotes from server')
       }
     } catch (e) {
+      // Check if this is a permission error
+      const isPermissionError = e instanceof Error && 
+        (e.message.includes('permission') || e.message.includes('Missing'))
+      
+      if (isPermissionError) {
+        console.warn('⚠️ Permission error accessing Firestore, falling back to API route')
+        // Fall back to API route that uses Firebase Admin
+        const response = await fetch('/api/quotes')
+        if (response.ok) {
+          const quotes = await response.json()
+          return quotes as Array<Record<string, unknown>>
+        }
+      }
+      
       console.warn(
         'getQuotes: orderBy(createdAt) failed, falling back to limited unordered fetch:',
         e
@@ -843,6 +857,24 @@ export async function getQuotes(
     return rows
   } catch (error) {
     console.error('Error getting quotes:', error)
+    
+    // If this is a permission error, try falling back to API route
+    const isPermissionError = error instanceof Error && 
+      (error.message.includes('permission') || error.message.includes('Missing'))
+    
+    if (isPermissionError) {
+      console.warn('⚠️ Permission error, falling back to API route')
+      try {
+        const response = await fetch('/api/quotes')
+        if (response.ok) {
+          const quotes = await response.json()
+          return quotes as Array<Record<string, unknown>>
+        }
+      } catch (apiError) {
+        console.error('Error fetching quotes from API:', apiError)
+      }
+    }
+    
     throw error
   }
 }

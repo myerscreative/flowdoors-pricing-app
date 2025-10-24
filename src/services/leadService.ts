@@ -173,6 +173,20 @@ export async function getLeads(): Promise<Lead[]> {
       const q = query(collection(db, 'leads'), orderBy('createdAt', 'desc'))
       snap = await getDocs(q)
     } catch (e) {
+      // Check if this is a permission error
+      const isPermissionError = e instanceof Error && 
+        (e.message.includes('permission') || e.message.includes('Missing'))
+      
+      if (isPermissionError) {
+        console.warn('⚠️ Permission error accessing Firestore, falling back to API route')
+        // Fall back to API route that uses Firebase Admin
+        const response = await fetch('/api/leads')
+        if (response.ok) {
+          const leads = await response.json()
+          return leads as Lead[]
+        }
+      }
+      
       console.warn(
         'getLeads: orderBy(createdAt) failed, falling back to unordered fetch:',
         e
@@ -192,6 +206,24 @@ export async function getLeads(): Promise<Lead[]> {
     return leads
   } catch (error) {
     console.error('Failed to fetch leads:', error)
+    
+    // If this is a permission error, try falling back to API route
+    const isPermissionError = error instanceof Error && 
+      (error.message.includes('permission') || error.message.includes('Missing'))
+    
+    if (isPermissionError) {
+      console.warn('⚠️ Permission error, falling back to API route')
+      try {
+        const response = await fetch('/api/leads')
+        if (response.ok) {
+          const leads = await response.json()
+          return leads as Lead[]
+        }
+      } catch (apiError) {
+        console.error('Error fetching leads from API:', apiError)
+      }
+    }
+    
     throw new Error(`Failed to fetch leads: ${error}`)
   }
 }
