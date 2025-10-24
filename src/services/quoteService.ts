@@ -2,10 +2,10 @@
 
 // Type-only imports for Firebase typings
 import type {
-    DocumentData,
-    Firestore,
-    QueryDocumentSnapshot,
-    Transaction,
+  DocumentData,
+  Firestore,
+  QueryDocumentSnapshot,
+  Transaction,
 } from 'firebase/firestore'
 import type { FirebaseStorage } from 'firebase/storage'
 import { z } from 'zod'

@@ -209,7 +209,9 @@ export async function getLeads(): Promise<Lead[]> {
     
     // If this is a permission error, try falling back to API route
     const isPermissionError = error instanceof Error && 
-      (error.message.includes('permission') || error.message.includes('Missing'))
+      (error.message.includes('permission') || 
+       error.message.includes('Missing') ||
+       error.message.includes('permission-denied'))
     
     if (isPermissionError) {
       console.warn('⚠️ Permission error, falling back to API route')
@@ -217,13 +219,17 @@ export async function getLeads(): Promise<Lead[]> {
         const response = await fetch('/api/leads')
         if (response.ok) {
           const leads = await response.json()
+          console.warn('✅ Successfully fetched leads from API fallback')
           return leads as Lead[]
+        } else {
+          console.error('API fallback failed with status:', response.status)
         }
       } catch (apiError) {
         console.error('Error fetching leads from API:', apiError)
       }
     }
     
+    // Only throw if fallback wasn't attempted or didn't succeed
     throw new Error(`Failed to fetch leads: ${error}`)
   }
 }
