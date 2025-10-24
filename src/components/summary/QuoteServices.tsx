@@ -116,7 +116,7 @@ export function QuoteServices() {
                 <div className="flex-grow">
                   <div className="flex justify-between items-center">
                     <h4 className="font-semibold">Regular Delivery</h4>
-                    <p className="font-bold text-md">$800+</p>
+                    <p className="font-bold text-md">$150+</p>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Curbside delivery. You will need people and/or forklift to

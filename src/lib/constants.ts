@@ -177,7 +177,7 @@ export const DELIVERY_OPTIONS: DeliveryOptionInfo[] = [
     name: 'Regular Delivery',
     description:
       'Curbside delivery. You will need people and/or forklift to offload the truck.',
-    price: 800,
+    price: 150,
   },
   {
     name: 'White Glove Delivery',

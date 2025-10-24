@@ -1,7 +1,7 @@
 'use client'
 
-import { useQuote } from '@/context/QuoteContext'
 import { Switch } from '@/components/ui/switch'
+import { useQuote } from '@/context/QuoteContext'
 import { Truck } from 'lucide-react'
 
 const INSTALLATION_INCLUSIONS = [
@@ -127,7 +127,7 @@ export function EnhancedQuoteServices() {
                       Regular Delivery
                     </h5>
                     <span className="text-lg font-bold text-flowdoors-blue">
-                      $800+
+                      $150+
                     </span>
                   </div>
                   <p className="text-sm text-slate-600">
