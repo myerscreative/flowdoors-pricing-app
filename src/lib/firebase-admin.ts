@@ -85,6 +85,7 @@ if (!getApps().length) {
     }
   } catch (error) {
     console.error('❌ Firebase Admin initialization error:', error)
+    console.error('Error details:', error instanceof Error ? error.message : String(error))
     console.warn('⚠️ Firebase Admin not available - some features may not work')
   }
 }

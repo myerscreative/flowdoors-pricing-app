@@ -1,14 +1,14 @@
 // src/app/summary/page.tsx
 'use client'
 
-import { useEffect } from 'react'
-import { useQuote } from '@/context/QuoteContext'
-import { ProgressBar } from '@/components/summary/ProgressBar'
-import { QuoteSummaryHeader } from '@/components/summary/QuoteSummaryHeader'
 import { EnhancedItemsTable } from '@/components/summary/EnhancedItemsTable'
 import { EnhancedQuoteItemCard } from '@/components/summary/EnhancedQuoteItemCard'
 import { EnhancedQuoteServices } from '@/components/summary/EnhancedQuoteServices'
 import { EnhancedQuoteTotals } from '@/components/summary/EnhancedQuoteTotals'
+import { ProgressBar } from '@/components/summary/ProgressBar'
+import { QuoteSummaryHeader } from '@/components/summary/QuoteSummaryHeader'
+import { useQuote } from '@/context/QuoteContext'
+import { useEffect } from 'react'
 
 export default function SummaryPage() {
   const { state, dispatch } = useQuote()

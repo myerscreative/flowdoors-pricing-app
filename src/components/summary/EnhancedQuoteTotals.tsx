@@ -1,18 +1,18 @@
 'use client'
 
-import { useQuote } from '@/context/QuoteContext'
-import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Separator } from '@/components/ui/separator'
+import { useQuote } from '@/context/QuoteContext'
 import { useToast } from '@/hooks/use-toast'
-import { generateQuotePdf } from '@/lib/generate-pdf'
-import { addQuote } from '@/services/quoteService'
 import { track } from '@/lib/analytics'
 import { trackConversion } from '@/lib/analytics/googleAds'
 import { readAttributionClient } from '@/lib/attributions'
+import { generateQuotePdf } from '@/lib/generate-pdf'
 import { getStoredAttribution } from '@/lib/marketing/attribution'
+import { addQuote } from '@/services/quoteService'
+import { Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 export function EnhancedQuoteTotals() {
   const { state, dispatch } = useQuote()

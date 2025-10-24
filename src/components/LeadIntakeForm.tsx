@@ -8,39 +8,39 @@ import * as z from 'zod'
 
 import { Button } from '@/components/ui/button'
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select'
 import { useQuote } from '@/context/QuoteContext'
 import { trackConversion } from '@/lib/analytics/googleAds'
 import {
-    CUSTOMER_TYPE_OPTIONS,
-    HEARD_VIA_OPTIONS,
-    TIMELINE_OPTIONS,
-    type SelectOption,
+  CUSTOMER_TYPE_OPTIONS,
+  HEARD_VIA_OPTIONS,
+  TIMELINE_OPTIONS,
+  type SelectOption,
 } from '@/lib/constants'
 import { getStoredAttribution } from '@/lib/marketing/attribution'
 import type { Customer, CustomerType, Timeline } from '@/lib/types'
 import {
-    Award,
-    BadgeCheck,
-    Lock,
-    Phone,
-    Shield,
-    Trophy,
-    Zap,
+  Award,
+  BadgeCheck,
+  Lock,
+  Phone,
+  Shield,
+  Trophy,
+  Zap,
 } from 'lucide-react'
 
 /** Helpers: make string tuples for z.enum from {label,value} options */

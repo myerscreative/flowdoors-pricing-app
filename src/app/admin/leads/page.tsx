@@ -75,13 +75,16 @@ export default function LeadsPage() {
         const data = await response.json()
         setLeads(data)
       } else {
-        throw new Error('Failed to fetch leads')
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to fetch leads:', response.status, errorData)
+        throw new Error(errorData.error || 'Failed to fetch leads')
       }
     } catch (error) {
       console.error('Error fetching leads:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch leads'
       toast({
         title: 'Error',
-        description: 'Failed to fetch leads',
+        description: errorMessage,
         variant: 'destructive',
       })
     } finally {
@@ -91,7 +94,7 @@ export default function LeadsPage() {
 
   useEffect(() => {
     fetchLeads()
-  }, [showWithoutQuotes])
+  }, [showWithoutQuotes, toast])
 
   // Filter leads based on search and filters
   const filteredLeads = useMemo(() => {

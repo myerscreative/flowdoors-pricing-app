@@ -1,19 +1,19 @@
 'use client'
 
 import {
-  Bell,
-  ChevronDown,
-  FileText,
-  HelpCircle,
-  Home,
-  LogOut,
-  Menu,
-  Settings,
-  ShoppingCart,
-  TrendingUp,
-  User,
-  Users,
-  X
+    Bell,
+    ChevronDown,
+    FileText,
+    HelpCircle,
+    Home,
+    LogOut,
+    Menu,
+    Settings,
+    ShoppingCart,
+    TrendingUp,
+    User,
+    Users,
+    X
 } from 'lucide-react';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -119,22 +119,12 @@ function Sidebar() {
                 </div>
               </div>
             )}
-            {isCollapsed && (
-              <button 
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-            )}
-            {!isCollapsed && (
-              <button 
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
+            <button 
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white"
+            >
+              {isCollapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5" />}
+            </button>
           </div>
         </div>
 
