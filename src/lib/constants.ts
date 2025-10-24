@@ -1,17 +1,17 @@
 import {
-    Clock,
-    MoveHorizontal,
-    PackageCheck,
-    ShieldCheck,
-    Wrench
+  Clock,
+  MoveHorizontal,
+  PackageCheck,
+  ShieldCheck,
+  Wrench
 } from 'lucide-react'
 import type {
-    DeliveryOptionInfo,
-    GlazingOption,
-    InstallationFeature,
-    ProductId,
-    ProductTypeInfo,
-    RalColor,
+  DeliveryOptionInfo,
+  GlazingOption,
+  InstallationFeature,
+  ProductId,
+  ProductTypeInfo,
+  RalColor,
 } from './types'
 
 export const STEPS = [
@@ -39,7 +39,7 @@ export const PRODUCT_TYPES: ProductTypeInfo[] = [
     },
     sizeConstraints: {
       minPanelWidth: 28,
-      maxPanelWidth: 39,
+      maxPanelWidth: 48,
       maxHeight: 137.79,
       maxWidth: 292,
     },

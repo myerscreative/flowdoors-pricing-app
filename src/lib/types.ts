@@ -1,8 +1,8 @@
 import type { LucideProps } from 'lucide-react'
 import type {
-    ComponentType,
-    ForwardRefExoticComponent,
-    RefAttributes,
+  ComponentType,
+  ForwardRefExoticComponent,
+  RefAttributes,
 } from 'react'
 
 // Reusable safe types for JSON-like data

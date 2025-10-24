@@ -2,9 +2,9 @@
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-import { NextResponse } from 'next/server'
 import admin from 'firebase-admin'
 import type { FieldValue } from 'firebase-admin/firestore'
+import { NextResponse } from 'next/server'
 
 /** Safe idempotent Admin init (prefer cert from env, else ADC) */
 if (!admin.apps.length) {

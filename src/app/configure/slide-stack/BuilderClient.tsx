@@ -1,7 +1,9 @@
 'use client'
 
 import { useQuote } from '@/context/QuoteContext'
+import { PRODUCT_TYPES } from '@/lib/constants'
 import { PANEL_GAP_IN } from '@/lib/door-config'
+import type { ProductTypeInfo } from '@/lib/types'
 import { CheckCircle2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -201,17 +203,21 @@ export default function SlideStackBuilder() {
   // ---- Panel count math (Bi-Fold rules reused) ----
   // usable opening = width - 5"
   const opening = typeof width === 'number' ? Math.max(width - PANEL_GAP_IN, 0) : null
-  // per-panel must be 25"–39"; allow 2..8 panels; max height 120"
+  // Use constraints from PRODUCT_TYPES
+  const slideStackType = PRODUCT_TYPES.find((p: ProductTypeInfo) => p.id === 'Slide-and-Stack')
+  const minPanelWidth = slideStackType?.sizeConstraints?.minPanelWidth ?? 28
+  const maxPanelWidth = slideStackType?.sizeConstraints?.maxPanelWidth ?? 48
+  // per-panel must be within configured range; allow 2..8 panels
   const validPanelOptions = useMemo(() => {
     if (opening == null || opening <= 0)
       return [] as { n: number; per: number }[]
     const opts: { n: number; per: number }[] = []
     for (let n = 2; n <= 8; n++) {
       const per = opening / n
-      if (per >= 25 && per <= 39) opts.push({ n, per })
+      if (per >= minPanelWidth && per <= maxPanelWidth) opts.push({ n, per })
     }
     return opts
-  }, [opening])
+  }, [opening, minPanelWidth, maxPanelWidth])
 
   // Check if form is complete (after panel/layout state exists)
   const isFormComplete = useMemo(() => {
@@ -619,7 +625,7 @@ export default function SlideStackBuilder() {
                   Panel Count
                 </div>
                 <div className="mt-1 text-xs text-gray-500">
-                  Usable opening = width − 5". Per-panel must be 25"–39".
+                  Usable opening = width − 5". Per-panel must be {minPanelWidth}"–{maxPanelWidth}".
                 </div>
 
                 {typeof width !== 'number' ? (
