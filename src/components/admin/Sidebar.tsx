@@ -119,12 +119,22 @@ function Sidebar() {
                 </div>
               </div>
             )}
-            <button 
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white"
-            >
-              {isCollapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5" />}
-            </button>
+            {isCollapsed && (
+              <button 
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            )}
+            {!isCollapsed && (
+              <button 
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 
