@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
+import { useCurrentUserRole } from './useCurrentUserRole'
 
 /**
  * Hidden admin access hook
@@ -12,6 +13,8 @@ import { useRouter } from 'next/navigation'
  * Provides two ways to access admin:
  * 1. Type "admin" sequence anywhere on the page (ignores input fields)
  * 2. Click logo 5 times rapidly (within 1 second)
+ * 
+ * Redirects to /admin/login if not logged in, or /admin if already logged in.
  */
 
 const ADMIN_SEQUENCE = 'admin'
@@ -21,6 +24,7 @@ const LOGO_CLICK_THRESHOLD = 5 // Number of clicks needed
 
 export function useAdminShortcut() {
   const router = useRouter()
+  const { role, loading } = useCurrentUserRole()
   const sequenceRef = useRef('')
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const clickCountRef = useRef(0)
@@ -52,7 +56,10 @@ export function useAdminShortcut() {
       if (sequenceRef.current === ADMIN_SEQUENCE) {
         console.log('🔑 Admin shortcut activated via keyboard sequence')
         setIsActivated(true)
-        router.push('/admin')
+        // Redirect to login if not logged in, otherwise to admin dashboard
+        const targetPath = role ? '/admin' : '/admin/login'
+        console.log(`📋 Redirecting to ${targetPath} (role: ${role || 'none'})`)
+        router.push(targetPath)
         sequenceRef.current = ''
       } else if (sequenceRef.current.length >= ADMIN_SEQUENCE.length) {
         // Reset if sequence gets too long
@@ -79,7 +86,10 @@ export function useAdminShortcut() {
       if (clickCountRef.current >= LOGO_CLICK_THRESHOLD) {
         console.log('🔑 Admin shortcut activated via logo clicks')
         setIsActivated(true)
-        router.push('/admin')
+        // Redirect to login if not logged in, otherwise to admin dashboard
+        const targetPath = role ? '/admin' : '/admin/login'
+        console.log(`📋 Redirecting to ${targetPath} (role: ${role || 'none'})`)
+        router.push(targetPath)
         clickCountRef.current = 0
       }
 
@@ -111,7 +121,7 @@ export function useAdminShortcut() {
         clearTimeout(clickTimeoutRef.current)
       }
     }
-  }, [router])
+  }, [router, role])
 
   return { isActivated }
 }
