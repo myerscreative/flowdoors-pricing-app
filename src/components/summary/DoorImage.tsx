@@ -1,7 +1,6 @@
 // src/components/summary/DoorImage.tsx
 'use client'
 
-import React from 'react'
 import { useQuote } from '@/context/QuoteContext'
 import Image from 'next/image'
 
@@ -67,7 +66,7 @@ export function DoorImage() {
 
         {/* Configuration Diagram - Priority display */}
         {configImageUrl ? (
-          <div className="relative w-full max-w-2xl h-[250px] bg-white rounded-lg overflow-hidden shadow-lg border-2 border-gray-200 flex items-center justify-center p-6">
+          <div className="relative w-full max-w-2xl h-[250px] bg-white rounded-lg overflow-hidden shadow-lg border-2 border-gray-200 flex items-center justify-center px-6 py-[5px]">
             <Image
               src={configImageUrl}
               alt={`${configuration} configuration diagram`}
@@ -78,7 +77,7 @@ export function DoorImage() {
           </div>
         ) : (
           /* Fallback to product image if no configuration available */
-          <div className="relative w-full max-w-2xl h-[250px] bg-gray-100 rounded-lg overflow-hidden shadow-lg flex items-center justify-center p-6">
+          <div className="relative w-full max-w-2xl h-[250px] bg-gray-100 rounded-lg overflow-hidden shadow-lg flex items-center justify-center px-6 py-[5px]">
             <Image
               src={imagePath}
               alt={`${productType} door`}
