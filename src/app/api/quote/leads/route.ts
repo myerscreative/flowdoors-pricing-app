@@ -231,7 +231,9 @@ export async function POST(req: Request) {
 
       const uiRole = typeof body.role === 'string' ? body.role : undefined
       const roleMap: Record<string, Role> = {
-        homeowner: 'homeowner',
+        'homeowner-updating': 'homeowner',
+        'homeowner-building': 'homeowner',
+        commercial: 'contractor',
         contractor: 'contractor',
         architect: 'architect',
         dealer: 'dealer',
@@ -414,11 +416,13 @@ export async function PUT(req: Request) {
       ? (timelineMap[uiTimeline] as Timeline | undefined)
       : undefined
 
-    // UI role/customerType values: 'homeowner' | 'contractor' | 'architect' | 'dealer' | 'other'
-    // API expects: Role without 'other' → map 'other' to 'homeowner'
+    // UI role/customerType values: 'homeowner-updating' | 'homeowner-building' | 'commercial' | 'contractor' | 'architect' | 'dealer' | 'other'
+    // API expects: Role without 'other' → map to appropriate role
     const uiRole = typeof body.role === 'string' ? body.role : undefined
     const roleMap: Record<string, Role> = {
-      homeowner: 'homeowner',
+      'homeowner-updating': 'homeowner',
+      'homeowner-building': 'homeowner',
+      commercial: 'contractor',
       contractor: 'contractor',
       architect: 'architect',
       dealer: 'dealer',

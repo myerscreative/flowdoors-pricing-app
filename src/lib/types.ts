@@ -33,6 +33,9 @@ export type CustomerType =
   | 'Architect'
   | 'Designer'
   | 'Dealer'
+  | 'homeowner-updating'
+  | 'homeowner-building'
+  | 'commercial'
   | ''
 export type ProductId =
   | 'Slide-and-Stack'

@@ -69,13 +69,13 @@ interface ModernQuoteStartFormProps {
 
 const PROJECT_TYPE_CARDS = [
   {
-    value: 'homeowner',
+    value: 'homeowner-updating',
     icon: Home,
     title: 'Updating My Home',
     description: 'Renovating or upgrading existing home',
   },
   {
-    value: 'homeowner',
+    value: 'homeowner-building',
     icon: Building2,
     title: 'Building New Home',
     description: 'New construction or custom build',

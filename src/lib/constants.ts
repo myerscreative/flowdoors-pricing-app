@@ -217,7 +217,9 @@ export const TIMELINE_OPTIONS: SelectOption[] = [
 ]
 
 export const CUSTOMER_TYPE_OPTIONS: SelectOption[] = [
-  { label: 'Homeowner', value: 'homeowner' },
+  { label: 'Updating My Home', value: 'homeowner-updating' },
+  { label: 'Building New Home', value: 'homeowner-building' },
+  { label: 'Commercial Project', value: 'commercial' },
   { label: 'Contractor/Builder', value: 'contractor' },
   { label: 'Architect/Designer', value: 'architect' },
   { label: 'Dealer/Reseller', value: 'dealer' },
