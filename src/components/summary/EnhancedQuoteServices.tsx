@@ -167,7 +167,7 @@ export function EnhancedQuoteServices() {
                       White Glove Delivery
                     </h5>
                     <span className="text-lg font-bold text-flowdoors-blue">
-                      $1,500+
+                      $225+
                     </span>
                   </div>
                   <p className="text-sm text-slate-600">

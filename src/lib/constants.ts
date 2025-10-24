@@ -183,7 +183,7 @@ export const DELIVERY_OPTIONS: DeliveryOptionInfo[] = [
     name: 'White Glove Delivery',
     description:
       'Professional offloading and inspection of all items at time of offloading.',
-    price: 1500,
+    price: 225,
     features: [
       'Professional offloading service',
       'Complete inspection at delivery',

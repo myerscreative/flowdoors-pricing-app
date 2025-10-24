@@ -1,9 +1,9 @@
 // src/components/summary/QuoteServices.tsx
 'use client'
 
-import { useQuote } from '@/context/QuoteContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
+import { useQuote } from '@/context/QuoteContext'
 import { Truck } from 'lucide-react'
 
 const INSTALLATION_INCLUSIONS = [
@@ -151,7 +151,7 @@ export function QuoteServices() {
                 <div className="flex-grow">
                   <div className="flex justify-between items-center">
                     <h4 className="font-semibold">White Glove Delivery</h4>
-                    <p className="font-bold text-md">$1,500+</p>
+                    <p className="font-bold text-md">$225+</p>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Professional offloading and inspection of all items at time
