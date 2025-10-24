@@ -1,6 +1,8 @@
 /* path: src/components/pdf/FlowDoorsQuoteLayout.tsx */
 /* eslint-disable @next/next/no-img-element */
 
+import { PANEL_GAP_IN } from '@/lib/door-config'
+
 /** ===== Types kept narrow to avoid `any` and lint errors ===== */
 type PdfTotals = {
   subtotal?: number
@@ -243,7 +245,7 @@ function swatchClasses(name?: string, code?: string): string {
 
 function computePanelWidthIn(totalWidthIn?: number, panelCount?: number) {
   if (!totalWidthIn || !panelCount || panelCount <= 0) return undefined
-  const usable = Math.max(totalWidthIn - 5, 0)
+  const usable = Math.max(totalWidthIn - PANEL_GAP_IN, 0)
   return Math.round((usable / panelCount) * 100) / 100
 }
 

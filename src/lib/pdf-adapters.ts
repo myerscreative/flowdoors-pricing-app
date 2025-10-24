@@ -1,6 +1,7 @@
 // src/lib/pdf-adapters.ts
 import { STANDARD_QUOTE_BLURB } from '@/constants/quotePrint'
 import { PRODUCT_SQFT_RATE } from '@/lib/constants'
+import { PANEL_GAP_IN } from '@/lib/door-config'
 
 /** Generic record */
 type AnyRec = Record<string, unknown>
@@ -288,7 +289,7 @@ export function mapStateToPdfProps(state: unknown): ScenicLayoutProps {
       asNum(product.panelWidthIn),
       asNum(it.panelSizeIn),
       asNum(it.panelWidthIn),
-      widthIn && panelCount ? round2((widthIn - 5) / panelCount) : undefined
+      widthIn && panelCount ? round2((widthIn - PANEL_GAP_IN) / panelCount) : undefined
     )
 
     const clearOpeningWidthIn = pick<number>(

@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuote } from '@/context/QuoteContext'
+import { PANEL_GAP_IN } from '@/lib/door-config'
 import { CheckCircle2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -199,7 +200,7 @@ export default function SlideStackBuilder() {
 
   // ---- Panel count math (Bi-Fold rules reused) ----
   // usable opening = width - 5"
-  const opening = typeof width === 'number' ? Math.max(width - 5, 0) : null
+  const opening = typeof width === 'number' ? Math.max(width - PANEL_GAP_IN, 0) : null
   // per-panel must be 25"–39"; allow 2..8 panels; max height 120"
   const validPanelOptions = useMemo(() => {
     if (opening == null || opening <= 0)

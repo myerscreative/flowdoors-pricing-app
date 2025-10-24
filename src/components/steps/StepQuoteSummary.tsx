@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast'
 import { track } from '@/lib/analytics'
 import { readAttributionClient } from '@/lib/attributions'
 import { DELIVERY_OPTIONS, INSTALLATION_INCLUSIONS } from '@/lib/constants'
+import { PANEL_GAP_IN } from '@/lib/door-config'
 import { generateQuotePdf } from '@/lib/generate-pdf'
 import type { DeliveryOption, InstallOption } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -87,7 +88,7 @@ function toCurrency(n: number): string {
 // mirror PDF logic
 function computePanelWidthIn(totalWidthIn?: number, panelCount?: number) {
   if (!totalWidthIn || !panelCount || panelCount <= 0) return undefined
-  const usable = Math.max(totalWidthIn - 5, 0)
+  const usable = Math.max(totalWidthIn - PANEL_GAP_IN, 0)
   return Math.round((usable / panelCount) * 100) / 100
 }
 
