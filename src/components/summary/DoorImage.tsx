@@ -63,14 +63,11 @@ export function DoorImage() {
           <h3 className="text-lg font-semibold text-gray-900">
             Selected Configuration
           </h3>
-          <p className="text-sm text-gray-600">
-            {configuration || productType}
-          </p>
         </div>
 
         {/* Configuration Diagram - Priority display */}
         {configImageUrl ? (
-          <div className="relative w-full max-w-2xl h-80 bg-white rounded-lg overflow-hidden shadow-lg border-2 border-gray-200 flex items-center justify-center p-6">
+          <div className="relative w-full max-w-2xl h-[250px] bg-white rounded-lg overflow-hidden shadow-lg border-2 border-gray-200 flex items-center justify-center p-6">
             <Image
               src={configImageUrl}
               alt={`${configuration} configuration diagram`}
@@ -81,7 +78,7 @@ export function DoorImage() {
           </div>
         ) : (
           /* Fallback to product image if no configuration available */
-          <div className="relative w-full max-w-2xl h-80 bg-gray-100 rounded-lg overflow-hidden shadow-lg flex items-center justify-center p-6">
+          <div className="relative w-full max-w-2xl h-[250px] bg-gray-100 rounded-lg overflow-hidden shadow-lg flex items-center justify-center p-6">
             <Image
               src={imagePath}
               alt={`${productType} door`}
