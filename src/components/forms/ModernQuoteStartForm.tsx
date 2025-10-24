@@ -23,7 +23,6 @@ import type { Customer, CustomerType, Timeline } from '@/lib/types'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Building2, CheckCircle, Clock, Hammer, Home, Lock, Mail, MapPin, Shield, Store } from 'lucide-react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
@@ -501,15 +500,6 @@ export function ModernQuoteStartForm({ onSubmit }: ModernQuoteStartFormProps) {
                     />
                     <p className="mt-1.5 text-xs text-slate-500">Have a code? Enter it for special savings</p>
                   </div>
-
-                  <div className="pt-2">
-                    <Link 
-                      href="/admin/login" 
-                      className="text-sm text-slate-600 hover:text-flowdoors-blue transition-colors"
-                    >
-                      Admin Login
-                    </Link>
-                  </div>
                 </div>
               </div>
             </form>
@@ -561,7 +551,7 @@ export function ModernQuoteStartForm({ onSubmit }: ModernQuoteStartFormProps) {
                 <span key={star} className="text-flowdoors-green text-xl">★</span>
               ))}
             </div>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 mb-4">
               <span className="font-semibold text-flowdoors-charcoal">4.9 out of 5 stars</span> from over 250 happy customers
             </p>
           </div>
