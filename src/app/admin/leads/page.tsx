@@ -17,15 +17,11 @@ import {
     Calendar,
     Clock,
     Download,
-    Edit,
-    Eye,
-    Filter,
     Mail,
     MapPin,
     Phone,
     RefreshCw,
     Search,
-    Trash2,
     User,
     Users
 } from 'lucide-react'

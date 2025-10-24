@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import * as admin from 'firebase-admin'
 import type { QueryDocumentSnapshot } from 'firebase-admin/firestore'
+import { NextRequest, NextResponse } from 'next/server'
 
 export interface Lead {
   id: string
@@ -25,6 +25,7 @@ export interface Lead {
   gclid?: string
   fbclid?: string
   hasQuote: boolean
+  assignedTo?: string
 }
 
 function toDateSafe(v: unknown): Date | null {
@@ -103,6 +104,7 @@ export async function GET(request: NextRequest) {
           gclid: data.gclid,
           fbclid: data.fbclid,
           hasQuote: false, // Will be set below
+          assignedTo: data.assignedTo,
         }
       }
     )

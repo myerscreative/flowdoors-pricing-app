@@ -187,8 +187,8 @@ export function ModernQuoteStartForm({ onSubmit }: ModernQuoteStartFormProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 md:py-16 px-4">
-      <div className="mx-auto max-w-4xl">
+    <div className="min-h-screen bg-slate-50 py-8 md:py-16 px-[5vw]">
+      <div className="mx-auto max-w-full">
         {/* Form Container */}
         <div className="relative rounded-3xl bg-white shadow-2xl overflow-hidden border border-slate-100">
           {/* Subtle accent line at top */}

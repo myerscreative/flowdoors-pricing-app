@@ -40,7 +40,7 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
 
       {/* Top navigation */}
       <header className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="px-[5vw]">
           <div className="flex items-center justify-between h-16">
             {/* Mobile menu button and back button */}
             <div className="flex items-center space-x-2">
@@ -147,7 +147,7 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
 
       {/* Page content - scrollable */}
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">{children}</div>
+        <div className="px-[5vw] py-6">{children}</div>
       </main>
     </div>
   )

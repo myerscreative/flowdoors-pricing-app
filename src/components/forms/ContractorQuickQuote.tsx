@@ -72,8 +72,8 @@ export function ContractorQuickQuote() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-flowdoors-charcoal-800 via-flowdoors-charcoal to-slate-900 py-12 px-4">
-      <div className="mx-auto max-w-5xl">
+    <div className="min-h-screen bg-gradient-to-br from-flowdoors-charcoal-800 via-flowdoors-charcoal to-slate-900 py-12 px-[5vw]">
+      <div className="mx-auto max-w-full">
         {/* Header */}
         <div className="mb-8 text-center">
           <Image

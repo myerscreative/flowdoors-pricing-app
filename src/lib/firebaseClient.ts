@@ -1,9 +1,9 @@
 // src/lib/firebaseClient.ts
-import { initializeApp, getApps, getApp } from 'firebase/app'
-import { getFirestore } from 'firebase/firestore'
+import { getApp, getApps, initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
+import { getFirestore } from 'firebase/firestore'
+import { connectFunctionsEmulator, getFunctions } from 'firebase/functions'
 import { getStorage } from 'firebase/storage'
-import { getFunctions, connectFunctionsEmulator } from 'firebase/functions'
 
 // Fallback config for production when env vars aren't injected
 // These are the actual values from your Firebase project
@@ -92,4 +92,5 @@ if (
   connectFunctionsEmulator(functions, 'localhost', 5001)
 }
 
-export { app, db, auth, storage, functions }
+export { app, auth, db, functions, storage }
+

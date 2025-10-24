@@ -189,6 +189,3 @@ If a key is compromised or you need to rotate it:
 - [Firebase Admin SDK Setup](https://firebase.google.com/docs/admin/setup)
 - [Service Account Best Practices](https://cloud.google.com/iam/docs/best-practices-service-accounts)
 - [Next.js Environment Variables](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables)
-
-
-

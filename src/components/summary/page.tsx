@@ -31,7 +31,7 @@ export default function SummaryPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-6">
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="px-[5vw]">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between gap-3">

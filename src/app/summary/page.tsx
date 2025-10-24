@@ -20,7 +20,7 @@ export default function SummaryPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
-      <div className="max-w-7xl mx-auto px-4 py-8 lg:py-12">
+      <div className="px-[5vw] py-8 lg:py-12">
         {/* Progress Bar */}
         <ProgressBar />
 

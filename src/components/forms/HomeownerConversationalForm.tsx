@@ -471,8 +471,8 @@ export function HomeownerConversationalForm() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 py-12 px-4">
-      <div className="mx-auto max-w-3xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 py-12 px-[5vw]">
+      <div className="mx-auto max-w-full">
         {/* Header */}
         <div className="mb-8 text-center">
           <Image

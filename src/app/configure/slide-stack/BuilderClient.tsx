@@ -400,7 +400,7 @@ export default function SlideStackBuilder() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-8">
-      <div className="mx-auto max-w-7xl px-4">
+      <div className="px-[5vw]">
         {/* Header */}
         <div className="mb-8">
           <div className="rounded-2xl bg-white p-6 shadow-lg border border-slate-100">
