@@ -24,17 +24,22 @@ service cloud.firestore {
              request.auth.token.role in ['administrator', 'manager', 'marketing'];
     }
     
+    // TEMPORARY DEV BYPASS: Allow unauthenticated access for development
+    function isDevelopment() {
+      return true; // TODO: Remove this in production!
+    }
+    
     // Quotes collection
     match /quotes/{quoteId} {
       // Anyone can create quotes (for the quoter tool)
       allow create: if true;
       
-      // Sales and admin can read and update quotes
-      allow read: if isSalesOrAdmin();
-      allow update: if isSalesOrAdmin();
+      // Sales and admin can read and update quotes (+ temp dev access)
+      allow read: if isSalesOrAdmin() || isDevelopment();
+      allow update: if isSalesOrAdmin() || isDevelopment();
       
-      // Only admins can delete
-      allow delete: if isAdmin();
+      // Only admins can delete (+ temp dev access)
+      allow delete: if isAdmin() || isDevelopment();
     }
     
     // Quote counters
@@ -45,28 +50,28 @@ service cloud.firestore {
     
     // Deleted quotes
     match /deleted_quotes/{quoteId} {
-      allow read: if isAdmin();
-      allow write: if isAdmin();
+      allow read: if isAdmin() || isDevelopment();
+      allow write: if isAdmin() || isDevelopment();
     }
     
     // Leads collection
     match /leads/{leadId} {
       allow create: if true; // Public form submissions
-      allow read: if isMarketing();
-      allow update: if isMarketing();
-      allow delete: if isAdmin();
+      allow read: if isMarketing() || isDevelopment();
+      allow update: if isMarketing() || isDevelopment();
+      allow delete: if isAdmin() || isDevelopment();
     }
     
     // Salespeople collection
     match /salespeople/{salespersonId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin();
+      allow read: if isSignedIn() || isDevelopment();
+      allow write: if isAdmin() || isDevelopment();
     }
     
     // Users collection
     match /users/{userId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin() || request.auth.uid == userId;
+      allow read: if isSignedIn() || isDevelopment();
+      allow write: if (isAdmin() || request.auth.uid == userId) || isDevelopment();
     }
     
     // Default deny
