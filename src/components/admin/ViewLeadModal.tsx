@@ -1,16 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Lead } from '@/types/lead'
 import { formatDate, formatPhone, getRelativeTime } from '@/lib/formatters'
-import { Mail, Phone, MapPin, Calendar, User, Trash2, Edit, Eye } from 'lucide-react'
+import { Lead } from '@/types/lead'
+import { Calendar, Edit, Mail, MapPin, Phone, X } from 'lucide-react'
 
 interface ViewLeadModalProps {
   open: boolean
@@ -47,181 +44,216 @@ export function ViewLeadModal({
     onOpenChange(false)
   }
 
-  const handleDelete = () => {
-    if (onDelete) {
-      onDelete(lead)
+  const getRoleIcon = (role: string) => {
+    switch (role.toLowerCase()) {
+      case 'homeowner':
+        return '🏡'
+      case 'contractor':
+        return '🔨'
+      case 'architect':
+        return '📐'
+      case 'builder':
+        return '🏗️'
+      default:
+        return '👤'
     }
-    onOpenChange(false)
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="pb-6">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-2xl font-bold text-[#2e2e2e] flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#00aeef] to-[#0097d1] rounded-xl flex items-center justify-center text-white text-lg">
-                👤
-              </div>
-              Lead Details
-            </DialogTitle>
-            <button
-              onClick={() => onOpenChange(false)}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          {/* Lead Name & Status */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-[#2e2e2e]">{lead.name}</h2>
-              <div className="flex items-center gap-2 mt-1">
-                <User className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-600 capitalize">{lead.role}</span>
+      <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto p-0">
+        {/* GRADIENT HEADER */}
+        <div className="bg-gradient-to-r from-[#00aeef] to-[#0097d1] p-8 text-white relative">
+          <button
+            onClick={() => onOpenChange(false)}
+            className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          
+          <div className="flex items-center gap-6">
+            <div className="text-6xl">
+              {getRoleIcon(lead.role)}
+            </div>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold mb-2">{lead.name}</h2>
+              <div className="flex items-center gap-3">
+                <StatusBadge status={lead.status} />
+                <QuoteBadge hasQuote={lead.hasQuote} />
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <StatusBadge status={lead.status} />
-              <QuoteBadge hasQuote={lead.hasQuote} />
-            </div>
           </div>
+        </div>
 
-          {/* Contact Information */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-[#2e2e2e] mb-4 flex items-center gap-2">
-              <Mail className="h-5 w-5 text-[#00aeef]" />
+        <div className="p-8 space-y-8">
+          {/* CONTACT INFORMATION SECTION */}
+          <div>
+            <h3 className="text-xl font-bold text-[#2e2e2e] mb-6 flex items-center gap-3">
+              <span className="text-2xl">👤</span>
               Contact Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3">
-                <Mail className="h-4 w-4 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-600">Email</p>
-                  <a 
-                    href={`mailto:${lead.email}`} 
-                    className="text-[#00aeef] hover:underline font-medium"
-                  >
-                    {lead.email}
-                  </a>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Phone className="h-4 w-4 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-600">Phone</p>
-                  <a 
-                    href={`tel:${lead.phone}`} 
-                    className="text-[#00aeef] hover:underline font-medium"
-                  >
-                    {formatPhone(lead.phone)}
-                  </a>
-                </div>
-              </div>
+              <InfoCard
+                icon="📧"
+                iconBg="bg-blue-100"
+                iconColor="text-blue-600"
+                label="Email"
+                value={lead.email}
+                href={`mailto:${lead.email}`}
+                linkColor="text-blue-600 hover:text-blue-700"
+              />
+              <InfoCard
+                icon="📞"
+                iconBg="bg-green-100"
+                iconColor="text-green-600"
+                label="Phone"
+                value={formatPhone(lead.phone)}
+                href={`tel:${lead.phone}`}
+                linkColor="text-green-600 hover:text-green-700"
+              />
             </div>
           </div>
 
-          {/* Location & Timeline */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-[#2e2e2e] mb-4 flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-[#00aeef]" />
-              Location & Timeline
+          {/* PROJECT DETAILS SECTION */}
+          <div>
+            <h3 className="text-xl font-bold text-[#2e2e2e] mb-6 flex items-center gap-3">
+              <span className="text-2xl">🏢</span>
+              Project Details
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <InfoCard
+                icon="📍"
+                iconBg="bg-purple-100"
+                iconColor="text-purple-600"
+                label="Location"
+                value={`${lead.location}, ${lead.zipCode}`}
+              />
+              <InfoCard
+                icon="⏱️"
+                iconBg="bg-orange-100"
+                iconColor="text-orange-600"
+                label="Timeline"
+                value={lead.timeline}
+              />
+              <InfoCard
+                icon="📈"
+                iconBg="bg-indigo-100"
+                iconColor="text-indigo-600"
+                label="Source"
+                value={lead.source}
+              />
+              <InfoCard
+                icon={lead.hasQuote ? "✓" : "✗"}
+                iconBg={lead.hasQuote ? "bg-green-100" : "bg-red-100"}
+                iconColor={lead.hasQuote ? "text-green-600" : "text-red-600"}
+                label="Quote Status"
+                value={lead.hasQuote ? "Has Quote" : "No Quote"}
+              />
+            </div>
+          </div>
+
+          {/* TIMELINE SECTION */}
+          <div>
+            <h3 className="text-xl font-bold text-[#2e2e2e] mb-6 flex items-center gap-3">
+              <span className="text-2xl">📅</span>
+              Timeline
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3">
-                <MapPin className="h-4 w-4 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-600">Location</p>
-                  <p className="font-medium text-[#2e2e2e]">{lead.location}</p>
-                  <p className="text-sm text-gray-500">ZIP: {lead.zipCode}</p>
+              <div className="bg-gradient-to-r from-[#00aeef] to-[#0097d1] rounded-xl p-6 text-white">
+                <div className="flex items-center gap-3 mb-2">
+                  <Calendar className="w-5 h-5" />
+                  <span className="text-sm uppercase tracking-wide">Created</span>
                 </div>
+                <div className="text-lg font-semibold">{formatDate(lead.createdAt)}</div>
+                <div className="text-sm opacity-90">{getRelativeTime(lead.createdAt)}</div>
               </div>
-              <div className="flex items-center gap-3">
-                <Calendar className="h-4 w-4 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-600">Timeline</p>
-                  <p className="font-medium text-[#2e2e2e] capitalize">{lead.timeline}</p>
+              <div className="bg-gradient-to-r from-[#8dc63f] to-[#7bb03a] rounded-xl p-6 text-white">
+                <div className="flex items-center gap-3 mb-2">
+                  <Calendar className="w-5 h-5" />
+                  <span className="text-sm uppercase tracking-wide">Updated</span>
                 </div>
+                <div className="text-lg font-semibold">{formatDate(lead.updatedAt)}</div>
+                <div className="text-sm opacity-90">{getRelativeTime(lead.updatedAt)}</div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Lead Information */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-[#2e2e2e] mb-4">Lead Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Source</p>
-                <p className="font-medium text-[#2e2e2e] capitalize">{lead.source}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Assigned To</p>
-                <p className="font-medium text-[#2e2e2e]">
-                  {lead.assignedTo || 'Unassigned'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Created</p>
-                <p className="font-medium text-[#2e2e2e]">{formatDate(lead.createdAt)}</p>
-                <p className="text-xs text-gray-400">{getRelativeTime(lead.createdAt)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Last Updated</p>
-                <p className="font-medium text-[#2e2e2e]">{formatDate(lead.updatedAt)}</p>
-                <p className="text-xs text-gray-400">{getRelativeTime(lead.updatedAt)}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4 border-t border-gray-200">
+        {/* FOOTER */}
+        <div className="bg-gray-50 px-8 py-6 border-t border-gray-200">
+          <div className="flex gap-4 justify-end">
             <Button
               onClick={handleEmail}
-              className="flex items-center gap-2 bg-[#00aeef] hover:bg-[#0097d1] text-white"
+              className="bg-gradient-to-r from-[#00aeef] to-[#0097d1] hover:from-[#0097d1] hover:to-[#0080b3] text-white px-6 py-2 rounded-lg font-semibold"
             >
-              <Mail className="h-4 w-4" />
+              <Mail className="w-4 h-4 mr-2" />
               Send Email
             </Button>
             {onEdit && (
               <Button
                 onClick={handleEdit}
-                variant="outline"
-                className="flex items-center gap-2 border-[#8dc63f] text-[#8dc63f] hover:bg-[#8dc63f]/10"
+                className="bg-[#8dc63f] hover:bg-[#7bb03a] text-white px-6 py-2 rounded-lg font-semibold"
               >
-                <Edit className="h-4 w-4" />
+                <Edit className="w-4 h-4 mr-2" />
                 Edit Lead
               </Button>
             )}
-            {onDelete && (
-              <Button
-                onClick={handleDelete}
-                variant="outline"
-                className="flex items-center gap-2 border-red-500 text-red-500 hover:bg-red-50"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete Lead
-              </Button>
-            )}
+            <Button
+              onClick={() => onOpenChange(false)}
+              variant="outline"
+              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-lg font-semibold"
+            >
+              Close
+            </Button>
           </div>
         </div>
       </DialogContent>
     </Dialog>
   )
+}
+
+function InfoCard({ 
+  icon, 
+  iconBg, 
+  iconColor, 
+  label, 
+  value, 
+  href, 
+  linkColor 
+}: {
+  icon: string
+  iconBg: string
+  iconColor: string
+  label: string
+  value: string
+  href?: string
+  linkColor?: string
+}) {
+  const content = (
+    <div className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+      <div className="flex items-center gap-3">
+        <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center text-lg`}>
+          {icon}
+        </div>
+        <div className="flex-1">
+          <p className="text-xs uppercase tracking-wide text-gray-500 font-medium">{label}</p>
+          <p className={`font-semibold text-[#2e2e2e] ${linkColor || ''}`}>
+            {value}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+
+  if (href) {
+    return (
+      <a href={href} className="block">
+        {content}
+      </a>
+    )
+  }
+
+  return content
 }
 
 function StatusBadge({ status }: { status: string }) {
