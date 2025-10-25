@@ -140,7 +140,7 @@ function LeadRow({ lead, isSelected, onToggleSelect, onView, onEdit, onDelete, o
       <td className="px-5 py-5 text-sm">
         <div className="flex items-center gap-2 mb-1 text-gray-600">
           <span>📍</span>
-          <span>{lead.zipCode}</span>
+          <span>{lead.location || lead.zipCode}</span>
         </div>
         <div className="flex items-center gap-2 text-gray-600">
           <span>⏱️</span>

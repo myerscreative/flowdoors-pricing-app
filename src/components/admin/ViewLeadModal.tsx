@@ -1,8 +1,8 @@
 'use client'
 
-import { Lead } from '@/types/lead'
 import { formatPhone } from '@/lib/formatters'
-import { X, Mail, Phone, MapPin, Clock, Calendar, User, Building2, TrendingUp, CheckCircle2, XCircle } from 'lucide-react'
+import { Lead } from '@/types/lead'
+import { Building2, Calendar, CheckCircle2, Clock, Mail, MapPin, Phone, TrendingUp, User, X, XCircle } from 'lucide-react'
 
 interface ViewLeadModalProps {
   lead: Lead
@@ -163,10 +163,10 @@ export function ViewLeadModal({ lead, onClose, onEdit, onEmail }: ViewLeadModalP
                       Location
                     </div>
                     <div className="text-flowdoors-charcoal font-medium">
-                      {lead.zipCode}
+                      {lead.location || lead.zipCode}
                     </div>
                     <div className="text-sm text-gray-500 mt-1">
-                      San Diego County
+                      {lead.zipCode && lead.location ? `ZIP: ${lead.zipCode}` : 'San Diego County'}
                     </div>
                   </div>
                 </div>
