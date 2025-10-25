@@ -1,0 +1,184 @@
+## alwaysApply: true
+
+# FlowDoors Design System Rules
+
+## Core Principles
+
+When implementing designs, always reference:
+
+- docs/redesign/ for mockups and guides
+- Use FlowDoors colors: #00aeef (blue), #8dc63f (green), #2e2e2e (charcoal)
+- Follow Next.js 15 and TypeScript best practices
+- Use Tailwind CSS for styling
+- Make all components mobile responsive (test at 320px, 768px, 1024px)
+
+## Brand Colors
+
+Primary Blue: #00aeef (FlowDoors Blue)
+
+- Use for: Primary CTAs, links, active states, focus rings
+- Hover: #0097d1
+- Light: rgba(0, 174, 239, 0.1)
+
+Success Green: #8dc63f (FlowDoors Green)
+
+- Use for: Success states, positive indicators, trust badges
+- Hover: #7ab82f
+- Light: rgba(141, 198, 63, 0.1)
+
+Charcoal: #2e2e2e (FlowDoors Charcoal)
+
+- Use for: Primary text, headings, important content
+- Never use pure black (#000000)
+
+## Component Guidelines
+
+- All buttons should have hover and focus states
+- Use consistent spacing: 8px, 16px, 24px, 32px, 48px
+- Border radius: 8px (inputs), 12px (cards), 16px (large cards)
+- Shadows: 0 2px 8px rgba(0,0,0,0.05) for subtle, 0 4px 16px rgba(0,0,0,0.1) for prominent
+- Font sizes: 48px (hero numbers), 24px (section headers), 16px (body), 14px (small), 12px (tiny)
+
+## File References
+
+### Admin Redesign:
+
+- docs/redesign/Admin_Leads_Implementation_Guide.md
+- docs/redesign/FlowDoors_Admin_Leads_Redesign.html
+- Components: LeadStatsCards, LeadFilters, LeadsTable, AssignmentDropdown
+
+### Quote Page:
+
+- docs/redesign/Quote_Summary_Redesign_Analysis.md
+- docs/redesign/FlowDoors_Quote_Summary_Redesign.html
+- Components: ProgressBar, QuoteSummaryCard, ServiceToggle
+
+### Forms:
+
+- docs/redesign/Audience_Optimized_Implementation_Guide.md
+- Use HomeownerConversationalForm for main site
+- Use ContractorQuickQuote for /contractor-quote page
+
+## Code Standards
+
+- TypeScript strict mode enabled
+- Use 'use client' directive for interactive components
+- Prefer function components over class components
+- Use descriptive variable names (no single letters except in loops)
+- Add JSDoc comments for complex functions
+- Handle loading and error states
+
+## Mobile Requirements
+
+- Touch targets minimum 44px × 44px (preferably 48px)
+- Test on iPhone SE (375px), iPad (768px), Desktop (1280px)
+- Stack columns vertically on mobile
+- Use responsive text sizes (text-sm md:text-base lg:text-lg)
+- Ensure dropdowns work well on touch devices
+
+## Accessibility
+
+- Include proper ARIA labels
+- Keyboard navigation must work (Tab, Enter, Escape)
+- Focus states must be visible
+- Color contrast ratio minimum 4.5:1 for text
+- Alt text for all images
+
+## Performance
+
+- Lazy load images
+- Use Next.js Image component
+- Minimize bundle size (check with 'npm run analyze' if available)
+- Avoid unnecessary re-renders (use React.memo when appropriate)
+
+## When Creating New Components:
+
+1. Check if similar component exists first
+2. Place in appropriate directory (admin/, quote/, forms/)
+3. Export from index.ts for easy imports
+4. Include TypeScript props interface
+5. Add display name for debugging
+6. Make mobile responsive by default
+
+## When Updating Existing Components:
+
+1. Review current implementation first
+2. Maintain backward compatibility if possible
+3. Update related components if needed
+4. Test on all breakpoints
+5. Verify no TypeScript errors
+
+## Common Mistakes to Avoid:
+
+- ❌ Don't use arbitrary Tailwind values unless necessary
+- ❌ Don't hardcode colors (use Tailwind color classes)
+- ❌ Don't forget mobile responsive classes
+- ❌ Don't use px values in Tailwind (use spacing scale)
+- ❌ Don't forget to handle loading/error states
+- ❌ Don't use inline styles (use Tailwind classes)
+
+## Before Committing:
+
+- Run TypeScript check: npm run typecheck
+- Run linter: npm run lint
+- Test on mobile and desktop
+- Verify all imports are correct
+- Check console for errors
+- Test in Chrome, Safari, and Firefox
+
+```
+
+---
+
+## 🎯 **But Your Current Version is Great!**
+
+Your current `.cursorrules` is **totally fine** and will work well. The expanded version above is just if you want to be more thorough.
+
+**Your current rules will:**
+- ✅ Tell Cursor to always use FlowDoors colors
+- ✅ Point to the right documentation
+- ✅ Enforce mobile responsiveness
+- ✅ Keep TypeScript/Tailwind best practices
+
+---
+
+## 🚀 **Test It Now**
+
+Open Cursor Composer (`Cmd/Ctrl + I`) and try:
+```
+
+Create a simple test component that uses our FlowDoors design system.
+
+Make a button with:
+
+- FlowDoors blue background
+- Proper hover state
+- Mobile responsive
+- Follows our .cursorrules
+
+```
+
+Cursor should automatically:
+- Use `#00aeef` for the button
+- Add a hover state with `#0097d1`
+- Make it mobile responsive
+- Use Tailwind CSS
+- Follow TypeScript best practices
+
+---
+
+## ✅ **Next Steps**
+
+Your setup is perfect! Now you can:
+
+**1. Start implementing:**
+```
+
+Cmd/Ctrl + I
+
+@docs/redesign/Admin_Leads_Implementation_Guide.md
+
+Let's implement the admin leads page redesign.
+Start with Phase 1: LeadStatsCards component.
+
+Follow the .cursorrules for colors and styling.
