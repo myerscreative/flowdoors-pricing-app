@@ -3,6 +3,7 @@
 import { LeadFiltersSection } from '@/components/admin/LeadFilters'
 import { LeadsTable } from '@/components/admin/LeadsTable'
 import { LeadStatsCards } from '@/components/admin/LeadStatsCards'
+import { ViewLeadModal } from '@/components/admin/ViewLeadModal'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import { Lead, LeadFilters, LeadStats } from '@/types/lead'
@@ -14,6 +15,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
+  const [viewingLead, setViewingLead] = useState<Lead | null>(null)
   const [filters, setFilters] = useState<LeadFilters>({
     search: '',
     status: '',
@@ -172,6 +174,10 @@ export default function LeadsPage() {
     setFilters(newFilters)
   }
 
+  const handleViewLead = (lead: Lead) => {
+    setViewingLead(lead)
+  }
+
   const handleEditLead = (lead: Lead) => {
     toast({
       title: 'Coming Soon',
@@ -180,10 +186,8 @@ export default function LeadsPage() {
   }
 
   const handleEmailLead = (lead: Lead) => {
-    toast({
-      title: 'Coming Soon',
-      description: 'Email lead feature will be available soon',
-    })
+    // Use mailto: to open email client
+    window.open(`mailto:${lead.email}`, '_blank')
   }
 
   if (loading) {
@@ -244,11 +248,22 @@ export default function LeadsPage() {
       ) : (
         <LeadsTable 
           leads={filteredLeads}
+          onView={handleViewLead}
           onEdit={handleEditLead}
           onDelete={handleDeleteLead}
           onEmail={handleEmailLead}
         />
       )}
+
+      {/* View Lead Modal */}
+      <ViewLeadModal
+        open={!!viewingLead}
+        onOpenChange={(open) => !open && setViewingLead(null)}
+        lead={viewingLead}
+        onEdit={handleEditLead}
+        onDelete={handleDeleteLead}
+        onEmail={handleEmailLead}
+      />
     </div>
   )
 }

@@ -6,12 +6,13 @@ import { useState } from 'react';
 
 interface Props {
   leads: Lead[];
+  onView: (lead: Lead) => void;
   onEdit: (lead: Lead) => void;
   onDelete: (lead: Lead) => void;
   onEmail: (lead: Lead) => void;
 }
 
-export function LeadsTable({ leads, onEdit, onDelete, onEmail }: Props) {
+export function LeadsTable({ leads, onView, onEdit, onDelete, onEmail }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const toggleSelect = (id: string) => {
@@ -91,6 +92,7 @@ export function LeadsTable({ leads, onEdit, onDelete, onEmail }: Props) {
                 lead={lead}
                 isSelected={selectedIds.has(lead.id)}
                 onToggleSelect={() => toggleSelect(lead.id)}
+                onView={() => onView(lead)}
                 onEdit={() => onEdit(lead)}
                 onDelete={() => onDelete(lead)}
                 onEmail={() => onEmail(lead)}
@@ -103,7 +105,7 @@ export function LeadsTable({ leads, onEdit, onDelete, onEmail }: Props) {
   );
 }
 
-function LeadRow({ lead, isSelected, onToggleSelect, onEdit, onDelete, onEmail }: any) {
+function LeadRow({ lead, isSelected, onToggleSelect, onView, onEdit, onDelete, onEmail }: any) {
   return (
     <tr className="border-b border-gray-100 hover:bg-[#00aeef]/[0.02] hover:shadow-[inset_0_0_0_1px_rgba(0,174,239,0.1)] transition-all">
       <td className="px-5 py-5">
@@ -157,7 +159,7 @@ function LeadRow({ lead, isSelected, onToggleSelect, onEdit, onDelete, onEmail }
       </td>
       <td className="px-5 py-5">
         <div className="flex gap-2">
-          <ActionButton icon="👁️" tooltip="View Details" onClick={() => {}} />
+          <ActionButton icon="👁️" tooltip="View Details" onClick={onView} />
           <ActionButton icon="✏️" tooltip="Edit Lead" onClick={onEdit} variant="success" />
           <ActionButton icon="📧" tooltip="Send Email" onClick={onEmail} />
           <ActionButton icon="🗑️" tooltip="Delete" onClick={onDelete} variant="danger" />
