@@ -106,7 +106,7 @@ export function ViewLeadModal({ lead, onClose, onEdit, onEmail }: ViewLeadModalP
               {/* Email */}
               <div className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-flowdoors-blue/10 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-flowdoors-blue-50 flex items-center justify-center">
                     <Mail className="h-5 w-5 text-flowdoors-blue" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -126,7 +126,7 @@ export function ViewLeadModal({ lead, onClose, onEdit, onEmail }: ViewLeadModalP
               {/* Phone */}
               <div className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-flowdoors-green/10 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-flowdoors-green-50 flex items-center justify-center">
                     <Phone className="h-5 w-5 text-flowdoors-green" />
                   </div>
                   <div className="flex-1 min-w-0">
