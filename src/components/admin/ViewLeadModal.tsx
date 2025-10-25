@@ -153,7 +153,7 @@ export function ViewLeadModal({ lead, onClose, onEdit, onEmail }: ViewLeadModalP
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Location */}
-              <div className="bg-gray-50 rounded-xl p-4">
+              <div className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center mt-0.5">
                     <MapPin className="h-5 w-5 text-red-500" />
@@ -173,7 +173,7 @@ export function ViewLeadModal({ lead, onClose, onEdit, onEmail }: ViewLeadModalP
               </div>
 
               {/* Timeline */}
-              <div className="bg-gray-50 rounded-xl p-4">
+              <div className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center mt-0.5">
                     <Clock className="h-5 w-5 text-purple-500" />
@@ -193,7 +193,7 @@ export function ViewLeadModal({ lead, onClose, onEdit, onEmail }: ViewLeadModalP
               </div>
 
               {/* Source */}
-              <div className="bg-gray-50 rounded-xl p-4">
+              <div className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center mt-0.5">
                     <TrendingUp className="h-5 w-5 text-orange-500" />
@@ -213,7 +213,7 @@ export function ViewLeadModal({ lead, onClose, onEdit, onEmail }: ViewLeadModalP
               </div>
 
               {/* Quote Status */}
-              <div className="bg-gray-50 rounded-xl p-4">
+              <div className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
                 <div className="flex items-start gap-3">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center mt-0.5 ${
                     lead.hasQuote ? 'bg-green-50' : 'bg-red-50'
