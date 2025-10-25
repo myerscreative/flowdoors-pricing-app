@@ -14,6 +14,9 @@ importers:
       '@dnd-kit/sortable':
         specifier: ^8.0.0
         version: 8.0.0(@dnd-kit/core@6.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      '@eslint/js':
+        specifier: ^9.38.0
+        version: 9.38.0
       '@fontsource/poppins':
         specifier: ^5.2.7
         version: 5.2.7

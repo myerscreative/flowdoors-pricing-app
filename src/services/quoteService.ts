@@ -440,6 +440,14 @@ export async function addQuote(quoteData: QuoteToSave): Promise<string> {
     // Initialize Firebase
     await initFirebase()
 
+    // Validate quoteData structure
+    if (!quoteData.items || !Array.isArray(quoteData.items)) {
+      throw new Error('Quote items must be an array')
+    }
+    if (quoteData.items.length === 0) {
+      throw new Error('Quote must have at least one item')
+    }
+
     const location_code = 'SD'
     // Prefer logged-in sales rep identity when present (set by Google sign-in)
     let salesperson_id = 'SP-ADMIN-WEB'
@@ -608,6 +616,8 @@ export async function addQuote(quoteData: QuoteToSave): Promise<string> {
     }
 
     const docRef = await addDoc(collection(requireDb(), 'quotes'), dataToSave)
+
+    console.info("addQuote(): new quote saved", { docId: docRef.id, humanQuoteNumber })
 
     // Send notification emails to marketing and manager (server-side only)
     if (typeof window === 'undefined') {
