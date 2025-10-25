@@ -1,295 +1,339 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-} from '@/components/ui/dialog'
-import { formatDate, formatPhone, getRelativeTime } from '@/lib/formatters'
 import { Lead } from '@/types/lead'
-import { Calendar, Edit, Mail, X } from 'lucide-react'
+import { formatPhone } from '@/lib/formatters'
+import { X, Mail, Phone, MapPin, Clock, Calendar, User, Building2, TrendingUp, CheckCircle2, XCircle } from 'lucide-react'
 
 interface ViewLeadModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  lead: Lead | null
+  lead: Lead
+  onClose: () => void
   onEdit?: (lead: Lead) => void
-  onDelete?: (lead: Lead) => void
   onEmail?: (lead: Lead) => void
 }
 
-export function ViewLeadModal({ 
-  open, 
-  onOpenChange, 
-  lead, 
-  onEdit, 
-  onDelete, 
-  onEmail 
-}: ViewLeadModalProps) {
-  if (!lead) return null
+export function ViewLeadModal({ lead, onClose, onEdit, onEmail }: ViewLeadModalProps) {
+  // Format date
+  const formatDate = (date: Date | string) => {
+    const d = typeof date === 'string' ? new Date(date) : date
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+    }).format(d)
+  }
 
-  const handleEmail = () => {
-    if (onEmail) {
-      onEmail(lead)
-    } else {
-      // Fallback to mailto
-      window.open(`mailto:${lead.email}`, '_blank')
+  // Get status badge styles
+  const getStatusBadge = (status: string) => {
+    const styles = {
+      new: 'bg-gradient-to-r from-flowdoors-green to-flowdoors-green-600 text-white',
+      contacted: 'bg-blue-100 text-blue-900',
+      quoted: 'bg-amber-100 text-amber-900',
+      cold: 'bg-gray-100 text-gray-600',
+    }
+    
+    const icons = {
+      new: '✨',
+      contacted: '📞',
+      quoted: '📄',
+      cold: '❄️',
+    }
+
+    return {
+      style: styles[status as keyof typeof styles] || styles.new,
+      icon: icons[status as keyof typeof icons] || icons.new,
     }
   }
 
-  const handleEdit = () => {
-    if (onEdit) {
-      onEdit(lead)
-    }
-    onOpenChange(false)
-  }
+  const statusBadge = getStatusBadge(lead.status)
 
+  // Get role icon
   const getRoleIcon = (role: string) => {
-    switch (role.toLowerCase()) {
+    switch (role) {
       case 'homeowner':
         return '🏡'
       case 'contractor':
         return '🔨'
-      case 'architect':
-        return '📐'
-      case 'builder':
-        return '🏗️'
+      case 'business':
+        return '🏢'
       default:
         return '👤'
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto p-0">
-        {/* GRADIENT HEADER */}
-        <div className="bg-gradient-to-r from-[#00aeef] to-[#0097d1] p-8 text-white relative">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
+        {/* Header with Gradient */}
+        <div className="bg-gradient-to-r from-flowdoors-blue to-[#0097d1] p-6 text-white relative">
           <button
-            onClick={() => onOpenChange(false)}
-            className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors"
+            onClick={onClose}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all backdrop-blur-sm"
+            aria-label="Close modal"
           >
-            <X className="w-6 h-6" />
+            <X className="h-5 w-5" />
           </button>
-          
-          <div className="flex items-center gap-6">
-            <div className="text-6xl">
+
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center text-3xl">
               {getRoleIcon(lead.role)}
             </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold mb-2">{lead.name}</h2>
-              <div className="flex items-center gap-3">
-                <StatusBadge status={lead.status} />
-                <QuoteBadge hasQuote={lead.hasQuote} />
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold ${statusBadge.style}`}>
+                  <span>{statusBadge.icon}</span>
+                  <span className="capitalize">{lead.status} Lead</span>
+                </span>
+                <span className="text-white/80 text-sm capitalize">
+                  {lead.role}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="p-8 space-y-8">
-          {/* CONTACT INFORMATION SECTION */}
-          <div>
-            <h3 className="text-xl font-bold text-[#2e2e2e] mb-6 flex items-center gap-3">
-              <span className="text-2xl">👤</span>
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto max-h-[calc(90vh-280px)] p-6">
+          {/* Contact Information */}
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-flowdoors-charcoal mb-4 flex items-center gap-2">
+              <User className="h-5 w-5 text-flowdoors-blue" />
               Contact Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InfoCard
-                icon="📧"
-                iconBg="bg-blue-100"
-                iconColor="text-blue-600"
-                label="Email"
-                value={lead.email}
-                href={`mailto:${lead.email}`}
-                linkColor="text-blue-600 hover:text-blue-700"
-              />
-              <InfoCard
-                icon="📞"
-                iconBg="bg-green-100"
-                iconColor="text-green-600"
-                label="Phone"
-                value={formatPhone(lead.phone)}
-                href={`tel:${lead.phone}`}
-                linkColor="text-green-600 hover:text-green-700"
-              />
+              {/* Email */}
+              <div className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-flowdoors-blue/10 flex items-center justify-center">
+                    <Mail className="h-5 w-5 text-flowdoors-blue" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                      Email
+                    </div>
+                    <a
+                      href={`mailto:${lead.email}`}
+                      className="text-flowdoors-blue hover:underline font-medium truncate block"
+                    >
+                      {lead.email}
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-flowdoors-green/10 flex items-center justify-center">
+                    <Phone className="h-5 w-5 text-flowdoors-green" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                      Phone
+                    </div>
+                    <a
+                      href={`tel:${lead.phone}`}
+                      className="text-flowdoors-green hover:underline font-medium"
+                    >
+                      {formatPhone(lead.phone)}
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* PROJECT DETAILS SECTION */}
-          <div>
-            <h3 className="text-xl font-bold text-[#2e2e2e] mb-6 flex items-center gap-3">
-              <span className="text-2xl">🏢</span>
+          {/* Project Details */}
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-flowdoors-charcoal mb-4 flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-flowdoors-blue" />
               Project Details
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <InfoCard
-                icon="📍"
-                iconBg="bg-purple-100"
-                iconColor="text-purple-600"
-                label="Location"
-                value={`${lead.location}, ${lead.zipCode}`}
-              />
-              <InfoCard
-                icon="⏱️"
-                iconBg="bg-orange-100"
-                iconColor="text-orange-600"
-                label="Timeline"
-                value={lead.timeline}
-              />
-              <InfoCard
-                icon="📈"
-                iconBg="bg-indigo-100"
-                iconColor="text-indigo-600"
-                label="Source"
-                value={lead.source}
-              />
-              <InfoCard
-                icon={lead.hasQuote ? "✓" : "✗"}
-                iconBg={lead.hasQuote ? "bg-green-100" : "bg-red-100"}
-                iconColor={lead.hasQuote ? "text-green-600" : "text-red-600"}
-                label="Quote Status"
-                value={lead.hasQuote ? "Has Quote" : "No Quote"}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Location */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center mt-0.5">
+                    <MapPin className="h-5 w-5 text-red-500" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                      Location
+                    </div>
+                    <div className="text-flowdoors-charcoal font-medium">
+                      {lead.zipCode}
+                    </div>
+                    <div className="text-sm text-gray-500 mt-1">
+                      San Diego County
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center mt-0.5">
+                    <Clock className="h-5 w-5 text-purple-500" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                      Timeline
+                    </div>
+                    <div className="text-flowdoors-charcoal font-medium">
+                      {lead.timeline}
+                    </div>
+                    <div className="text-sm text-gray-500 mt-1">
+                      Project start timeframe
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Source */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center mt-0.5">
+                    <TrendingUp className="h-5 w-5 text-orange-500" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                      Source
+                    </div>
+                    <div className="text-flowdoors-charcoal font-medium capitalize">
+                      {lead.source}
+                    </div>
+                    <div className="text-sm text-gray-500 mt-1">
+                      How they found us
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quote Status */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center mt-0.5 ${
+                    lead.hasQuote ? 'bg-green-50' : 'bg-red-50'
+                  }`}>
+                    {lead.hasQuote ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                      Quote Status
+                    </div>
+                    <div className={`font-medium ${
+                      lead.hasQuote ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {lead.hasQuote ? 'Quote Sent' : 'No Quote'}
+                    </div>
+                    <div className="text-sm text-gray-500 mt-1">
+                      {lead.hasQuote ? 'Quote has been provided' : 'Needs quote'}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* TIMELINE SECTION */}
-          <div>
-            <h3 className="text-xl font-bold text-[#2e2e2e] mb-6 flex items-center gap-3">
-              <span className="text-2xl">📅</span>
+          {/* Timestamps */}
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-flowdoors-charcoal mb-4 flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-flowdoors-blue" />
               Timeline
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-gradient-to-r from-[#00aeef] to-[#0097d1] rounded-xl p-6 text-white">
-                <div className="flex items-center gap-3 mb-2">
-                  <Calendar className="w-5 h-5" />
-                  <span className="text-sm uppercase tracking-wide">Created</span>
+              {/* Created */}
+              <div className="bg-gradient-to-br from-blue-50 to-sky-50 rounded-xl p-4 border border-blue-100">
+                <div className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">
+                  Lead Created
                 </div>
-                <div className="text-lg font-semibold">{formatDate(lead.createdAt)}</div>
-                <div className="text-sm opacity-90">{getRelativeTime(lead.createdAt)}</div>
+                <div className="text-flowdoors-charcoal font-semibold">
+                  {lead.createdAt ? formatDate(lead.createdAt) : 'Unknown'}
+                </div>
               </div>
-              <div className="bg-gradient-to-r from-[#8dc63f] to-[#7bb03a] rounded-xl p-6 text-white">
-                <div className="flex items-center gap-3 mb-2">
-                  <Calendar className="w-5 h-5" />
-                  <span className="text-sm uppercase tracking-wide">Updated</span>
+
+              {/* Updated */}
+              {lead.updatedAt && (
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
+                  <div className="text-xs font-semibold text-green-600 uppercase tracking-wide mb-1">
+                    Last Updated
+                  </div>
+                  <div className="text-flowdoors-charcoal font-semibold">
+                    {formatDate(lead.updatedAt)}
+                  </div>
                 </div>
-                <div className="text-lg font-semibold">{formatDate(lead.updatedAt)}</div>
-                <div className="text-sm opacity-90">{getRelativeTime(lead.updatedAt)}</div>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
+            <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-4">
+              Quick Stats
+            </h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-flowdoors-blue mb-1">
+                  {lead.hasQuote ? '1' : '0'}
+                </div>
+                <div className="text-xs text-gray-600">Quotes</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-flowdoors-green mb-1">
+                  {getRoleIcon(lead.role)}
+                </div>
+                <div className="text-xs text-gray-600 capitalize">{lead.role}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-flowdoors-charcoal mb-1">
+                  {statusBadge.icon}
+                </div>
+                <div className="text-xs text-gray-600 capitalize">{lead.status}</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* FOOTER */}
-        <div className="bg-gray-50 px-8 py-6 border-t border-gray-200">
-          <div className="flex gap-4 justify-end">
-            <Button
-              onClick={handleEmail}
-              className="bg-gradient-to-r from-[#00aeef] to-[#0097d1] hover:from-[#0097d1] hover:to-[#0080b3] text-white px-6 py-2 rounded-lg font-semibold"
-            >
-              <Mail className="w-4 h-4 mr-2" />
-              Send Email
-            </Button>
-            {onEdit && (
-              <Button
-                onClick={handleEdit}
-                className="bg-[#8dc63f] hover:bg-[#7bb03a] text-white px-6 py-2 rounded-lg font-semibold"
+        {/* Footer Actions */}
+        <div className="border-t border-gray-200 p-6 bg-gray-50">
+          <div className="flex flex-col sm:flex-row gap-3">
+            {onEmail && (
+              <button
+                onClick={() => onEmail(lead)}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-flowdoors-blue to-[#0097d1] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-flowdoors-blue/30 transition-all flex items-center justify-center gap-2"
               >
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Lead
-              </Button>
+                <Mail className="h-4 w-4" />
+                Send Email
+              </button>
             )}
-            <Button
-              onClick={() => onOpenChange(false)}
-              variant="outline"
-              className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-lg font-semibold"
+            {onEdit && (
+              <button
+                onClick={() => {
+                  onEdit(lead)
+                  onClose()
+                }}
+                className="flex-1 px-6 py-3 bg-flowdoors-green text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-flowdoors-green/30 transition-all flex items-center justify-center gap-2"
+              >
+                <User className="h-4 w-4" />
+                Edit Lead
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
             >
               Close
-            </Button>
+            </button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function InfoCard({ 
-  icon, 
-  iconBg, 
-  iconColor, 
-  label, 
-  value, 
-  href, 
-  linkColor 
-}: {
-  icon: string
-  iconBg: string
-  iconColor: string
-  label: string
-  value: string
-  href?: string
-  linkColor?: string
-}) {
-  const baseClasses = "bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
-  
-  const content = (
-    <div className="flex items-center gap-3">
-      <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center text-lg`}>
-        {icon}
-      </div>
-      <div className="flex-1">
-        <p className="text-xs uppercase tracking-wide text-gray-500 font-medium">{label}</p>
-        <p className={`font-semibold text-[#2e2e2e] ${linkColor || ''}`}>
-          {value}
-        </p>
       </div>
     </div>
-  )
-
-  if (href) {
-    return (
-      <a href={href} className={`block ${baseClasses}`}>
-        {content}
-      </a>
-    )
-  }
-
-  return (
-    <div className={baseClasses}>
-      {content}
-    </div>
-  )
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const styles = {
-    new: 'bg-gradient-to-r from-[#8dc63f] to-[#7bb03a] text-white',
-    contacted: 'bg-blue-100 text-blue-900',
-    quoted: 'bg-amber-100 text-amber-900',
-    cold: 'bg-gray-100 text-gray-600',
-  }
-
-  const icons = {
-    new: '✨',
-    contacted: '📞',
-    quoted: '📄',
-    cold: '❄️',
-  }
-
-  return (
-    <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold ${styles[status as keyof typeof styles]}`}>
-      <span>{icons[status as keyof typeof icons]}</span>
-      <span className="capitalize">{status} Lead</span>
-    </span>
-  )
-}
-
-function QuoteBadge({ hasQuote }: { hasQuote: boolean }) {
-  return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${
-      hasQuote ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
-    }`}>
-      <span>{hasQuote ? '✅' : '❌'}</span>
-      <span>{hasQuote ? 'Has Quote' : 'No Quote'}</span>
-    </span>
   )
 }

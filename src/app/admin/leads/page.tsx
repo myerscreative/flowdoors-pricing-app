@@ -256,14 +256,14 @@ export default function LeadsPage() {
       )}
 
       {/* View Lead Modal */}
-      <ViewLeadModal
-        open={!!viewingLead}
-        onOpenChange={(open) => !open && setViewingLead(null)}
-        lead={viewingLead}
-        onEdit={handleEditLead}
-        onDelete={handleDeleteLead}
-        onEmail={handleEmailLead}
-      />
+      {viewingLead && (
+        <ViewLeadModal
+          lead={viewingLead}
+          onClose={() => setViewingLead(null)}
+          onEdit={handleEditLead}
+          onEmail={handleEmailLead}
+        />
+      )}
     </div>
   )
 }
