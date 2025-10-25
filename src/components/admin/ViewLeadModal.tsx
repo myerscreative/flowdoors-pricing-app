@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { formatDate, formatPhone, getRelativeTime } from '@/lib/formatters'
 import { Lead } from '@/types/lead'
-import { Calendar, Edit, Mail, MapPin, Phone, X } from 'lucide-react'
+import { Calendar, Edit, Mail, X } from 'lucide-react'
 
 interface ViewLeadModalProps {
   open: boolean
@@ -229,31 +229,35 @@ function InfoCard({
   href?: string
   linkColor?: string
 }) {
+  const baseClasses = "bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
+  
   const content = (
-    <div className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center text-lg`}>
-          {icon}
-        </div>
-        <div className="flex-1">
-          <p className="text-xs uppercase tracking-wide text-gray-500 font-medium">{label}</p>
-          <p className={`font-semibold text-[#2e2e2e] ${linkColor || ''}`}>
-            {value}
-          </p>
-        </div>
+    <div className="flex items-center gap-3">
+      <div className={`w-10 h-10 ${iconBg} rounded-full flex items-center justify-center text-lg`}>
+        {icon}
+      </div>
+      <div className="flex-1">
+        <p className="text-xs uppercase tracking-wide text-gray-500 font-medium">{label}</p>
+        <p className={`font-semibold text-[#2e2e2e] ${linkColor || ''}`}>
+          {value}
+        </p>
       </div>
     </div>
   )
 
   if (href) {
     return (
-      <a href={href} className="block">
+      <a href={href} className={`block ${baseClasses}`}>
         {content}
       </a>
     )
   }
 
-  return content
+  return (
+    <div className={baseClasses}>
+      {content}
+    </div>
+  )
 }
 
 function StatusBadge({ status }: { status: string }) {
