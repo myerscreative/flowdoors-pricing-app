@@ -37,7 +37,6 @@ import {
 } from '@/components/ui/popover'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { listNotes, type Note as NotesApiNote } from '@/lib/notesApi'
 import { cn } from '@/lib/utils'
 import { Salesperson } from '@/services/salesService'
 import type { QuoteTask, Quote as QuoteType } from '@/types/quote'
@@ -79,15 +78,6 @@ function getNumberProp(obj: unknown, key: string): number | undefined {
   if (obj && typeof obj === 'object') {
     const v = (obj as Record<string, unknown>)[key]
     if (typeof v === 'number') return v
-  }
-  return undefined
-}
-function getFirstString(obj: unknown, keys: string[]): string | undefined {
-  if (!obj || typeof obj !== 'object') return undefined
-  const rec = obj as Record<string, unknown>
-  for (const k of keys) {
-    const v = rec[k]
-    if (typeof v === 'string') return v
   }
   return undefined
 }
@@ -173,15 +163,6 @@ interface QuotesGridProps {
   ) => void
   onDeleteQuote?: (_quoteId: string) => void
 }
-
-// Convert NotesApiNote → NotesPanelNote (shape expected by NotesPanel)
-const convertToNotesPanelNote = (apiNote: NotesApiNote): NotesPanelNote => ({
-  id: apiNote.id,
-  content: apiNote.content,
-  createdAt:
-    getFirstString(apiNote, ['createdAt', 'timestamp', 'created_at']) ??
-    new Date().toISOString(),
-})
 
 export const getStatusClasses = (status: string) => {
   const statusLower = status.toLowerCase()
@@ -269,26 +250,14 @@ const ActivityDialog = ({
   )
   const tasksCount = tasks.length
 
-  // Robust NotesPanel initial data (global for now)
-  const [initialNotes, setInitialNotes] = useState<NotesPanelNote[]>([])
-  useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        const data = await listNotes()
-        if (mounted && data) {
-          const convertedNotes = data.map(convertToNotesPanelNote)
-          setInitialNotes(convertedNotes)
-        }
-      } catch (err) {
-        // Non-fatal; NotesPanel can start empty
-        console.error('Failed to load notes:', err)
-      }
-    })()
-    return () => {
-      mounted = false
-    }
-  }, [])
+  // Convert quote-specific notes to NotesPanel format
+  const quoteNotes = quote.notes || []
+  const initialNotes: NotesPanelNote[] = quoteNotes.map((note) => ({
+    id: note.id,
+    content: note.content,
+    createdAt: note.timestamp,
+    author: note.author,
+  }))
 
   return (
     <Dialog>
@@ -326,7 +295,7 @@ const ActivityDialog = ({
             </TabsTrigger>
           </TabsList>
 
-          {/* Notes tab: robust NotesPanel (Prisma/SQLite) */}
+          {/* Notes tab: quote-specific notes from Firestore */}
           <TabsContent value="notes" className="mt-4 space-y-4">
             <NotesPanel
               initialNotes={initialNotes}
