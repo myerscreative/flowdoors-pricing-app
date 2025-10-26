@@ -750,10 +750,67 @@ export async function getQuotes(
         console.warn('⚠️ Permission error accessing Firestore, falling back to API route')
         // Fall back to API route that uses Firebase Admin
         const response = await fetch('/api/quotes')
-        if (response.ok) {
-          const quotes = await response.json()
-          return quotes as Array<Record<string, unknown>>
-        } else {
+if (response.ok) {
+  const data = await response.json()
+  const apiQuotes = data.quotes || []
+  
+  // Process API data the same way as Firestore data
+  const rows = apiQuotes
+    .map((rawDoc: any) => {
+      const base = mapFireToAdminQuote(rawDoc.id, rawDoc)
+      if (!base) return null
+      
+      const raw = rawDoc as FireQuoteDoc
+      
+      // Notes
+      const notes: Note[] = (raw.notes ?? []).map((note) => {
+        const ts = note?.timestamp
+        const iso =
+          (typeof ts === 'string' && ts) ||
+          (toDateSafe(ts)?.toISOString() ?? new Date().toISOString())
+        return {
+          id: asString(note?.id || `note-${rawDoc.id}-${Math.random().toString(36).slice(2)}`),
+          content: asString(note?.content),
+          timestamp: iso,
+          author: asString(note?.author || 'Unknown'),
+        }
+      })
+      
+      // Tasks
+      const tasks: Task[] = (raw.tasks ?? []).map((task) => ({
+        id: asString(task?.id || `task-${rawDoc.id}-${Math.random().toString(36).slice(2)}`),
+        content: asString(task?.content),
+        dueDate: toDateSafe(task?.dueDate) ?? new Date(),
+        completed: Boolean(task?.completed),
+      }))
+      
+      const createdAt = base.createdAt ?? toDateSafe(raw.createdAt) ?? new Date()
+      const updatedAt = base.updatedAt ?? toDateSafe(raw.updatedAt) ?? null
+      
+      return {
+        ...base,
+        pipelineStage: raw.pipelineStage || base.status || 'New',
+        tags: Array.isArray(base.tags) ? base.tags : Array.isArray(raw.tags) ? raw.tags : [],
+        company: raw.customer?.customerType || raw.customer?.company || '',
+        phone: base.phone ?? raw.customer?.phone ?? '',
+        zip: base.zipCode ?? raw.customer?.zipCode ?? '',
+        createdAt,
+        updatedAt,
+        stageDates: raw.stageDates || {},
+        salesRep: raw.salesperson_id || raw.last_modified_by || 'Unassigned',
+        numberOfItems: Array.isArray(raw.items) ? raw.items.length : 0,
+        notes,
+        tasks,
+        attachments: raw.attachments || [],
+        followUpDate: toDateSafe(raw.followUpDate),
+        discount: raw.discount,
+        _raw: raw,
+      }
+    })
+    .filter(Boolean)
+  
+  return rows as Array<Record<string, unknown>>
+} else {
           const errorData = await response.json().catch(() => ({}))
           console.error('API fallback failed:', response.status, errorData)
           throw new Error(errorData.error || 'Failed to fetch quotes from API')
@@ -881,8 +938,8 @@ export async function getQuotes(
       try {
         const response = await fetch('/api/quotes')
         if (response.ok) {
-          const quotes = await response.json()
-          return quotes as Array<Record<string, unknown>>
+          const data = await response.json()
+	  return data.quotes as Array<Record<string, unknown>>
         }
       } catch (apiError) {
         console.error('Error fetching quotes from API:', apiError)

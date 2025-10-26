@@ -626,12 +626,13 @@ const QuoteCard = ({
 
         {/* Notes Section */}
         <div className="mb-6">
-          <ActivityDialog
-            quote={quote}
-            onAddNote={onAddNote}
-            onAddTask={onAddTask}
-            onToggleTask={onToggleTask}
-          />
+        <ActivityDialog
+          key={`${quote.id}-${quote.notes?.length || 0}-${quote.updatedAt || ''}`}
+          quote={quote}
+          onAddNote={onAddNote}
+          onAddTask={onAddTask}
+          onToggleTask={onToggleTask}
+        />
         </div>
 
         {/* Action Buttons */}

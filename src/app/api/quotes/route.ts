@@ -1,97 +1,98 @@
-import { adminDb } from '@/lib/firebase-admin'
-import type { QueryDocumentSnapshot } from 'firebase-admin/firestore'
-import { NextRequest, NextResponse } from 'next/server'
+import { adminDb } from '@/lib/firebase-admin';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(_request: NextRequest) {
+// GET - Fetch all quotes
+export async function GET(request: NextRequest) {
   try {
-    const db = adminDb
-    
-    // Query quotes with a limit to prevent overload
-    const limitParam = 500 // Same limit as client-side code
-    const quotesSnapshot = await db
-      .collection('quotes')
-      .orderBy('createdAt', 'desc')
-      .limit(limitParam)
-      .get()
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
 
-    const quotes: Array<Record<string, unknown>> = []
+    let query = adminDb.collection('quotes').orderBy('createdAt', 'desc');
     
-    quotesSnapshot.forEach((doc: QueryDocumentSnapshot) => {
-      const data = doc.data()
-      quotes.push({
-        id: doc.id,
-        ...data,
-        // Ensure dates are serialized properly
-        createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
-        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt,
-      })
-    })
+    if (status) {
+      query = query.where('status', '==', status) as any;
+    }
 
-    return NextResponse.json(quotes)
+    const quotesSnapshot = await query.get();
+
+    const quotes = quotesSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate().toISOString(),
+      updatedAt: doc.data().updatedAt?.toDate().toISOString(),
+    }));
+
+    return NextResponse.json({ quotes });
   } catch (error) {
-    console.error('Error fetching quotes from Firestore:', error)
-    console.error('Error details:', error instanceof Error ? error.message : String(error))
+    console.error('Error fetching quotes:', error);
     return NextResponse.json(
-      {
-        error: 'Failed to fetch quotes',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: 'Failed to fetch quotes' },
       { status: 500 }
-    )
+    );
   }
 }
 
-export async function DELETE(request: NextRequest) {
+// POST - Create new quote
+export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const quoteId = searchParams.get('id')
+    const data = await request.json();
+
+    const quoteData = {
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      status: data.status || 'draft',
+    };
+
+    const docRef = await adminDb.collection('quotes').add(quoteData);
+
+    return NextResponse.json({
+      id: docRef.id,
+      ...quoteData,
+      createdAt: quoteData.createdAt.toISOString(),
+      updatedAt: quoteData.updatedAt.toISOString(),
+    });
+  } catch (error) {
+    console.error('Error creating quote:', error);
+    return NextResponse.json(
+      { error: 'Failed to create quote' },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT - Update existing quote
+export async function PUT(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const quoteId = searchParams.get('id');
     
     if (!quoteId) {
       return NextResponse.json(
         { error: 'Quote ID is required' },
         { status: 400 }
-      )
+      );
     }
 
-    const db = adminDb
-    
-    // Get the quote to soft delete
-    const quoteRef = db.collection('quotes').doc(quoteId)
-    const quoteSnap = await quoteRef.get()
-    
-    if (!quoteSnap.exists) {
-      return NextResponse.json(
-        { error: 'Quote not found' },
-        { status: 404 }
-      )
-    }
+    const data = await request.json();
+    const quoteRef = adminDb.collection('quotes').doc(quoteId);
 
-    const quoteData = quoteSnap.data()
-    
-    // Soft delete: move to deleted_quotes with timestamp for retention
-    const retentionDays = 30 // Default retention period
-    const now = Date.now()
-    const expiresAt = new Date(now + retentionDays * 24 * 60 * 60 * 1000)
-    
-    await db.collection('deleted_quotes').doc(quoteId).set({
-      ...quoteData,
-      deletedAt: new Date(),
-      expiresAt,
-    })
-    
-    // Delete the original quote
-    await quoteRef.delete()
-    
-    return NextResponse.json({ success: true, message: 'Quote deleted successfully' })
+    await quoteRef.update({
+      ...data,
+      updatedAt: new Date(),
+    });
+
+    const updatedDoc = await quoteRef.get();
+
+    return NextResponse.json({
+      id: updatedDoc.id,
+      ...updatedDoc.data(),
+    });
   } catch (error) {
-    console.error('Error deleting quote:', error)
+    console.error('Error updating quote:', error);
     return NextResponse.json(
-      {
-        error: 'Failed to delete quote',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: 'Failed to update quote' },
       { status: 500 }
-    )
+    );
   }
 }
-

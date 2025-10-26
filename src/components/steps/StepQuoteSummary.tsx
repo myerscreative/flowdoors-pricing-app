@@ -1,16 +1,17 @@
 /* path: src/components/steps/StepQuoteSummary.tsx */
 'use client'
 
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
+Here's what the imports section should look like with the new import added:
+typescriptimport {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,15 +26,15 @@ import { PANEL_GAP_IN } from '@/lib/door-config'
 import { generateQuotePdf } from '@/lib/generate-pdf'
 import type { DeliveryOption, InstallOption } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import { addQuote } from '@/services/quoteService'
+import { saveQuoteViaApi } from '@/services/quoteApiClient'
 import {
-    AlertTriangle,
-    CheckCircle,
-    Copy,
-    Loader2,
-    Pencil,
-    Trash2,
-    Truck,
+  AlertTriangle,
+  CheckCircle,
+  Copy,
+  Loader2,
+  Pencil,
+  Trash2,
+  Truck,
 } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { Input } from '../ui/input'
@@ -388,7 +389,7 @@ export function StepQuoteSummary({
       }
 
       console.warn('Object being passed to addQuote:', quoteToSave)
-      await addQuote(quoteToSave)
+      await saveQuoteViaApi(quoteToSave)
 
       // 🔸 Attribution + event after the quote is saved
       const at = readAttributionClient()

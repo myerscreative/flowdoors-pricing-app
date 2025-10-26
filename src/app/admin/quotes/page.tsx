@@ -34,8 +34,8 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { useQuotesGridPrefs } from '@/hooks/useQuotesGridPrefs'
 import { cn } from '@/lib/utils'
+import { addNoteToQuoteViaApi } from '@/services/quoteApiClient'
 import {
-  addNoteToQuote,
   addTaskToQuote,
   deleteQuote,
   getQuotes,
@@ -366,32 +366,32 @@ export default function AdminQuotesPage() {
     })
   }
 
-  const handleAddNote = async (quoteId: string, noteContent: string) => {
-    const newNote: NoteLite = {
-      id: `note-${Date.now()}`,
-      content: noteContent,
-      timestamp: new Date().toISOString(),
-      author: 'Admin User',
-    }
+  const handleAddNote = async (quoteId: string, content: string) => {
     try {
-      await addNoteToQuote(quoteId, newNote as QuoteNote)
-      setAllQuotes((prev) =>
-        prev.map((q) =>
-          q.id === quoteId
-            ? ({
-                ...q,
-                notes: [...((q as LooseQuote).notes ?? []), newNote] as unknown,
-              } as Quote)
-            : q
-        )
-      )
-      toast({ title: 'Success', description: 'Note added successfully.' })
+      const newNote: QuoteNote = {
+        id: `note-${Date.now()}`,
+        content,
+        timestamp: new Date().toISOString(),
+        author: 'Admin User',
+      }
+      
+      await addNoteToQuoteViaApi(quoteId, newNote as QuoteNote)
+      
+      // Refetch quotes to get updated data
+      const updatedQuotes = await getQuotes({ limit: 500, useCachedIfAvailable: false })
+      setAllQuotes(updatedQuotes as unknown as Quote[])
+      
+      toast({
+        title: 'Note Added',
+        description: 'The note has been added to the quote.',
+      })
+      
     } catch (error) {
       console.error('Failed to add note', error)
       toast({
+        variant: 'destructive',
         title: 'Error',
         description: 'Failed to add note.',
-        variant: 'destructive',
       })
     }
   }
