@@ -28,11 +28,12 @@ service cloud.firestore {
     match /quotes/{quoteId} {
       // Anyone can create quotes (for the quoter tool)
       allow create: if true;
-      
-      // Sales and admin can read and update quotes
-      allow read: if isSalesOrAdmin();
-      allow update: if isSalesOrAdmin();
-      
+
+      // DEVELOPMENT MODE: Allow all reads/updates for local dev
+      // TODO: Restore proper auth when deploying to production
+      allow read: if true;  // Temporarily open for dev
+      allow update: if true;  // Temporarily open for dev
+
       // Only admins can delete
       allow delete: if isAdmin();
     }
