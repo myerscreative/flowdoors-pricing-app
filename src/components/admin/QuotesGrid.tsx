@@ -252,6 +252,7 @@ const ActivityDialog = ({
 
   // Convert quote-specific notes to NotesPanel format
   const quoteNotes = quote.notes || []
+  const notesCount = quoteNotes.length
   const initialNotes: NotesPanelNote[] = quoteNotes.map((note) => ({
     id: note.id,
     content: note.content,
@@ -265,7 +266,7 @@ const ActivityDialog = ({
         <button className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-between">
           <span className="flex items-center gap-2">
             <Notebook className="w-4 h-4" />
-            Notes · Tasks ({tasksCount})
+            Notes ({notesCount}) · Tasks ({tasksCount})
           </span>
           <span className="text-xs text-gray-400">→</span>
         </button>
