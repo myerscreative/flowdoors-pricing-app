@@ -51,13 +51,13 @@ export async function verifyAuthToken(
         email: decodedToken.email,
         role: (decodedToken.role as string) || 'user',
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         authenticated: false,
         error: 'Invalid or expired token',
       }
     }
-  } catch (error) {
+  } catch (_error) {
     return {
       authenticated: false,
       error: 'Authentication failed',

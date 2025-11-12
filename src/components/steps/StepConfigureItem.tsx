@@ -154,20 +154,22 @@ const SizeAndConfigSelector = () => {
     () => PRODUCT_TYPES.find((p) => p.id === product.type),
     [product.type]
   )
-  const productType = product.type as ProductId
-  const isAwningWindow = productType === 'Awning-Window'
-  const isMultiSlideFamily = productType === 'Multi-Slide'
+  // Note: productType, isAwningWindow and Multi-Slide are not currently in use
+  // const productType = product.type as ProductId
+  // const isAwningWindow = productType === 'Awning-Window'
+  // const isMultiSlideFamily = productType === 'Multi-Slide'
 
   useEffect(() => {
-    if (
-      product.type === 'Awning-Window' &&
-      product.configuration !== 'Top-hinge'
-    ) {
-      dispatch({
-        type: 'SET_CONFIGURATION',
-        payload: { configuration: 'Top-hinge' },
-      })
-    }
+    // Awning-Window configuration logic disabled (type not in system)
+    // if (
+    //   product.type === 'Awning-Window' &&
+    //   product.configuration !== 'Top-hinge'
+    // ) {
+    //   dispatch({
+    //     type: 'SET_CONFIGURATION',
+    //     payload: { configuration: 'Top-hinge' },
+    //   })
+    // }
   }, [product.type, product.configuration, dispatch])
 
   const handleBlur = () => {

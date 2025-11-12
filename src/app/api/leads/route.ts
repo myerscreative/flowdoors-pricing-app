@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import * as admin from 'firebase-admin'
 import type { QueryDocumentSnapshot } from 'firebase-admin/firestore'
+import { checkRateLimit, getClientIp, RateLimitPresets } from '@/lib/rateLimit'
 
 export interface Lead {
   id: string
@@ -172,6 +173,28 @@ export async function GET(request: NextRequest) {
 // POST endpoint for creating new leads from forms
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting - 3 lead submissions per hour per IP
+    const clientIp = getClientIp(request.headers)
+    const rateLimitResult = checkRateLimit(clientIp, RateLimitPresets.leadSubmission)
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Too many lead submissions. Please try again later.',
+          retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000)
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': new Date(rateLimitResult.reset).toISOString(),
+            'Retry-After': Math.ceil((rateLimitResult.reset - Date.now()) / 1000).toString(),
+          }
+        }
+      )
+    }
+
     const body = await request.json()
     const {
       // Common fields

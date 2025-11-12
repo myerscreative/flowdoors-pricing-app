@@ -53,8 +53,35 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Parse pagination parameters
+    const url = new URL(request.url)
+    const page = parseInt(url.searchParams.get('page') || '1', 10)
+    const limit = parseInt(url.searchParams.get('limit') || '50', 10)
+    const status = url.searchParams.get('status') || ''
+
+    // Validate pagination parameters
+    const validatedPage = Math.max(1, page)
+    const validatedLimit = Math.min(100, Math.max(1, limit)) // Max 100 per page
+
     const db = admin.firestore()
-    const ordersSnapshot = await db.collection('orders').get()
+    let query = db.collection('orders').orderBy('createdAt', 'desc')
+
+    // Apply status filter if provided
+    if (status) {
+      query = query.where('status', '==', status) as admin.firestore.Query
+    }
+
+    // Get total count for pagination
+    const totalSnapshot = status
+      ? await db.collection('orders').where('status', '==', status).count().get()
+      : await db.collection('orders').count().get()
+    const totalCount = totalSnapshot.data().count
+
+    // Apply pagination
+    const offset = (validatedPage - 1) * validatedLimit
+    query = query.limit(validatedLimit).offset(offset)
+
+    const ordersSnapshot = await query.get()
 
     const orders: Array<Record<string, unknown>> = []
     ordersSnapshot.forEach((doc: admin.firestore.QueryDocumentSnapshot) => {
@@ -93,7 +120,16 @@ export async function GET(request: NextRequest) {
       })
     })
 
-    return NextResponse.json(orders)
+    return NextResponse.json({
+      orders,
+      pagination: {
+        page: validatedPage,
+        limit: validatedLimit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / validatedLimit),
+        hasMore: validatedPage < Math.ceil(totalCount / validatedLimit),
+      },
+    })
   } catch (error) {
     console.error('Error fetching orders from Firestore:', error)
     return NextResponse.json(

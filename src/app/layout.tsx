@@ -1,32 +1,22 @@
 import { Toaster } from '@/components/ui/toaster'
 import type { Metadata } from 'next'
-import { DM_Sans, Inter, Playfair_Display, Poppins } from 'next/font/google'
 import Script from 'next/script'
+
+// Import fonts from fontsource (local packages)
+import '@fontsource/inter/400.css'
+import '@fontsource/inter/500.css'
+import '@fontsource/inter/600.css'
+import '@fontsource/inter/700.css'
+import '@fontsource/poppins/600.css'
+import '@fontsource/poppins/700.css'
+import '@fontsource/playfair-display/400.css'
+import '@fontsource/playfair-display/700.css'
+import '@fontsource/dm-sans/400.css'
+import '@fontsource/dm-sans/500.css'
+import '@fontsource/dm-sans/700.css'
+
 import './globals.css'
 import Providers from './providers'
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-})
-
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['600', '700'],
-  variable: '--font-poppins',
-})
-
-const playfairDisplay = Playfair_Display({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-playfair-display',
-})
-
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
-  variable: '--font-dm-sans',
-})
 
 export const metadata: Metadata = {
   title: 'FlowDoors - San Diego Custom Door Systems',
@@ -90,7 +80,7 @@ export default function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className={`${inter.variable} ${poppins.variable} ${playfairDisplay.variable} ${dmSans.variable} font-body bg-gradient-to-b from-[#f8f9fa] to-[#e9ecef]`}
+        className="font-body bg-gradient-to-b from-[#f8f9fa] to-[#e9ecef]"
       >
         {/* Google Tag Manager (noscript) */}
         <noscript>

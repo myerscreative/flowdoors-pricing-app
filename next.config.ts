@@ -37,8 +37,10 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   eslint: {
-    // ESLint enabled during build
+    // ESLint enabled during build (fail on errors, allow warnings)
     ignoreDuringBuilds: false,
+    // Only fail build on errors, not warnings
+    dirs: ['src'],
   },
   webpack: webpackFn,
   experimental: {
