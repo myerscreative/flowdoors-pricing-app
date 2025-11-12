@@ -33,12 +33,12 @@ const webpackFn: NonNullable<NextConfig['webpack']> = (
 
 const nextConfig: NextConfig = {
   typescript: {
-    // Skip type checking during build (for now)
-    ignoreBuildErrors: true,
+    // Type checking enabled during build
+    ignoreBuildErrors: false,
   },
   eslint: {
-    // Skip ESLint during build (for now)
-    ignoreDuringBuilds: true,
+    // ESLint enabled during build
+    ignoreDuringBuilds: false,
   },
   webpack: webpackFn,
   experimental: {

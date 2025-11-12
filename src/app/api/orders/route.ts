@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import admin from 'firebase-admin'
+import { verifyAuthToken, isAuthorized } from '@/lib/apiAuth'
 
 // Ensure Firebase Admin is initialized
 if (!admin.apps.length) {
@@ -33,9 +34,25 @@ if (!admin.apps.length) {
   }
 }
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    // TODO: Add authentication check here if needed
+    // Verify authentication
+    const authResult = await verifyAuthToken(request)
+    if (!authResult.authenticated) {
+      return NextResponse.json(
+        { error: authResult.error || 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Check authorization - only admin, manager, and salesperson can view orders
+    if (!isAuthorized(authResult, ['admin', 'manager', 'salesperson'])) {
+      return NextResponse.json(
+        { error: 'Forbidden - Insufficient permissions' },
+        { status: 403 }
+      )
+    }
+
     const db = admin.firestore()
     const ordersSnapshot = await db.collection('orders').get()
 

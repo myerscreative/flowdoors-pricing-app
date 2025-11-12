@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import admin from 'firebase-admin'
+import { verifyAuthToken, isAuthorized } from '@/lib/apiAuth'
 
 // Ensure Firebase Admin is initialized
 if (!admin.apps.length) {
@@ -38,6 +39,23 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Verify authentication
+    const authResult = await verifyAuthToken(request)
+    if (!authResult.authenticated) {
+      return NextResponse.json(
+        { error: authResult.error || 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Check authorization - only admin, manager, and salesperson can view orders
+    if (!isAuthorized(authResult, ['admin', 'manager', 'salesperson'])) {
+      return NextResponse.json(
+        { error: 'Forbidden - Insufficient permissions' },
+        { status: 403 }
+      )
+    }
+
     const db = admin.firestore()
     const orderDoc = await db.collection('orders').doc(params.id).get()
 
@@ -98,7 +116,23 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    // TODO: Add authentication and authorization check here
+    // Verify authentication
+    const authResult = await verifyAuthToken(request)
+    if (!authResult.authenticated) {
+      return NextResponse.json(
+        { error: authResult.error || 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Check authorization - only admin and manager can delete orders
+    if (!isAuthorized(authResult, ['admin', 'manager'])) {
+      return NextResponse.json(
+        { error: 'Forbidden - Insufficient permissions' },
+        { status: 403 }
+      )
+    }
+
     const db = admin.firestore()
     await db.collection('orders').doc(params.id).delete()
 
@@ -117,7 +151,23 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    // TODO: Add authentication and authorization check here
+    // Verify authentication
+    const authResult = await verifyAuthToken(request)
+    if (!authResult.authenticated) {
+      return NextResponse.json(
+        { error: authResult.error || 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Check authorization - only admin, manager, and salesperson can update orders
+    if (!isAuthorized(authResult, ['admin', 'manager', 'salesperson'])) {
+      return NextResponse.json(
+        { error: 'Forbidden - Insufficient permissions' },
+        { status: 403 }
+      )
+    }
+
     const db = admin.firestore()
     const updates = await request.json()
 

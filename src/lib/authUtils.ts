@@ -1,4 +1,7 @@
 import crypto from 'crypto'
+import bcrypt from 'bcrypt'
+
+const SALT_ROUNDS = 12 // Higher = more secure but slower
 
 /**
  * Generate a secure random token for activation/password reset
@@ -10,13 +13,25 @@ export function generateActivationToken(length: number = 32): string {
 }
 
 /**
- * Hash a password using SHA-256 (for storage comparison)
- * Note: In production, use bcrypt or Argon2 for password hashing
+ * Hash a password using bcrypt
  * @param password - Plain text password
- * @returns Hashed password
+ * @returns Promise with hashed password
  */
-export function hashPassword(password: string): string {
-  return crypto.createHash('sha256').update(password).digest('hex')
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, SALT_ROUNDS)
+}
+
+/**
+ * Verify a password against a bcrypt hash
+ * @param password - Plain text password to verify
+ * @param hash - Bcrypt hash to compare against
+ * @returns Promise with boolean indicating if password matches
+ */
+export async function verifyPassword(
+  password: string,
+  hash: string
+): Promise<boolean> {
+  return bcrypt.compare(password, hash)
 }
 
 /**
