@@ -1,24 +1,27 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { MoodCoordinates } from '@/types'
+
+interface MoodCoordinates {
+  x: number // motivation (0-1)
+  y: number // happiness (0-1)
+}
 
 interface GradientSelectorProps {
   onMoodSelect: (coordinates: MoodCoordinates) => void
   selectedMood?: MoodCoordinates
-  disabled?: boolean
 }
 
-export default function GradientSelector({ onMoodSelect, selectedMood, disabled = false }: GradientSelectorProps) {
+export default function GradientSelector({ onMoodSelect, selectedMood }: GradientSelectorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const wrapperRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const [currentMood, setCurrentMood] = useState<MoodCoordinates | null>(selectedMood || null)
   const [cursorPosition, setCursorPosition] = useState<{ x: number; y: number } | null>(null)
 
   // Four corner colors - EXACT from reference image
   const corners = {
     topLeft: { r: 107, g: 182, b: 214 },      // #6BB6D6 - Light cyan/blue (Happy + Unmotivated)
-    topRight: { r: 245, g: 165, b: 84 },      // #F5A554 - Orange (Happy + Motivated)
+    topRight: { r: 255, g: 180, b: 70 },      // Brighter orange/yellow (Happy + Motivated)
     bottomLeft: { r: 26, g: 42, b: 74 },      // #1A2A4A - Dark navy (Unhappy + Unmotivated)
     bottomRight: { r: 168, g: 54, b: 83 },    // #A83653 - Dark burgundy (Unhappy + Motivated)
   }
@@ -55,27 +58,28 @@ export default function GradientSelector({ onMoodSelect, selectedMood, disabled 
 
   const drawGradient = () => {
     const canvas = canvasRef.current
-    const wrapper = wrapperRef.current
-    if (!canvas || !wrapper) return
+    const container = containerRef.current
+    if (!canvas || !container) return
 
-    const ctx = canvas.getContext('2d')
+    const ctx = canvas.getContext('2d', { willReadFrequently: false })
     if (!ctx) return
 
-    const rect = wrapper.getBoundingClientRect()
-    const dpr = window.devicePixelRatio || 1
+    // Get actual display size
+    const displayWidth = container.clientWidth
+    const displayHeight = container.clientHeight
 
-    canvas.width = rect.width * dpr
-    canvas.height = rect.height * dpr
-    canvas.style.width = `${rect.width}px`
-    canvas.style.height = `${rect.height}px`
+    // Set canvas size to match display size (1:1 pixels)
+    canvas.width = displayWidth
+    canvas.height = displayHeight
 
-    ctx.scale(dpr, dpr)
+    const width = displayWidth
+    const height = displayHeight
 
-    const width = rect.width
-    const height = rect.height
+    // Create image data
     const imageData = ctx.createImageData(width, height)
     const data = imageData.data
 
+    // Fill every pixel with bilinearly interpolated color
     for (let py = 0; py < height; py++) {
       for (let px = 0; px < width; px++) {
         const x = px / (width - 1)
@@ -98,22 +102,33 @@ export default function GradientSelector({ onMoodSelect, selectedMood, disabled 
       }
     }
 
+    // Put the image data directly on the canvas
     ctx.putImageData(imageData, 0, 0)
   }
 
   useEffect(() => {
-    drawGradient()
-    window.addEventListener('resize', drawGradient)
-    return () => window.removeEventListener('resize', drawGradient)
+    // Small delay to ensure container is sized
+    const timer = setTimeout(() => {
+      drawGradient()
+    }, 0)
+
+    const handleResize = () => {
+      drawGradient()
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('resize', handleResize)
+    }
   }, [])
 
   const handleInteraction = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
-    if (disabled) return
+    const container = containerRef.current
+    if (!container) return
 
-    const wrapper = wrapperRef.current
-    if (!wrapper) return
-
-    const rect = wrapper.getBoundingClientRect()
+    const rect = container.getBoundingClientRect()
     let clientX: number
     let clientY: number
 
@@ -161,14 +176,16 @@ export default function GradientSelector({ onMoodSelect, selectedMood, disabled 
 
       {/* Gradient Container */}
       <div
-        ref={wrapperRef}
-        className={`relative w-full aspect-square rounded-3xl overflow-hidden cursor-crosshair shadow-2xl ${
-          disabled ? 'cursor-not-allowed opacity-50' : ''
-        }`}
+        ref={containerRef}
+        className="relative w-full aspect-square rounded-3xl overflow-hidden cursor-crosshair shadow-2xl"
         onClick={handleInteraction}
         onTouchStart={handleInteraction}
       >
-        <canvas ref={canvasRef} className="w-full h-full" />
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full"
+          style={{ display: 'block' }}
+        />
 
         {/* Selection Indicator */}
         {currentMood && cursorPosition && (
