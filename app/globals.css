@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom gradient for mood selector */
+.mood-gradient {
+  background: linear-gradient(135deg,
+    #FFD93D 0%,    /* Top-left: Happy & Unmotivated (yellow) */
+    #6BCF7F 25%,   /* Happy & Mid-motivation (green) */
+    #4D96FF 50%,   /* Middle (blue) */
+    #FF6B9D 75%,   /* Unhappy & Mid-motivation (pink) */
+    #C44569 100%   /* Bottom-right: Unhappy & Unmotivated (red) */
+  );
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Touch target minimum size */
+button, a, [role="button"] {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Focus indicators for accessibility */
+*:focus-visible {
+  outline: 2px solid #4D96FF;
+  outline-offset: 2px;
+}
+
+/* Ripple effect for gradient taps */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  width: 50px;
+  height: 50px;
+  animation: ripple 0.6s ease-out;
+}
