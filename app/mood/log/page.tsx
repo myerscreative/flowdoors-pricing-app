@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import GradientSelector from '@/components/GradientSelector';
-import { MoodCoordinate } from '@/types';
+import CoachingCard from '@/components/CoachingCard';
+import { MoodCoordinate, CoachingSuggestion } from '@/types';
 import { createMoodEntry } from '@/lib/db';
+import { analyzeMoodSentiment, getCoachingSuggestions, detectCognitiveDistortions } from '@/lib/sentiment-analysis';
 
 type Step = 'gradient' | 'question1' | 'question2' | 'question3' | 'notes' | 'success';
 
@@ -23,6 +25,9 @@ export default function LogMoodPage() {
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [coachingSuggestions, setCoachingSuggestions] = useState<CoachingSuggestion[]>([]);
+  const [showCoaching, setShowCoaching] = useState(false);
+  const [cognitiveDistortions, setCognitiveDistortions] = useState<any[]>([]);
 
   const handleGradientSelect = (coord: MoodCoordinate) => {
     setMoodCoord(coord);
@@ -69,11 +74,44 @@ export default function LogMoodPage() {
     handleSave();
   };
 
+  // Analyze sentiment when self-talk changes
+  useEffect(() => {
+    if (selfTalk.trim().length > 10 && step === 'question2') {
+      // Detect cognitive distortions in self-talk
+      const distortions = detectCognitiveDistortions(selfTalk);
+      setCognitiveDistortions(distortions);
+    }
+  }, [selfTalk, step]);
+
+  // Generate coaching suggestions after question 3
+  useEffect(() => {
+    if (step === 'notes' && focus && selfTalk && physical) {
+      const sentiments = analyzeMoodSentiment(focus, selfTalk, physical);
+      const suggestions = getCoachingSuggestions(
+        sentiments.self_talk_sentiment,
+        selfTalk,
+        sentiments.overall_sentiment
+      );
+      setCoachingSuggestions(suggestions);
+      if (suggestions.length > 0) {
+        setShowCoaching(true);
+      }
+    }
+  }, [step, focus, selfTalk, physical]);
+
   const handleSave = async () => {
     if (!moodCoord) return;
 
     setSaving(true);
     setError('');
+
+    // Analyze sentiment
+    const sentiments = analyzeMoodSentiment(
+      focus.trim(),
+      selfTalk.trim(),
+      physical.trim(),
+      notes.trim() || undefined
+    );
 
     const { error: saveError } = await createMoodEntry({
       mood_x: moodCoord.x,
@@ -82,6 +120,11 @@ export default function LogMoodPage() {
       self_talk: selfTalk.trim(),
       physical: physical.trim(),
       notes: notes.trim() || undefined,
+      focus_sentiment: sentiments.focus_sentiment,
+      self_talk_sentiment: sentiments.self_talk_sentiment,
+      physical_sentiment: sentiments.physical_sentiment,
+      notes_sentiment: sentiments.notes_sentiment,
+      overall_sentiment: sentiments.overall_sentiment,
     });
 
     if (saveError) {
@@ -238,6 +281,25 @@ export default function LogMoodPage() {
               />
             </div>
 
+            {/* Cognitive distortion detection (question 2 only) */}
+            {step === 'question2' && cognitiveDistortions.length > 0 && (
+              <div className="mb-6 space-y-3">
+                <p className="text-sm font-medium text-amber-900 flex items-center">
+                  <span className="mr-2">💭</span>
+                  Thought Pattern Detected
+                </p>
+                {cognitiveDistortions.map((distortion, index) => (
+                  <div key={index} className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm">
+                    <p className="font-medium text-amber-900 mb-1">{distortion.distortion}</p>
+                    <p className="text-amber-800 text-xs mb-2">{distortion.description}</p>
+                    <p className="text-amber-700 text-xs">
+                      <strong>Try:</strong> {distortion.reframe}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Suggestion chips */}
             {currentQuestion.chips && currentQuestion.chipField && (
               <div className="mb-6">
@@ -334,6 +396,49 @@ export default function LogMoodPage() {
                 autoFocus
               />
             </div>
+
+            {/* Coaching Suggestions */}
+            {showCoaching && coachingSuggestions.length > 0 && (
+              <div className="mb-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-gray-900 flex items-center">
+                    <span className="mr-2">🧠</span>
+                    Emotion Coach
+                  </p>
+                  <button
+                    onClick={() => setShowCoaching(false)}
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    Hide
+                  </button>
+                </div>
+                {coachingSuggestions.map((suggestion, index) => (
+                  <CoachingCard
+                    key={index}
+                    suggestion={suggestion}
+                    onDismiss={() => {
+                      const newSuggestions = coachingSuggestions.filter((_, i) => i !== index);
+                      setCoachingSuggestions(newSuggestions);
+                      if (newSuggestions.length === 0) {
+                        setShowCoaching(false);
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {!showCoaching && coachingSuggestions.length > 0 && (
+              <div className="mb-6">
+                <button
+                  onClick={() => setShowCoaching(true)}
+                  className="text-sm text-blue-600 hover:text-blue-700 flex items-center"
+                >
+                  <span className="mr-2">💡</span>
+                  Show coaching suggestions ({coachingSuggestions.length})
+                </button>
+              </div>
+            )}
 
             {/* Navigation buttons */}
             <div className="flex space-x-3">

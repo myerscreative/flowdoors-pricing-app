@@ -19,6 +19,11 @@ Stores individual mood log entries created by users.
 | `self_talk` | text | NOT NULL | What the user is telling themselves |
 | `physical` | text | NOT NULL | Physical sensations noticed |
 | `notes` | text | NULL | Optional additional notes |
+| `focus_sentiment` | numeric | NULL | Sentiment score for focus text (-5 to 5) |
+| `self_talk_sentiment` | numeric | NULL | Sentiment score for self-talk text (-5 to 5) |
+| `physical_sentiment` | numeric | NULL | Sentiment score for physical text (-5 to 5) |
+| `notes_sentiment` | numeric | NULL | Sentiment score for notes text (-5 to 5) |
+| `overall_sentiment` | numeric | NULL | Weighted average sentiment score (-5 to 5) |
 
 **Indexes:**
 - `mood_entries_user_id_created_at_idx` on (user_id, created_at DESC) - For efficient queries
@@ -58,7 +63,12 @@ create table mood_entries (
   focus text not null,
   self_talk text not null,
   physical text not null,
-  notes text
+  notes text,
+  focus_sentiment numeric check (focus_sentiment >= -5 and focus_sentiment <= 5),
+  self_talk_sentiment numeric check (self_talk_sentiment >= -5 and self_talk_sentiment <= 5),
+  physical_sentiment numeric check (physical_sentiment >= -5 and physical_sentiment <= 5),
+  notes_sentiment numeric check (notes_sentiment >= -5 and notes_sentiment <= 5),
+  overall_sentiment numeric check (overall_sentiment >= -5 and overall_sentiment <= 5)
 );
 
 -- Enable Row Level Security

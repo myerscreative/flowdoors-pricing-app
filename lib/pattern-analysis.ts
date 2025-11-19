@@ -1,5 +1,6 @@
 import { MoodEntry, FocusPattern, Insight, UserStats } from '@/types';
 import { getMoodZone } from './mood-utils';
+import { analyzeSentimentTrends, getCoachingSuggestions } from './sentiment-analysis';
 import { startOfWeek } from 'date-fns';
 
 export function analyzePatterns(entries: MoodEntry[]): UserStats {
@@ -86,6 +87,16 @@ function generateInsights(
     entries.reduce((sum, e) => sum + (100 - e.mood_y), 0) / entries.length;
   const avgMotivation =
     entries.reduce((sum, e) => sum + e.mood_x, 0) / entries.length;
+
+  // Sentiment trend analysis
+  const sentimentScores = entries
+    .filter((e) => e.overall_sentiment !== undefined && e.overall_sentiment !== null)
+    .map((e) => e.overall_sentiment!);
+
+  const hasSentimentData = sentimentScores.length > 0;
+  const sentimentTrend = hasSentimentData
+    ? analyzeSentimentTrends(sentimentScores)
+    : null;
 
   // Insight 1: Best focus area
   if (focusAreas.length > 0) {
@@ -191,6 +202,86 @@ function generateInsights(
     }
   });
 
-  // Limit to top 3 insights
-  return insights.slice(0, 3);
+  // Sentiment trend insights
+  if (sentimentTrend && hasSentimentData) {
+    if (sentimentTrend.trend === 'improving' && sentimentTrend.average > 0) {
+      insights.push({
+        type: 'coaching',
+        title: 'Your Emotional Trajectory is Improving',
+        description: `Over your recent entries, your overall sentiment has been trending upward (average: ${sentimentTrend.average.toFixed(1)}/5). You're cultivating more positive emotional experiences.`,
+        suggestion: 'Reflect on what changes you\'ve made that might be contributing to this improvement.',
+        actionItems: [
+          'Journal about what\'s been working well',
+          'Notice the thoughts that support positive moods',
+          'Consider how to maintain this momentum',
+        ],
+      });
+    } else if (sentimentTrend.trend === 'declining' && sentimentTrend.average < 0) {
+      insights.push({
+        type: 'coaching',
+        title: 'Your Sentiment Has Been Declining',
+        description: `Your overall emotional tone has been trending downward recently (average: ${sentimentTrend.average.toFixed(1)}/5). This might be a good time to reach out for support.`,
+        suggestion: 'Consider talking to a friend, therapist, or using additional coping strategies.',
+        actionItems: [
+          'Identify what might be contributing to this shift',
+          'Practice self-compassion - this is temporary',
+          'Reach out to your support network',
+          'Consider professional support if this continues',
+        ],
+      });
+    } else if (sentimentTrend.volatility > 2) {
+      insights.push({
+        type: 'coaching',
+        title: 'Your Emotions Have Been Variable',
+        description: `Your sentiment scores show significant fluctuation. This variability is normal, but you might benefit from grounding practices.`,
+        suggestion: 'Regular mindfulness or emotional regulation practices could help smooth these swings.',
+        actionItems: [
+          'Try a daily grounding exercise (breathing, meditation)',
+          'Notice what triggers major shifts',
+          'Build consistent routines for stability',
+          'Celebrate flexibility while seeking balance',
+        ],
+      });
+    }
+  }
+
+  // Coaching insights based on self-talk sentiment
+  const recentEntries = entries.slice(0, 5);
+  if (recentEntries.length >= 5) {
+    const avgSelfTalkSentiment =
+      recentEntries
+        .filter((e) => e.self_talk_sentiment !== undefined)
+        .reduce((sum, e) => sum + (e.self_talk_sentiment || 0), 0) /
+      recentEntries.filter((e) => e.self_talk_sentiment !== undefined).length;
+
+    if (avgSelfTalkSentiment < -1.5) {
+      insights.push({
+        type: 'coaching',
+        title: 'Your Inner Critic is Active',
+        description: `Your recent self-talk has been notably negative (average: ${avgSelfTalkSentiment.toFixed(1)}/5). Your inner voice shapes your reality.`,
+        suggestion: 'Practice cognitive reframing and self-compassion techniques.',
+        actionItems: [
+          'Notice when your inner critic speaks up',
+          'Ask: "Is this thought helpful or true?"',
+          'Speak to yourself as you would a good friend',
+          'Consider working with a therapist on thought patterns',
+        ],
+      });
+    } else if (avgSelfTalkSentiment > 2) {
+      insights.push({
+        type: 'coaching',
+        title: 'Your Self-Talk is Empowering',
+        description: `Your recent internal dialogue has been supportive and positive (average: ${avgSelfTalkSentiment.toFixed(1)}/5). This is a powerful foundation for wellbeing.`,
+        suggestion: 'Keep nurturing this positive relationship with yourself.',
+        actionItems: [
+          'Notice what helps you maintain positive self-talk',
+          'Share your self-compassion practices with others',
+          'Return to these entries when you need encouragement',
+        ],
+      });
+    }
+  }
+
+  // Limit to top 5 insights (increased from 3 to accommodate coaching)
+  return insights.slice(0, 5);
 }

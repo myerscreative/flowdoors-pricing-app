@@ -195,16 +195,39 @@ export default function PatternsPage() {
                       ? 'bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200'
                       : insight.type === 'warning'
                       ? 'bg-gradient-to-br from-orange-50 to-yellow-50 border border-orange-200'
+                      : insight.type === 'coaching'
+                      ? 'bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200'
                       : 'bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200'
                   }`}
                 >
                   <div className="flex items-start space-x-3">
                     <div className="text-3xl">
-                      {insight.type === 'positive' ? '💡' : insight.type === 'warning' ? '⚠️' : '✨'}
+                      {insight.type === 'positive' ? '💡' : insight.type === 'warning' ? '⚠️' : insight.type === 'coaching' ? '🧠' : '✨'}
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900 mb-2">{insight.title}</h3>
                       <p className="text-gray-700">{insight.description}</p>
+
+                      {insight.suggestion && (
+                        <div className="mt-3 p-3 bg-white bg-opacity-60 rounded-lg">
+                          <p className="text-sm font-medium text-gray-900 mb-1">💭 Suggestion</p>
+                          <p className="text-sm text-gray-700">{insight.suggestion}</p>
+                        </div>
+                      )}
+
+                      {insight.actionItems && insight.actionItems.length > 0 && (
+                        <div className="mt-3 space-y-1">
+                          <p className="text-sm font-medium text-gray-900">Try these steps:</p>
+                          <ul className="space-y-1">
+                            {insight.actionItems.map((item, i) => (
+                              <li key={i} className="flex items-start space-x-2 text-sm text-gray-700">
+                                <span className="text-purple-600 mt-0.5">•</span>
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
 
                       {insight.relatedEntries && insight.relatedEntries.length > 0 && (
                         <Link

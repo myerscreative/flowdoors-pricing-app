@@ -4,6 +4,14 @@ export interface MoodCoordinate {
   y: number; // 0-100: top (happy) to bottom (unhappy)
 }
 
+export interface SentimentScores {
+  focus_sentiment: number;
+  self_talk_sentiment: number;
+  physical_sentiment: number;
+  notes_sentiment?: number;
+  overall_sentiment: number;
+}
+
 export interface MoodEntry {
   id: string;
   user_id: string;
@@ -14,6 +22,11 @@ export interface MoodEntry {
   self_talk: string;
   physical: string;
   notes?: string;
+  focus_sentiment?: number;
+  self_talk_sentiment?: number;
+  physical_sentiment?: number;
+  notes_sentiment?: number;
+  overall_sentiment?: number;
 }
 
 export interface MoodEntryInput {
@@ -23,6 +36,11 @@ export interface MoodEntryInput {
   self_talk: string;
   physical: string;
   notes?: string;
+  focus_sentiment?: number;
+  self_talk_sentiment?: number;
+  physical_sentiment?: number;
+  notes_sentiment?: number;
+  overall_sentiment?: number;
 }
 
 // Pattern analysis types
@@ -34,10 +52,20 @@ export interface FocusPattern {
 }
 
 export interface Insight {
-  type: 'positive' | 'warning' | 'neutral';
+  type: 'positive' | 'warning' | 'neutral' | 'coaching';
   title: string;
   description: string;
   relatedEntries?: string[];
+  suggestion?: string;
+  actionItems?: string[];
+}
+
+export interface CoachingSuggestion {
+  type: 'reframe' | 'celebrate' | 'explore' | 'practice';
+  title: string;
+  message: string;
+  tips: string[];
+  basedOn: 'sentiment' | 'pattern' | 'combination';
 }
 
 export interface UserStats {

@@ -1,14 +1,31 @@
 # Vibepoint
 
-A mood tracking application that helps you understand your emotional patterns through visual mood logging and AI-powered insights.
+An intelligent mood tracking and emotion coaching application that helps you understand your emotional patterns through visual mood logging, real-time sentiment analysis, and AI-powered coaching insights.
 
 ## Features
 
+### Core Mood Tracking
 - **Visual Mood Tracking**: Express your mood by tapping on an interactive gradient (happiness × motivation)
 - **Contextual Questions**: Answer 3 quick questions about focus, self-talk, and physical sensations
-- **History View**: Browse and review all your past mood entries
+- **History View**: Browse and review all your past mood entries with sentiment visualization
 - **Pattern Analysis**: Unlock insights after 10+ entries to discover what affects your mood
-- **Progressive Insights**: Get deeper analysis with 20+ entries
+
+### Emotion Coaching (NEW ✨)
+- **Real-Time Sentiment Analysis**: Automatically analyzes the sentiment of your responses (-5 to +5 scale)
+- **Cognitive Distortion Detection**: Identifies unhelpful thought patterns in your self-talk (e.g., all-or-nothing thinking, catastrophizing, should statements)
+- **Live Coaching Suggestions**: Get personalized reframing tips as you log your mood
+- **Sentiment Trend Tracking**: Understand how your emotional tone changes over time
+- **AI-Powered Coaching Insights**: Receive actionable guidance based on your patterns:
+  - Identify happiness boosters and emotional drains
+  - Recognize negative self-talk patterns
+  - Discover body-mood connections
+  - Track emotional trajectory (improving/declining/stable)
+  - Get personalized action items for wellbeing
+
+### Progressive Features
+- **10+ Entries**: Unlock basic pattern analysis and focus area insights
+- **20+ Entries**: Unlock advanced coaching insights and sentiment trend analysis
+- **Adaptive Coaching**: The more you log, the smarter the coaching becomes
 
 ## Tech Stack
 
@@ -16,6 +33,7 @@ A mood tracking application that helps you understand your emotional patterns th
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **Authentication & Database**: Supabase
+- **Sentiment Analysis**: Sentiment.js
 - **Animations**: Framer Motion
 - **Date Handling**: date-fns
 
