@@ -304,7 +304,7 @@ const ActivityDialog = ({
             </TabsTrigger>
           </TabsList>
 
-          {/* Notes tab: robust NotesPanel (Prisma/SQLite) */}
+          {/* Notes tab: robust NotesPanel (Firestore) */}
           <TabsContent value="notes" className="mt-4 space-y-4">
             <NotesPanel initialNotes={initialNotes} />
           </TabsContent>

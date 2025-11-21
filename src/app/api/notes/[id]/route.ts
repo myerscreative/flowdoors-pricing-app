@@ -1,24 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server'
+import * as notesService from '@/services/notesService'
+
+type AttachmentIn = {
+  name: string
+  type: string
+  size: number
+  url: string
+  isImage: boolean
+}
 
 type UpdateNotePayload = {
-  content?: string // optional if your route allows partial update
-  // add other fields you actually use, e.g.:
-  // title?: string;
-  // attachments?: AttachmentIn[];
+  content?: string
+  attachments?: AttachmentIn[]
 }
 
 function isUpdateNotePayload(x: unknown): x is UpdateNotePayload {
   if (!x || typeof x !== 'object') return false
   const o = x as Record<string, unknown>
 
-  // If you require at least one updatable field, assert that here:
-  const hasContent =
-    typeof o.content === 'string' ? o.content.trim().length >= 0 : false
-  // Add other property checks if your handler uses them.
-  return hasContent /* || otherFieldChecks */
-}
+  // At least one field should be provided
+  const hasContent = typeof o.content === 'string' && o.content.trim().length > 0
+  const hasAttachments = Array.isArray(o.attachments)
 
-// If you have a GET handler, leave it as-is—no payload typing needed.
+  if (!hasContent && !hasAttachments) {
+    return false
+  }
+
+  // Validate attachments if present
+  if (o.attachments !== undefined) {
+    if (!Array.isArray(o.attachments)) return false
+
+    for (const attachment of o.attachments) {
+      if (!attachment || typeof attachment !== 'object') return false
+      const a = attachment as Record<string, unknown>
+
+      if (
+        typeof a.name !== 'string' ||
+        typeof a.type !== 'string' ||
+        typeof a.size !== 'number' ||
+        typeof a.url !== 'string' ||
+        typeof a.isImage !== 'boolean'
+      ) {
+        return false
+      }
+    }
+  }
+
+  return true
+}
 
 export async function PATCH(
   req: NextRequest,
@@ -35,11 +64,34 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
     }
 
-    // TODO: Implement update logic using `noteId` and fields from bodyUnknown
+    const updated = await notesService.updateNote(noteId, {
+      content: bodyUnknown.content,
+      attachments: bodyUnknown.attachments,
+    })
 
-    return NextResponse.json({ success: true })
+    // Convert dates to ISO strings for JSON serialization
+    const serialized = {
+      ...updated,
+      createdAt: updated.createdAt?.toISOString() ?? null,
+      updatedAt: updated.updatedAt?.toISOString() ?? null,
+      attachments: updated.attachments.map((a) => ({
+        ...a,
+        createdAt: a.createdAt?.toISOString() ?? undefined,
+      })),
+    }
+
+    return NextResponse.json(serialized)
   } catch (err) {
     console.error('notes/[id] PATCH error', err)
+
+    // Handle specific errors
+    if (err instanceof Error && err.message === 'Note not found') {
+      return NextResponse.json(
+        { error: 'Note not found' },
+        { status: 404 }
+      )
+    }
+
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }
@@ -57,7 +109,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Missing note id' }, { status: 400 })
     }
 
-    // ... existing delete logic using `noteId` ...
+    await notesService.deleteNote(noteId)
 
     return NextResponse.json({ success: true })
   } catch (err) {
