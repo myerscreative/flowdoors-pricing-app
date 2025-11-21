@@ -12,49 +12,46 @@ export default function NotesSectionClient({ orderId }: { orderId: string }) {
   const [notes, setNotes] = useState<UINote[] | null>(null)
   const [err, setErr] = useState<string | null>(null)
 
-  useEffect(() => {
-    let alive = true
-    ;(async () => {
-      try {
-        const list = await api.listNotes()
+  // Coerce API attachment (id?: string) -> UI attachment (id: string)
+  const mapAttachment = (
+    a: api.NoteAttachment,
+    idx: number
+  ): UIAttachment => ({
+    id:
+      a.id ??
+      `${Date.now().toString(36)}-${idx}-${Math.random()
+        .toString(36)
+        .slice(2, 8)}`,
+    name: a.name,
+    type: a.type,
+    size: a.size,
+    url: a.url,
+    isImage: a.isImage,
+  })
 
-        // Coerce API attachment (id?: string) -> UI attachment (id: string)
-        const mapAttachment = (
-          a: api.NoteAttachment,
-          idx: number
-        ): UIAttachment => ({
-          id:
-            a.id ??
-            `${Date.now().toString(36)}-${idx}-${Math.random()
-              .toString(36)
-              .slice(2, 8)}`,
-          name: a.name,
-          type: a.type,
-          size: a.size,
-          url: a.url,
-          isImage: a.isImage,
-        })
+  const loadNotes = async () => {
+    try {
+      const list = await api.listNotes({ orderId })
 
-        const mapped: UINote[] = list.map((n) => {
-          const atts = (n.attachments ?? []).map((a, i) => mapAttachment(a, i))
-          return {
-            id: n.id,
-            content: n.content,
-            createdAt: n.createdAt,
-            ...(atts.length ? { attachments: atts } : {}),
-          }
-        })
+      const mapped: UINote[] = list.map((n) => {
+        const atts = (n.attachments ?? []).map((a, i) => mapAttachment(a, i))
+        return {
+          id: n.id,
+          content: n.content,
+          createdAt: n.createdAt ?? new Date().toISOString(),
+          ...(atts.length ? { attachments: atts } : {}),
+        }
+      })
 
-        if (alive) setNotes(mapped)
-      } catch (err) {
-        if (alive)
-          setErr(err instanceof Error ? err.message : 'Failed to load notes')
-      }
-    })()
-
-    return () => {
-      alive = false
+      setNotes(mapped)
+      setErr(null)
+    } catch (err) {
+      setErr(err instanceof Error ? err.message : 'Failed to load notes')
     }
+  }
+
+  useEffect(() => {
+    loadNotes()
   }, [orderId])
 
   if (err) {
@@ -73,6 +70,64 @@ export default function NotesSectionClient({ orderId }: { orderId: string }) {
     )
   }
 
-  // NotesPanel handles add/edit/delete UI. Persisting actions via notesApi will be wired in a later step.
-  return <NotesPanel initialNotes={notes} />
+  const handleCreate = async (note: UINote) => {
+    try {
+      await api.createNote({
+        content: note.content,
+        orderId,
+        attachments: note.attachments?.map((a) => ({
+          name: a.name,
+          type: a.type,
+          size: a.size,
+          url: a.url,
+          isImage: a.isImage,
+        })),
+      })
+      // Reload notes to get the server-generated data
+      await loadNotes()
+    } catch (err) {
+      console.error('Failed to create note:', err)
+      setErr(err instanceof Error ? err.message : 'Failed to create note')
+    }
+  }
+
+  const handleUpdate = async (note: UINote) => {
+    try {
+      await api.updateNote(note.id, {
+        content: note.content,
+        attachments: note.attachments?.map((a) => ({
+          name: a.name,
+          type: a.type,
+          size: a.size,
+          url: a.url,
+          isImage: a.isImage,
+        })),
+      })
+      // Reload notes to get the server-generated data
+      await loadNotes()
+    } catch (err) {
+      console.error('Failed to update note:', err)
+      setErr(err instanceof Error ? err.message : 'Failed to update note')
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      await api.deleteNote(id)
+      // Reload notes after deletion
+      await loadNotes()
+    } catch (err) {
+      console.error('Failed to delete note:', err)
+      setErr(err instanceof Error ? err.message : 'Failed to delete note')
+    }
+  }
+
+  return (
+    <NotesPanel
+      initialNotes={notes}
+      onCreate={handleCreate}
+      onUpdate={handleUpdate}
+      onDelete={handleDelete}
+    />
+  )
 }

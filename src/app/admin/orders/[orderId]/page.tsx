@@ -1,13 +1,15 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { prisma } from '@/lib/prisma'
 import { ArrowLeft } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
-/** Client-only NotesPanel (avoid making this page a client component) */
-const NotesPanel = dynamic(() => import('@/components/notes/NotesPanel'), {})
+/** Client-only NotesSection (handles API calls and state) */
+const NotesSectionClient = dynamic(
+  () => import('./NotesSectionClient'),
+  { ssr: false }
+)
 
 /** Route Metadata (server-only) */
 export async function generateMetadata({
@@ -55,26 +57,6 @@ export default async function OrderPage({
 
   // Pricing (footer)
   const itemPriceUSD = 12450
-
-  // Load persisted notes (internal follow-up notes).
-  // For now, show all notes. In a later step we can scope notes to this orderId.
-  const rawNotes = await prisma.note.findMany({
-    include: { attachments: true },
-    orderBy: { createdAt: 'desc' },
-  })
-  const initialNotes = rawNotes.map((n) => ({
-    id: n.id,
-    content: n.content,
-    createdAt: n.createdAt.toISOString(),
-    attachments: n.attachments.map((a) => ({
-      id: a.id,
-      name: a.name,
-      type: a.type,
-      size: a.size,
-      url: a.url,
-      isImage: a.isImage,
-    })),
-  }))
 
   return (
     <main className="max-w-6xl mx-auto p-6 md:p-8 space-y-8">
@@ -218,8 +200,8 @@ export default async function OrderPage({
             These notes are for sales/ops only and are not shown to the client.
           </p>
         </div>
-        {/* Client-side Notes UI fed by server-fetched data */}
-        <NotesPanel initialNotes={initialNotes} />
+        {/* Client-side Notes UI with Firestore integration */}
+        <NotesSectionClient orderId={orderId} />
       </SectionCard>
 
       {/* Footer: Pricing */}

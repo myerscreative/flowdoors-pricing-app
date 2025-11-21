@@ -11,18 +11,24 @@ export type NoteAttachment = {
 export type Note = {
   id: string
   content: string
-  createdAt: string
-  updatedAt: string
+  orderId?: string | null
+  quoteId?: string | null
+  userId?: string | null
+  createdAt: string | null
+  updatedAt: string | null
   attachments: NoteAttachment[]
 }
 
 type CreateNoteInput = {
   content: string
+  orderId?: string | null
+  quoteId?: string | null
+  userId?: string | null
   attachments?: Omit<NoteAttachment, 'id' | 'createdAt'>[]
 }
 
 type UpdateNoteInput = {
-  content: string
+  content?: string
   attachments?: Omit<NoteAttachment, 'id' | 'createdAt'>[]
 }
 
@@ -35,9 +41,18 @@ async function json<T>(res: Response): Promise<T> {
 }
 
 export async function listNotes(opts?: {
+  orderId?: string
+  quoteId?: string
   signal?: AbortSignal
 }): Promise<Note[]> {
-  const res = await fetch('/api/notes', {
+  const params = new URLSearchParams()
+  if (opts?.orderId) params.set('orderId', opts.orderId)
+  if (opts?.quoteId) params.set('quoteId', opts.quoteId)
+
+  const queryString = params.toString()
+  const url = queryString ? `/api/notes?${queryString}` : '/api/notes'
+
+  const res = await fetch(url, {
     method: 'GET',
     cache: 'no-store',
     signal: opts?.signal,
@@ -57,6 +72,9 @@ export async function createNote(
     headers: { 'content-type': 'application/json', accept: 'application/json' },
     body: JSON.stringify({
       content: input.content,
+      orderId: input.orderId,
+      quoteId: input.quoteId,
+      userId: input.userId,
       attachments: input.attachments ?? [],
     }),
   })
@@ -75,7 +93,7 @@ export async function updateNote(
     headers: { 'content-type': 'application/json', accept: 'application/json' },
     body: JSON.stringify({
       content: input.content,
-      attachments: input.attachments ?? [],
+      attachments: input.attachments,
     }),
   })
   return json<Note>(res)
@@ -84,12 +102,12 @@ export async function updateNote(
 export async function deleteNote(
   id: string,
   opts?: { signal?: AbortSignal }
-): Promise<{ ok: true }> {
+): Promise<{ success: true }> {
   const res = await fetch(`/api/notes/${encodeURIComponent(id)}`, {
     method: 'DELETE',
     cache: 'no-store',
     signal: opts?.signal,
     headers: { accept: 'application/json' },
   })
-  return json<{ ok: true }>(res)
+  return json<{ success: true }>(res)
 }

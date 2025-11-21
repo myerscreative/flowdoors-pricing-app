@@ -1,17 +1,33 @@
 // src/app/api/notes/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '../../../lib/prisma'
+import * as notesService from '@/services/notesService'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const notes = await prisma.note.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: { attachments: { orderBy: { createdAt: 'asc' } } },
+    const { searchParams } = new URL(req.url)
+    const orderId = searchParams.get('orderId')
+    const quoteId = searchParams.get('quoteId')
+
+    const notes = await notesService.listNotes({
+      orderId: orderId || undefined,
+      quoteId: quoteId || undefined,
     })
-    return NextResponse.json(notes)
+
+    // Convert dates to ISO strings for JSON serialization
+    const serializedNotes = notes.map((note) => ({
+      ...note,
+      createdAt: note.createdAt?.toISOString() ?? null,
+      updatedAt: note.updatedAt?.toISOString() ?? null,
+      attachments: note.attachments.map((a) => ({
+        ...a,
+        createdAt: a.createdAt?.toISOString() ?? undefined,
+      })),
+    }))
+
+    return NextResponse.json(serializedNotes)
   } catch (err) {
     console.error('notes GET error', err)
     return NextResponse.json(
@@ -31,6 +47,9 @@ type AttachmentIn = {
 
 type CreateNotePayload = {
   content: string
+  orderId?: string | null
+  quoteId?: string | null
+  userId?: string | null
   attachments?: AttachmentIn[]
 }
 
@@ -40,6 +59,14 @@ function isCreateNotePayload(x: unknown): x is CreateNotePayload {
 
   // Check content is a non-empty string
   if (typeof o.content !== 'string' || o.content.trim().length === 0)
+    return false
+
+  // orderId, quoteId, userId are optional
+  if (o.orderId !== undefined && o.orderId !== null && typeof o.orderId !== 'string')
+    return false
+  if (o.quoteId !== undefined && o.quoteId !== null && typeof o.quoteId !== 'string')
+    return false
+  if (o.userId !== undefined && o.userId !== null && typeof o.userId !== 'string')
     return false
 
   // Check attachments if present
@@ -81,23 +108,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Empty note' }, { status: 400 })
     }
 
-    const created = await prisma.note.create({
-      data: {
-        content,
-        attachments: {
-          create: attachments.map((a) => ({
-            name: a.name,
-            type: a.type,
-            size: Number(a.size) || 0,
-            url: a.url,
-            isImage: Boolean(a.isImage),
-          })),
-        },
-      },
-      include: { attachments: true },
+    const created = await notesService.createNote({
+      content,
+      orderId: body.orderId,
+      quoteId: body.quoteId,
+      userId: body.userId,
+      attachments,
     })
 
-    return NextResponse.json(created, { status: 201 })
+    // Convert dates to ISO strings for JSON serialization
+    const serialized = {
+      ...created,
+      createdAt: created.createdAt?.toISOString() ?? null,
+      updatedAt: created.updatedAt?.toISOString() ?? null,
+      attachments: created.attachments.map((a) => ({
+        ...a,
+        createdAt: a.createdAt?.toISOString() ?? undefined,
+      })),
+    }
+
+    return NextResponse.json(serialized, { status: 201 })
   } catch (err) {
     console.error('notes POST error', err)
     return NextResponse.json(
