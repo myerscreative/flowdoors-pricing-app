@@ -3,7 +3,6 @@
 // Type-only imports for Firebase typings
 import type {
   Firestore,
-  Timestamp,
 } from 'firebase/firestore'
 import { z } from 'zod'
 
