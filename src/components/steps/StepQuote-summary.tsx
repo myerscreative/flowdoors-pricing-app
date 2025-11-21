@@ -518,8 +518,8 @@ export function StepQuoteSummary({
         </TabsList>
         {state.items.map((item, index) => {
           const { priceBreakdown } = item
-          const costLabel =
-            item.product.type === 'Awning-Window' ? 'Window Cost' : 'Door Cost'
+          // Only Slide-and-Stack is available, so always use 'Door Cost'
+          const costLabel = 'Door Cost'
 
           return (
             <TabsContent key={item.id} value={`item-${index}`}>
@@ -607,12 +607,7 @@ export function StepQuoteSummary({
                             label="Product"
                             value={item.product.type}
                           />
-                          {item.product.type === 'Multi-Slide' && (
-                            <SummaryItem
-                              label="System Type"
-                              value={item.product.systemType}
-                            />
-                          )}
+                          {/* Multi-Slide not available in this version - removed conditional */}
                           <SummaryItem
                             label="Dimensions"
                             value={`${item.product.widthIn}" W x ${item.product.heightIn}" H`}

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import Image from 'next/image'
 import { useQuote } from '@/context/QuoteContext'
 import { StepContainer } from './StepContainer'
@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { Paintbrush, ArrowRight } from 'lucide-react'
@@ -28,7 +27,6 @@ import type {
   ProductTypeInfo,
   RalColor,
   ProductId,
-  SystemType,
   GlazingOption,
   HardwareFinish,
 } from '@/lib/types'
@@ -154,21 +152,9 @@ const SizeAndConfigSelector = () => {
     () => PRODUCT_TYPES.find((p) => p.id === product.type),
     [product.type]
   )
-  const productType = product.type as ProductId
-  const isAwningWindow = productType === 'Awning-Window'
-  const isMultiSlideFamily = productType === 'Multi-Slide'
+  // Only Slide-and-Stack is available in this version
 
-  useEffect(() => {
-    if (
-      product.type === 'Awning-Window' &&
-      product.configuration !== 'Top-hinge'
-    ) {
-      dispatch({
-        type: 'SET_CONFIGURATION',
-        payload: { configuration: 'Top-hinge' },
-      })
-    }
-  }, [product.type, product.configuration, dispatch])
+  // Removed Awning-Window and Multi-Slide checks as they're not available
 
   const handleBlur = () => {
     dispatch({
@@ -178,47 +164,11 @@ const SizeAndConfigSelector = () => {
     dispatch({ type: 'SET_ROOM_NAME', payload: roomName })
   }
 
-  const handleSystemTypeChange = useCallback(
-    (value: string) => {
-      dispatch({ type: 'SET_SYSTEM_TYPE', payload: value as SystemType })
-    },
-    [dispatch]
-  )
+  // handleSystemTypeChange removed - System Type selection not available for Slide-and-Stack only
 
   return (
     <div className="space-y-12">
-      {isMultiSlideFamily && (
-        <Card className="p-6 transition-shadow hover:shadow-lg">
-          <h3 className="text-xl font-semibold">System Type *</h3>
-          <RadioGroup
-            value={product.systemType || 'Multi-Slide'}
-            onValueChange={handleSystemTypeChange}
-            className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4"
-          >
-            <Label className="flex flex-col items-start space-x-2 rounded-md border p-4 cursor-pointer transition-colors hover:bg-accent has-[:checked]:bg-accent has-[:checked]:ring-2 has-[:checked]:ring-primary">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Multi-Slide" id="multi-slide" />
-                <span>Sliders and Multi-Slide Systems</span>
-              </div>
-            </Label>
-            <Label className="flex flex-col items-start space-x-2 rounded-md border p-4 cursor-pointer transition-colors hover:bg-accent has-[:checked]:bg-accent has-[:checked]:ring-2 has-[:checked]:ring-primary">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Pocket Door" id="pocket-door" />
-                <span>
-                  Pocket Door System{' '}
-                  <span className="font-bold text-primary ml-1">
-                    (Upcharge: $1,200)
-                  </span>
-                </span>
-              </div>
-              <p className="text-sm text-muted-foreground pl-6 pt-1">
-                Do not include the pocket area in width, this will be calculated
-                by our system.
-              </p>
-            </Label>
-          </RadioGroup>
-        </Card>
-      )}
+      {/* System Type selection removed - only Slide-and-Stack is available in this version */}
 
       <Card className="p-6 transition-shadow hover:shadow-lg">
         <h3 className="text-xl font-semibold mb-4">Dimensions</h3>
@@ -256,7 +206,7 @@ const SizeAndConfigSelector = () => {
         </div>
       </Card>
 
-      {!isAwningWindow && (
+      {
         <Card className="p-6 transition-shadow hover:shadow-lg">
           <DoorConfigurator
             widthIn={width}
@@ -268,7 +218,7 @@ const SizeAndConfigSelector = () => {
             }
           />
         </Card>
-      )}
+      }
 
       <div className="mt-8">
         <Label htmlFor="roomName">Room Name (Optional)</Label>

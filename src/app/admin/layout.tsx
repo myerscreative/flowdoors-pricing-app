@@ -3,7 +3,7 @@
 import Sidebar from '@/components/admin/Sidebar'
 import { useCurrentUserRole } from '@/hooks/useCurrentUserRole'
 import { usePathname, useRouter } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 
 export default function AdminLayout({
   children,
@@ -13,7 +13,6 @@ export default function AdminLayout({
   const { role, loading } = useCurrentUserRole()
   const router = useRouter()
   const pathname = usePathname()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   console.warn('🔍 Admin Layout Debug:', { role, loading, pathname })
 
@@ -28,27 +27,6 @@ export default function AdminLayout({
     }
   }, [role, loading, router, isLoginPage])
 
-  const handleLogout = async () => {
-    try {
-      // Import Firebase Auth dynamically
-      const { getAuth, signOut } = await import('firebase/auth')
-      const auth = getAuth()
-
-      // Sign out from Firebase
-      await signOut(auth)
-
-      // Clear localStorage
-      localStorage.removeItem('salesRepId')
-      localStorage.removeItem('userRole')
-
-      // Redirect to login page
-      router.push('/admin/login')
-    } catch (error) {
-      console.error('Error during logout:', error)
-      // Still redirect even if there's an error
-      router.push('/admin/login')
-    }
-  }
 
   // Show login page without sidebar/navigation
   if (isLoginPage) {

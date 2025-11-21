@@ -132,7 +132,7 @@ export function useCurrentUserRole() {
         })
 
         // Force development mode for now to bypass auth issues
-        if (true) { // Temporarily force dev mode
+        if (process.env.NODE_ENV === 'development') { // Development mode bypass
           console.warn(
             '🔧 Development mode: bypassing auth, setting role to admin'
           )

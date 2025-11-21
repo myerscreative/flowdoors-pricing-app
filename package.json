@@ -86,6 +86,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.39.1",
     "@next/eslint-plugin-next": "^15.5.0",
     "@types/jest": "^29.5.14",
     "@types/lodash": "^4.17.4",
