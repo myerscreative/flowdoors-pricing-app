@@ -497,7 +497,13 @@ const QuoteProviderWithSearchParams = ({
   // Save to localStorage whenever state changes
   useEffect(() => {
     try {
-      // Always save the state, but only if it's not the initial empty state
+      // Always save the state if we have customer details or meaningful quote data
+      const hasCustomerDetails =
+        state.customer.firstName ||
+        state.customer.lastName ||
+        state.customer.email ||
+        state.customer.phone
+
       const hasItems =
         state.items.length > 0 &&
         state.items.some(
@@ -507,7 +513,7 @@ const QuoteProviderWithSearchParams = ({
             item.product.heightIn > 0
         )
 
-      if (hasItems) {
+      if (hasCustomerDetails || hasItems) {
         const stateToSave = { ...state }
         localStorage.setItem('quoteState', JSON.stringify(stateToSave))
         // console.log('State saved to localStorage:', stateToSave);
