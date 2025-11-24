@@ -1,8 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-bg: #fdfbf7;
+  --color-surface: #ffffff;
+  --color-text: #1a1410;
+  --color-text-soft: #6b5d52;
+  --color-accent: #d946ef;
+  --color-accent-2: #8b5cf6;
+  --color-gradient-start: #f97316;
+  --color-gradient-end: #8b5cf6;
+  --color-trust: #10b981;
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+  --spacing-2xl: 4rem;
+  --border-radius: 1.5rem;
 }
 
 @theme inline {
@@ -12,15 +26,152 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Animated gradient background */
+.hero-bg {
+  position: absolute;
+  top: -50%;
+  left: -10%;
+  width: 120%;
+  height: 140%;
+  background: radial-gradient(ellipse at top left, rgba(249, 115, 22, 0.08), transparent 50%),
+              radial-gradient(ellipse at top right, rgba(139, 92, 246, 0.08), transparent 50%);
+  animation: float 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(30px, -30px) rotate(1deg); }
+  66% { transform: translate(-20px, 20px) rotate(-1deg); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes highlightPulse {
+  0%, 100% {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  }
+  50% {
+    box-shadow: 0 12px 48px rgba(139, 92, 246, 0.25);
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.animate-highlightPulse {
+  animation: highlightPulse 1s ease-out;
+}
+
+/* Mood marker styling */
+.mood-marker {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.1); }
+}
+
+/* Container class */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+  position: relative;
+  z-index: 1;
+}
+
+/* Hero section */
+.hero {
+  padding: var(--spacing-2xl) 0;
+  text-align: center;
+  position: relative;
+}
+
+/* Features section */
+.features {
+  padding: var(--spacing-2xl) 0;
+}
+
+/* How it works section */
+.how-it-works {
+  padding: var(--spacing-2xl) 0;
+  background: linear-gradient(to bottom, transparent, rgba(139, 92, 246, 0.03), transparent);
+}
+
+/* Privacy section */
+.privacy-section {
+  padding: var(--spacing-2xl) 0;
+  text-align: center;
+}
+
+/* Footer CTA section */
+.footer-cta {
+  padding: var(--spacing-2xl) 0;
+  text-align: center;
+}
+
+/* Gradient demo */
+.gradient-demo {
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  border-radius: var(--border-radius);
+  position: relative;
+  overflow: hidden;
+  cursor: crosshair;
+  border: 2px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+/* Gradient canvas */
+.gradient-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 1;
+}
+
+/* Axis labels for gradient demo */
+.axis-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  opacity: 1;
+  user-select: none;
+  pointer-events: none;
+  z-index: 10;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }

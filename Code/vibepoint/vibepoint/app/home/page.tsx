@@ -46,6 +46,7 @@ export default function HomePage() {
 
       const totalEntries = entries?.length || 0
       const weekStart = startOfWeek(new Date())
+
       const entriesThisWeek = entries?.filter(entry =>
         isWithinInterval(new Date(entry.timestamp), {
           start: weekStart,
@@ -70,6 +71,9 @@ export default function HomePage() {
 
       const mostCommonFocus = Object.entries(focusCounts)
         .sort(([,a], [,b]) => b - a)[0]?.[0] || 'No entries yet'
+
+      // Placeholder: future labeled feelings will go here once schema updated
+      // const mostCommonFeelingLabel = ...
 
       setStats({
         total_entries: totalEntries,
@@ -185,7 +189,7 @@ export default function HomePage() {
               <div>
                 <h3 className="text-lg font-semibold mb-2">Log New Mood</h3>
                 <p className="text-indigo-100 text-sm">
-                  Tap the gradient and answer 3 questions
+                  Tap the gradient, answer 3 questions, and (optionally) name your feeling
                 </p>
               </div>
               <div className="text-2xl">🎨</div>
@@ -229,14 +233,21 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Recent Focus */}
+        {/* Most Common Focus */}
         {stats && stats.total_entries > 0 && (
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Most Common Focus</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Your Most Common Focus
+            </h3>
             <p className="text-gray-600">&ldquo;{stats.most_common_focus}&rdquo;</p>
             <p className="text-sm text-gray-500 mt-2">
               This appears most frequently in your mood entries.
             </p>
+
+            {/* Placeholder for future feeling label */}
+            {/* <p className="text-sm text-gray-500 mt-2">
+              Your most common named feeling: "{stats.most_common_feeling_label}"
+            </p> */}
           </div>
         )}
       </main>

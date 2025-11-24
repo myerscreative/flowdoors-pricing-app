@@ -53,8 +53,201 @@ export default function LandingPage() {
     }
   }
 
-  // Smooth scroll for anchor links
+  // Initialize gradient canvas and smooth scroll
   useEffect(() => {
+    // Four corner colors - EXACT from app
+    const corners = {
+      topLeft: { r: 180, g: 220, b: 255 },     // Soft, airy sky blue - Happy + Unmotivated
+      topRight: { r: 255, g: 240, b: 50 },     // Bright golden yellow - Happy + Motivated
+      bottomLeft: { r: 40, g: 35, b: 45 },     // Dark grey-purple - Unhappy + Unmotivated
+      bottomRight: { r: 255, g: 20, b: 0 },    // Intense red - Unhappy + Motivated
+    }
+
+    // Bilinear interpolation between four corners
+    function bilinearInterpolate(x: number, y: number, c00: any, c10: any, c01: any, c11: any) {
+      const r = Math.round(
+        c00.r * (1 - x) * (1 - y) +
+        c10.r * x * (1 - y) +
+        c01.r * (1 - x) * y +
+        c11.r * x * y
+      )
+      const g = Math.round(
+        c00.g * (1 - x) * (1 - y) +
+        c10.g * x * (1 - y) +
+        c01.g * (1 - x) * y +
+        c11.g * x * y
+      )
+      const b = Math.round(
+        c00.b * (1 - x) * (1 - y) +
+        c10.b * x * (1 - y) +
+        c01.b * (1 - x) * y +
+        c11.b * x * y
+      )
+      return { r, g, b }
+    }
+
+    function drawGradient() {
+      const gradientDemo = document.getElementById('gradientDemo') as HTMLDivElement
+      const gradientCanvas = document.getElementById('gradientCanvas') as HTMLCanvasElement
+      
+      if (!gradientCanvas || !gradientDemo) {
+        // Retry if elements aren't ready
+        requestAnimationFrame(drawGradient)
+        return
+      }
+
+      const ctx = gradientCanvas.getContext('2d', { willReadFrequently: false })
+      if (!ctx) return
+
+      // Get actual display size
+      const displayWidth = gradientDemo.clientWidth
+      const displayHeight = gradientDemo.clientHeight
+
+      // Don't draw if container has no dimensions
+      if (displayWidth === 0 || displayHeight === 0) {
+        requestAnimationFrame(drawGradient)
+        return
+      }
+
+      // Set canvas size to match display size (1:1 pixels)
+      gradientCanvas.width = displayWidth
+      gradientCanvas.height = displayHeight
+
+      const width = displayWidth
+      const height = displayHeight
+
+      // Create image data
+      const imageData = ctx.createImageData(width, height)
+      const data = imageData.data
+
+      // Fill every pixel with bilinearly interpolated color
+      for (let py = 0; py < height; py++) {
+        for (let px = 0; px < width; px++) {
+          const x = px / (width - 1)
+          const y = py / (height - 1)
+
+          const color = bilinearInterpolate(
+            x,
+            y,
+            corners.topLeft,
+            corners.topRight,
+            corners.bottomLeft,
+            corners.bottomRight
+          )
+
+          const index = (py * width + px) * 4
+          data[index] = color.r
+          data[index + 1] = color.g
+          data[index + 2] = color.b
+          data[index + 3] = 255
+        }
+      }
+
+      // Put the image data directly on the canvas
+      ctx.putImageData(imageData, 0, 0)
+    }
+
+    // Initial draw - use multiple attempts to ensure it renders
+    const attemptDraw = () => {
+      const gradientDemo = document.getElementById('gradientDemo')
+      const gradientCanvas = document.getElementById('gradientCanvas')
+      
+      if (gradientDemo && gradientCanvas && gradientDemo.clientWidth > 0) {
+        drawGradient()
+      } else {
+        // Retry if elements aren't ready
+        setTimeout(attemptDraw, 50)
+      }
+    }
+
+    // Start attempting to draw
+    setTimeout(attemptDraw, 100)
+    
+    // Also try on next frame
+    requestAnimationFrame(() => {
+      attemptDraw()
+    })
+
+    // Redraw on window resize with debouncing
+    let resizeTimeout: NodeJS.Timeout
+    const handleResize = () => {
+      clearTimeout(resizeTimeout)
+      resizeTimeout = setTimeout(() => {
+        drawGradient()
+      }, 100)
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    function handleGradientClick(e: MouseEvent) {
+      const gradientDemo = document.getElementById('gradientDemo') as HTMLDivElement
+      const moodMarker = document.getElementById('moodMarker') as HTMLDivElement
+      
+      if (!gradientDemo) return
+      
+      const rect = gradientDemo.getBoundingClientRect()
+      const clickX = e.clientX - rect.left
+      const clickY = e.clientY - rect.top
+
+      const x = Math.max(0, Math.min(1, clickX / rect.width))
+      const y = Math.max(0, Math.min(1, 1 - (clickY / rect.height))) // Invert so top = happy
+
+      const percentX = x * 100
+      const percentY = clickY / rect.height * 100
+
+      if (moodMarker) {
+        moodMarker.style.left = `${percentX}%`
+        moodMarker.style.top = `${percentY}%`
+      }
+
+      handleMoodSelect({ x, y })
+    }
+
+    function handleTouchStart(e: TouchEvent) {
+      e.preventDefault()
+      const gradientDemo = document.getElementById('gradientDemo') as HTMLDivElement
+      const moodMarker = document.getElementById('moodMarker') as HTMLDivElement
+      
+      if (!gradientDemo) return
+      
+      const touch = e.touches[0]
+      const rect = gradientDemo.getBoundingClientRect()
+      const clickX = touch.clientX - rect.left
+      const clickY = touch.clientY - rect.top
+
+      const x = Math.max(0, Math.min(1, clickX / rect.width))
+      const y = Math.max(0, Math.min(1, 1 - (clickY / rect.height)))
+
+      const percentX = x * 100
+      const percentY = clickY / rect.height * 100
+
+      if (moodMarker) {
+        moodMarker.style.left = `${percentX}%`
+        moodMarker.style.top = `${percentY}%`
+      }
+
+      handleMoodSelect({ x, y })
+    }
+
+    // Wait for elements to be available before adding event listeners
+    const setupEventListeners = () => {
+      const gradientDemo = document.getElementById('gradientDemo')
+      if (gradientDemo) {
+        gradientDemo.addEventListener('click', handleGradientClick)
+        gradientDemo.addEventListener('touchstart', handleTouchStart)
+        return true
+      }
+      return false
+    }
+
+    // Try to set up event listeners, retry if needed
+    if (!setupEventListeners()) {
+      setTimeout(() => {
+        setupEventListeners()
+      }, 200)
+    }
+
+    // Smooth scroll for anchor links
     const handleAnchorClick = (e: Event) => {
       const target = e.target as HTMLAnchorElement
       if (target.tagName === 'A') {
@@ -78,19 +271,29 @@ export default function LandingPage() {
     }
 
     document.addEventListener('click', handleAnchorClick)
-    return () => document.removeEventListener('click', handleAnchorClick)
-  }, [])
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      clearTimeout(resizeTimeout)
+      document.removeEventListener('click', handleAnchorClick)
+      const gradientDemo = document.getElementById('gradientDemo')
+      if (gradientDemo) {
+        gradientDemo.removeEventListener('click', handleGradientClick)
+        gradientDemo.removeEventListener('touchstart', handleTouchStart)
+      }
+    }
+  }, [handleMoodSelect])
 
   const moodLabel = currentMood ? `${getMoodDescription(currentMood)} • Happiness: ${Math.round(currentMood.y * 100)}% • Motivation: ${Math.round(currentMood.x * 100)}%` : 'Tap anywhere on the gradient to map your mood'
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] overflow-x-hidden">
       {/* Animated gradient background */}
-      <div className="fixed top-[-50%] left-[-10%] w-[120%] h-[140%] bg-radial-gradient-ellipse-at-top-left-from-[rgba(249,115,22,0.08)]-to-transparent bg-radial-gradient-ellipse-at-top-right-from-[rgba(139,92,246,0.08)]-to-transparent animate-float pointer-events-none z-0" />
+      <div className="hero-bg" />
 
       <div className="relative z-1">
         {/* Header */}
-        <header className="px-6 py-6 flex justify-between items-center max-w-6xl mx-auto">
+        <header className="container">
           <div className="font-playfair font-bold text-2xl bg-gradient-to-r from-[var(--color-gradient-start)] to-[var(--color-gradient-end)] bg-clip-text text-transparent">
             VibePoint
           </div>
@@ -104,7 +307,7 @@ export default function LandingPage() {
         </header>
 
         {/* Hero Section */}
-        <section className="px-6 py-16 text-center max-w-6xl mx-auto">
+        <section className="container hero">
           <h1 className="font-playfair font-bold text-4xl sm:text-5xl lg:text-6xl leading-tight mb-6 animate-fadeInUp">
             Navigate Your Emotions.<br/>
             <span className="bg-gradient-to-r from-[var(--color-gradient-start)] to-[var(--color-gradient-end)] bg-clip-text text-transparent">
@@ -142,24 +345,44 @@ export default function LandingPage() {
             <div className="text-center text-[var(--color-text-soft)] font-medium text-sm uppercase tracking-wider mb-6">
               Intuitive Mood Mapping
             </div>
-            <div className="relative">
-              <div className="relative w-full max-w-2xl mx-auto aspect-square mb-6">
-                <GradientSelector onMoodSelect={handleMoodSelect} />
+            <div className="relative w-full max-w-[600px] mx-auto mt-8">
+              <div className="gradient-demo relative" id="gradientDemo" style={{ margin: '0 auto' }}>
+                {/* Axis labels positioned inside the gradient */}
+                <div className="axis-label absolute top-1/2 whitespace-nowrap" style={{ left: '16px', transformOrigin: 'left center', transform: 'translateY(-50%) rotate(90deg) translateX(-50%)' }}>
+                  Unmotivated
+                </div>
+                <div className="axis-label absolute top-1/2 whitespace-nowrap" style={{ right: '16px', transformOrigin: 'right center', transform: 'translateY(-50%) rotate(-90deg) translateX(50%)' }}>
+                  Motivated
+                </div>
+                <div className="axis-label absolute left-1/2 -translate-x-1/2" style={{ bottom: '16px' }}>
+                  Unhappy
+                </div>
+                <div className="axis-label absolute left-1/2 -translate-x-1/2" style={{ top: '16px' }}>
+                  Happy
+                </div>
+                <canvas
+                  className="gradient-canvas"
+                  id="gradientCanvas"
+                  width={600}
+                  height={600}
+                  style={{ width: '100%', height: '100%', display: 'block' }}
+                ></canvas>
+                <div className="mood-marker" id="moodMarker" style={{left: '50%', top: '50%'}}></div>
               </div>
-
-              <div className="text-center text-lg font-semibold text-[var(--color-text)]">
-                {moodLabel}
-              </div>
-              <p className="text-[var(--color-text-soft)] text-sm opacity-80 max-w-md mx-auto mt-4 leading-relaxed">
-                VibePoint doesn&apos;t tell you what emotion you&apos;re feeling—you define your own experience. The gradient helps you capture your coordinates; the insights come from your own patterns.
-              </p>
             </div>
+
+            <div className="text-center text-lg font-semibold text-[var(--color-text)] mt-12" id="moodLabel">
+              Tap anywhere to capture your current state
+            </div>
+            <p className="text-[var(--color-text-soft)] text-sm opacity-80 max-w-md mx-auto mt-4 leading-relaxed">
+              VibePoint doesn&apos;t tell you what emotion you&apos;re feeling—you define your own experience. The gradient helps you capture your coordinates; the insights come from your own patterns.
+            </p>
           </div>
         </section>
 
         {/* Features Grid */}
-        <section className="px-6 py-16">
-          <div className="max-w-6xl mx-auto">
+        <section className="features">
+          <div className="container">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="bg-[var(--color-surface)] p-8 rounded-3xl shadow-sm border border-black/4 hover:-translate-y-2 transition-all duration-300 hover:shadow-lg">
                 <div className="text-5xl mb-6">🎨</div>
@@ -189,8 +412,8 @@ export default function LandingPage() {
         </section>
 
         {/* How It Works */}
-        <section className="px-6 py-16 bg-gradient-to-b from-transparent via-purple-500/3 to-transparent">
-          <div className="max-w-6xl mx-auto text-center">
+        <section className="how-it-works">
+          <div className="container text-center">
             <h2 className="font-playfair font-bold text-4xl sm:text-5xl mb-12">How It Works</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
               <div>
@@ -237,8 +460,8 @@ export default function LandingPage() {
         </section>
 
         {/* Privacy Section */}
-        <section className="px-6 py-16">
-          <div className="max-w-4xl mx-auto text-center">
+        <section className="privacy-section">
+          <div className="container text-center">
             <div className="bg-[var(--color-surface)] p-8 sm:p-12 rounded-3xl shadow-lg border-2 border-[var(--color-trust)]/20">
               <div className="text-6xl mb-6">🔐</div>
               <h3 className="font-playfair font-bold text-2xl sm:text-3xl mb-6">Your Data, Your Privacy</h3>
@@ -276,7 +499,7 @@ export default function LandingPage() {
         </section>
 
         {/* Footer CTA */}
-        <section className="px-6 py-16 text-center">
+        <section className="footer-cta">
           <h2 className="font-playfair font-bold text-4xl sm:text-5xl mb-6">Ready to understand your emotional patterns?</h2>
           <p className="text-[var(--color-text-soft)] text-xl mb-12 max-w-2xl mx-auto">
             Start tracking today—free for 14 days, no credit card required.
