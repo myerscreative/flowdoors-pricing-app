@@ -141,7 +141,7 @@ export default function TutorialPage() {
   }, [])
 
   return (
-    <div className="font-[var(--font-inter)] bg-gradient-to-b from-[#faf7f3] to-[#f8f5ef] text-[#333] min-h-screen py-8">
+    <div className="bg-gradient-to-b from-[#faf7f3] to-[#f8f5ef] text-[#333] min-h-screen py-8">
       <div className="max-w-[900px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Title */}
         <div className="text-center mb-16">
