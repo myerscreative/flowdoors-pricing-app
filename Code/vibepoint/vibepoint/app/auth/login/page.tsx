@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { supabase, handleAuthError } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Logo from '@/components/Logo'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -35,11 +36,34 @@ export default function LoginPage() {
     }
   }
 
+  const handleDevLogin = async () => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: 'dev@vibepoint.local',
+        password: 'dev123456',
+      })
+
+      if (error) {
+        setError(handleAuthError(error))
+      } else {
+        router.push('/home')
+      }
+    } catch (err) {
+      setError(handleAuthError(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <div className="flex flex-col items-center">
+          <Logo variant="full" size="md" className="mb-4" />
+          <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
             Sign in to Vibepoint
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
@@ -105,6 +129,22 @@ export default function LoginPage() {
             </Link>
           </div>
         </form>
+
+        {/* Dev Sign-In Button */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <button
+              onClick={handleDevLogin}
+              disabled={loading}
+              className="w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50"
+            >
+              {loading ? 'Signing in...' : '🚀 Dev Sign-In (dev@vibepoint.local)'}
+            </button>
+            <p className="mt-2 text-xs text-center text-gray-500">
+              Development only
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

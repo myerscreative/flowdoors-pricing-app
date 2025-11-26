@@ -107,7 +107,7 @@ export default function HistoryPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white shadow-sm border-b pt-2.5">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <Link href="/home" className="text-gray-600 hover:text-gray-900">
@@ -225,6 +225,13 @@ export default function HistoryPage() {
                         <h4 className="font-medium text-gray-900 mb-1">Physical sensations:</h4>
                         <p className="text-gray-700 bg-gray-50 p-3 rounded-md">{entry.physical_sensations}</p>
                       </div>
+
+                      {entry.emotion_name && (
+                        <div>
+                          <h4 className="font-medium text-gray-900 mb-1">Emotion/Mood Name:</h4>
+                          <p className="text-gray-700 bg-gray-50 p-3 rounded-md">{entry.emotion_name}</p>
+                        </div>
+                      )}
 
                       {entry.notes && (
                         <div>

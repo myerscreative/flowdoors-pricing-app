@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import GradientSelector from '@/components/GradientSelector'
+import Logo from '@/components/Logo'
 
 interface MoodCoordinates {
   x: number // motivation (0-1)
@@ -291,12 +292,10 @@ export default function LandingPage() {
       {/* Animated gradient background */}
       <div className="hero-bg" />
 
-      <div className="relative z-1">
+      <div className="relative z-1 pt-8">
         {/* Header */}
         <header className="container">
-          <div className="font-playfair font-bold text-2xl bg-gradient-to-r from-[var(--color-gradient-start)] to-[var(--color-gradient-end)] bg-clip-text text-transparent">
-            VibePoint
-          </div>
+          <Logo variant="full" href="/" size="md" />
           <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-surface)] border border-black/6 rounded-3xl text-[var(--color-trust)] font-medium text-sm shadow-sm">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -345,7 +344,7 @@ export default function LandingPage() {
             <div className="text-center text-[var(--color-text-soft)] font-medium text-sm uppercase tracking-wider mb-6">
               Intuitive Mood Mapping
             </div>
-            <div className="relative w-full max-w-[600px] mx-auto mt-8">
+            <div className="relative w-full max-w-[660px] mx-auto mt-8">
               <div className="gradient-demo relative" id="gradientDemo" style={{ margin: '0 auto' }}>
                 {/* Axis labels positioned inside the gradient */}
                 <div className="axis-label absolute top-1/2 whitespace-nowrap" style={{ left: '16px', transformOrigin: 'left center', transform: 'translateY(-50%) rotate(90deg) translateX(-50%)' }}>

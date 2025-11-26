@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import GradientSelector from '@/components/GradientSelector'
 import { MoodCoordinates } from '@/types'
@@ -8,6 +8,13 @@ import { MoodCoordinates } from '@/types'
 export default function MoodPage() {
   const [coordinates, setCoordinates] = useState<MoodCoordinates | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    const stored = localStorage.getItem('moodCoordinates')
+    if (stored) {
+      setCoordinates(JSON.parse(stored))
+    }
+  }, [])
 
   const handleMoodSelect = (coords: MoodCoordinates) => {
     setCoordinates(coords)
@@ -22,17 +29,17 @@ export default function MoodPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-md mx-auto">
-        <GradientSelector onMoodSelect={handleMoodSelect} />
+    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] py-12 px-4 flex flex-col items-center">
+      <div className="w-full max-w-2xl">
+        <GradientSelector onMoodSelect={handleMoodSelect} selectedMood={coordinates || undefined} />
 
-        <div className="mt-8">
+        <div className="mt-8 max-w-md mx-auto">
           <button
             onClick={handleContinue}
             disabled={!coordinates}
-            className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700 transition-colors"
+            className="w-full bg-gradient-to-r from-[var(--color-gradient-start)] to-[var(--color-gradient-end)] text-white py-4 px-6 rounded-3xl font-semibold text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
           >
-            Continue
+            Continue to Reflection
           </button>
         </div>
       </div>

@@ -2,13 +2,17 @@ export interface MoodEntry {
   id: string
   user_id: string
   timestamp: string
-  happiness_level: number // 0-1
-  motivation_level: number // 0-1
+  // Core numeric mood coordinates (0–1 floats)
+  happiness_level: number
+  motivation_level: number
+  // Free text responses
   focus: string
   self_talk: string
   physical_sensations: string
-  notes?: string
-  created_at: string
+  // Optional emotion label (string or null)
+  emotion_name?: string | null
+  // Optional notes field (future use)
+  notes?: string | null
 }
 
 export interface Pattern {

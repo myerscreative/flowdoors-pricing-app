@@ -101,7 +101,7 @@ export default function PatternsPage() {
   if (entries.length < 10) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm border-b">
+        <header className="bg-white shadow-sm border-b pt-2.5">
           <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <Link href="/home" className="text-gray-600 hover:text-gray-900">
@@ -134,7 +134,7 @@ export default function PatternsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white shadow-sm border-b pt-2.5">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <Link href="/home" className="text-gray-600 hover:text-gray-900">

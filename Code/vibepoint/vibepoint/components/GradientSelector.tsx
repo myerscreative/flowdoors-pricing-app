@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 
 interface MoodCoordinates {
   x: number // motivation (0-1)
@@ -10,53 +10,64 @@ interface MoodCoordinates {
 interface GradientSelectorProps {
   onMoodSelect: (coordinates: MoodCoordinates) => void
   selectedMood?: MoodCoordinates
+  showStats?: boolean
+  showHeader?: boolean
+  className?: string
 }
 
-export default function GradientSelector({ onMoodSelect, selectedMood }: GradientSelectorProps) {
+// Four corner colors - EXACT from app
+const corners = {
+  topLeft: { r: 180, g: 220, b: 255 },     // Soft, airy sky blue - Happy + Unmotivated
+  topRight: { r: 255, g: 240, b: 50 },     // Bright golden yellow - Happy + Motivated
+  bottomLeft: { r: 40, g: 35, b: 45 },     // Dark grey-purple - Unhappy + Unmotivated
+  bottomRight: { r: 255, g: 20, b: 0 },    // Intense red - Unhappy + Motivated
+}
+
+// Bilinear interpolation between four corners
+const bilinearInterpolate = (
+  x: number,
+  y: number,
+  c00: { r: number; g: number; b: number },
+  c10: { r: number; g: number; b: number },
+  c01: { r: number; g: number; b: number },
+  c11: { r: number; g: number; b: number }
+) => {
+  const r = Math.round(
+    c00.r * (1 - x) * (1 - y) +
+    c10.r * x * (1 - y) +
+    c01.r * (1 - x) * y +
+    c11.r * x * y
+  )
+  const g = Math.round(
+    c00.g * (1 - x) * (1 - y) +
+    c10.g * x * (1 - y) +
+    c01.g * (1 - x) * y +
+    c11.g * x * y
+  )
+  const b = Math.round(
+    c00.b * (1 - x) * (1 - y) +
+    c10.b * x * (1 - y) +
+    c01.b * (1 - x) * y +
+    c11.b * x * y
+  )
+  return { r, g, b }
+}
+
+export default function GradientSelector({ 
+  onMoodSelect, 
+  selectedMood, 
+  showStats = true, 
+  showHeader = true,
+  className = ""
+}: GradientSelectorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [currentMood, setCurrentMood] = useState<MoodCoordinates | null>(selectedMood || null)
-  const [cursorPosition, setCursorPosition] = useState<{ x: number; y: number } | null>(null)
+  const [internalMood, setInternalMood] = useState<MoodCoordinates | null>(null)
+  
+  // Use controlled state if provided, otherwise internal state
+  const currentMood = selectedMood !== undefined ? selectedMood : internalMood
 
-  // Four corner colors - EXACT from reference image
-  const corners = {
-    topLeft: { r: 107, g: 182, b: 214 },      // #6BB6D6 - Light cyan/blue (Happy + Unmotivated)
-    topRight: { r: 255, g: 180, b: 70 },      // Brighter orange/yellow (Happy + Motivated)
-    bottomLeft: { r: 26, g: 42, b: 74 },      // #1A2A4A - Dark navy (Unhappy + Unmotivated)
-    bottomRight: { r: 168, g: 54, b: 83 },    // #A83653 - Dark burgundy (Unhappy + Motivated)
-  }
-
-  // Bilinear interpolation between four corners
-  const bilinearInterpolate = (
-    x: number,
-    y: number,
-    c00: { r: number; g: number; b: number },
-    c10: { r: number; g: number; b: number },
-    c01: { r: number; g: number; b: number },
-    c11: { r: number; g: number; b: number }
-  ) => {
-    const r = Math.round(
-      c00.r * (1 - x) * (1 - y) +
-      c10.r * x * (1 - y) +
-      c01.r * (1 - x) * y +
-      c11.r * x * y
-    )
-    const g = Math.round(
-      c00.g * (1 - x) * (1 - y) +
-      c10.g * x * (1 - y) +
-      c01.g * (1 - x) * y +
-      c11.g * x * y
-    )
-    const b = Math.round(
-      c00.b * (1 - x) * (1 - y) +
-      c10.b * x * (1 - y) +
-      c01.b * (1 - x) * y +
-      c11.b * x * y
-    )
-    return { r, g, b }
-  }
-
-  const drawGradient = () => {
+  const drawGradient = useCallback(() => {
     const canvas = canvasRef.current
     const container = containerRef.current
     if (!canvas || !container) return
@@ -104,7 +115,7 @@ export default function GradientSelector({ onMoodSelect, selectedMood }: Gradien
 
     // Put the image data directly on the canvas
     ctx.putImageData(imageData, 0, 0)
-  }
+  }, [])
 
   useEffect(() => {
     // Small delay to ensure container is sized
@@ -122,7 +133,7 @@ export default function GradientSelector({ onMoodSelect, selectedMood }: Gradien
       clearTimeout(timer)
       window.removeEventListener('resize', handleResize)
     }
-  }, [])
+  }, [drawGradient])
 
   const handleInteraction = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     const container = containerRef.current
@@ -147,8 +158,9 @@ export default function GradientSelector({ onMoodSelect, selectedMood }: Gradien
     const y = Math.max(0, Math.min(1, 1 - (clickY / rect.height))) // Invert so top = happy
 
     const mood = { x, y }
-    setCurrentMood(mood)
-    setCursorPosition({ x: clickX, y: clickY })
+    if (selectedMood === undefined) {
+      setInternalMood(mood)
+    }
     onMoodSelect(mood)
   }
 
@@ -162,17 +174,13 @@ export default function GradientSelector({ onMoodSelect, selectedMood }: Gradien
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold mb-3">How are you feeling?</h1>
-        <p className="text-gray-600 text-lg">Tap anywhere on the gradient to show your current mood</p>
-      </div>
-
-      {/* Axis Labels */}
-      <div className="flex justify-between mb-2 px-2">
-        <span className="text-sm text-gray-500 font-medium">Unmotivated</span>
-        <span className="text-sm text-gray-500 font-medium">Motivated</span>
-      </div>
+    <div className={`w-full ${showHeader ? 'max-w-2xl mx-auto px-4 py-8' : ''} ${className}`}>
+      {showHeader && (
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-3">How are you feeling?</h1>
+          <p className="text-gray-600 text-lg">Tap anywhere on the gradient to show your current mood</p>
+        </div>
+      )}
 
       {/* Gradient Container */}
       <div
@@ -181,6 +189,20 @@ export default function GradientSelector({ onMoodSelect, selectedMood }: Gradien
         onClick={handleInteraction}
         onTouchStart={handleInteraction}
       >
+        {/* Axis labels positioned inside the gradient */}
+        <div className="axis-label absolute top-1/2 whitespace-nowrap" style={{ left: '16px', transformOrigin: 'left center', transform: 'translateY(-50%) rotate(90deg) translateX(-50%)' }}>
+          Unmotivated
+        </div>
+        <div className="axis-label absolute top-1/2 whitespace-nowrap" style={{ right: '16px', transformOrigin: 'right center', transform: 'translateY(-50%) rotate(-90deg) translateX(50%)' }}>
+          Motivated
+        </div>
+        <div className="axis-label absolute left-1/2 -translate-x-1/2" style={{ bottom: '16px' }}>
+          Unhappy
+        </div>
+        <div className="axis-label absolute left-1/2 -translate-x-1/2" style={{ top: '16px' }}>
+          Happy
+        </div>
+
         <canvas
           ref={canvasRef}
           className="absolute inset-0 w-full h-full"
@@ -188,45 +210,23 @@ export default function GradientSelector({ onMoodSelect, selectedMood }: Gradien
         />
 
         {/* Selection Indicator */}
-        {currentMood && cursorPosition && (
+        {currentMood && (
           <div
-            className="absolute w-12 h-12 -ml-6 -mt-6 pointer-events-none"
+            className="absolute w-6 h-6 -ml-3 -mt-3 pointer-events-none transition-all duration-75 ease-out"
             style={{
-              left: `${cursorPosition.x}px`,
-              top: `${cursorPosition.y}px`,
+              left: `${currentMood.x * 100}%`,
+              top: `${(1 - currentMood.y) * 100}%`,
             }}
           >
-            <div className="w-full h-full rounded-full border-4 border-white shadow-lg animate-pulse" />
-            <div className="absolute inset-0 w-full h-full rounded-full border-4 border-white/50 scale-150" />
+            <div className="w-full h-full rounded-full border-2 border-white shadow-lg animate-pulse" />
+            <div className="absolute inset-0 w-full h-full rounded-full border-2 border-white/50 scale-150" />
           </div>
         )}
       </div>
 
-      {/* Quadrant Labels */}
-      <div className="grid grid-cols-2 gap-4 mt-4 text-center text-sm text-gray-600">
-        <div className="text-left pl-2">
-          <div className="font-medium">Happy</div>
-          <div>Unmotivated</div>
-        </div>
-        <div className="text-right pr-2">
-          <div className="font-medium">Happy</div>
-          <div>Motivated</div>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-4 text-center text-sm text-gray-600">
-        <div className="text-left pl-2">
-          <div className="font-medium">Unhappy</div>
-          <div>Unmotivated</div>
-        </div>
-        <div className="text-right pr-2">
-          <div className="font-medium">Unhappy</div>
-          <div>Motivated</div>
-        </div>
-      </div>
-
       {/* Current Mood Display */}
-      {currentMood && (
-        <div className="mt-8 p-6 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl text-center">
+      {showStats && currentMood && (
+        <div className="mt-8 p-6 bg-linear-to-r from-purple-50 to-indigo-50 rounded-2xl text-center">
           <p className="text-lg font-semibold text-gray-800">{getMoodLabel(currentMood)}</p>
           <p className="text-sm text-gray-600 mt-2">
             Happiness: {Math.round(currentMood.y * 100)}% • Motivation: {Math.round(currentMood.x * 100)}%

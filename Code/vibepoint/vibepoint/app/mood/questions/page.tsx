@@ -9,8 +9,15 @@ interface QuestionData {
   focus: string
   selfTalk: string
   physicalSensations: string
+  emotionDropdown: string
+  emotionCustom: string
   notes: string
 }
+
+const emotionOptions = [
+  'Calm', 'Hopeful', 'Stressed', 'Anxious', 'Motivated', 'Discouraged',
+  'Grateful', 'Overwhelmed', 'Frustrated', 'Confident', 'Tired', 'Peaceful'
+]
 
 export default function QuestionsPage() {
   const [coordinates, setCoordinates] = useState<MoodCoordinates | null>(null)
@@ -18,8 +25,17 @@ export default function QuestionsPage() {
     focus: '',
     selfTalk: '',
     physicalSensations: '',
+    emotionDropdown: '',
+    emotionCustom: '',
     notes: ''
   })
+
+  // Get the final emotion name: custom input overrides dropdown
+  const getEmotionName = () => {
+    const custom = formData.emotionCustom.trim()
+    if (custom) return custom.slice(0, 80) // Max 80 characters
+    return formData.emotionDropdown || null
+  }
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -62,6 +78,7 @@ export default function QuestionsPage() {
           focus: formData.focus,
           self_talk: formData.selfTalk,
           physical_sensations: formData.physicalSensations,
+          emotion_name: getEmotionName(),
           notes: formData.notes || null
         })
 
@@ -84,24 +101,24 @@ export default function QuestionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-md mx-auto">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 text-center mb-2">
+    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] py-12 px-4 flex flex-col items-center">
+      <div className="w-full max-w-2xl">
+        <div className="mb-12 text-center">
+          <h1 className="text-3xl font-bold mb-3">
             Tell us more about your mood
           </h1>
-          <p className="text-gray-600 text-center text-sm">
+          <p className="text-[var(--color-text-soft)] text-lg">
             Understanding what creates your moods helps you control them
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8 bg-[var(--color-surface)] p-8 rounded-3xl shadow-lg border border-black/5">
           {/* Question 1: Focus */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-lg font-semibold mb-2">
               What are you focusing on?
             </label>
-            <p className="text-xs text-gray-500 mb-3">
+            <p className="text-sm text-[var(--color-text-soft)] mb-3">
               What thoughts, situations, or concerns have your attention?
             </p>
             <textarea
@@ -109,17 +126,17 @@ export default function QuestionsPage() {
               onChange={(e) => handleInputChange('focus', e.target.value)}
               required
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-4 py-3 border border-black/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-2)] focus:border-transparent bg-transparent"
               placeholder="e.g., my upcoming deadline, argument with partner, vacation plans..."
             />
           </div>
 
           {/* Question 2: Self-talk */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-lg font-semibold mb-2">
               What are you telling yourself?
             </label>
-            <p className="text-xs text-gray-500 mb-3">
+            <p className="text-sm text-[var(--color-text-soft)] mb-3">
               What internal dialogue or self-talk is running through your mind?
             </p>
             <textarea
@@ -127,17 +144,17 @@ export default function QuestionsPage() {
               onChange={(e) => handleInputChange('selfTalk', e.target.value)}
               required
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-4 py-3 border border-black/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-2)] focus:border-transparent bg-transparent"
               placeholder="e.g., I can't handle this, Everything will work out, I'm not good enough..."
             />
           </div>
 
           {/* Question 3: Physical sensations */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-lg font-semibold mb-2">
               What physical sensations are you experiencing?
             </label>
-            <p className="text-xs text-gray-500 mb-3">
+            <p className="text-sm text-[var(--color-text-soft)] mb-3">
               What do you notice in your body right now?
             </p>
             <textarea
@@ -145,27 +162,57 @@ export default function QuestionsPage() {
               onChange={(e) => handleInputChange('physicalSensations', e.target.value)}
               required
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-4 py-3 border border-black/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-2)] focus:border-transparent bg-transparent"
               placeholder="e.g., tight chest, relaxed shoulders, butterflies in stomach, energized..."
             />
           </div>
 
+          {/* Emotion Name - After the three questions */}
+          <div className="mt-6">
+            <label className="block text-lg font-semibold mb-2">
+              Name the emotion you&apos;re feeling right now
+            </label>
+            <p className="text-sm text-neutral-500 mb-3">
+              Choose one or type your own.
+            </p>
+            <div className="space-y-3">
+              <select
+                value={formData.emotionDropdown}
+                onChange={(e) => handleInputChange('emotionDropdown', e.target.value)}
+                className="w-full px-3 py-3 border border-[#e5e5e5] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-2)] focus:border-transparent bg-transparent shadow-sm"
+              >
+                <option value="">Select an emotion...</option>
+                {emotionOptions.map(emotion => (
+                  <option key={emotion} value={emotion}>{emotion}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                value={formData.emotionCustom}
+                onChange={(e) => handleInputChange('emotionCustom', e.target.value)}
+                maxLength={80}
+                className="w-full px-3 py-3 border border-[#e5e5e5] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-2)] focus:border-transparent bg-transparent shadow-sm"
+                placeholder="Or type your own emotion..."
+              />
+            </div>
+          </div>
+
           {/* Optional Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-lg font-semibold mb-2">
               Notes (optional)
             </label>
             <textarea
               value={formData.notes}
               onChange={(e) => handleInputChange('notes', e.target.value)}
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-4 py-3 border border-black/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-2)] focus:border-transparent bg-transparent"
               placeholder="Any additional thoughts or context..."
             />
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-md">
+            <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-xl">
               {error}
             </div>
           )}
@@ -173,7 +220,7 @@ export default function QuestionsPage() {
           <button
             type="submit"
             disabled={loading || !formData.focus || !formData.selfTalk || !formData.physicalSensations}
-            className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700 transition-colors"
+            className="w-full bg-gradient-to-r from-[var(--color-gradient-start)] to-[var(--color-gradient-end)] text-white py-4 px-6 rounded-3xl font-semibold text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
           >
             {loading ? 'Saving...' : 'Save Entry'}
           </button>
