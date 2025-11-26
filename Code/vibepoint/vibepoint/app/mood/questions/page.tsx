@@ -69,28 +69,99 @@ export default function QuestionsPage() {
         return
       }
 
-      const { error } = await supabase
+      // Validate required fields
+      if (!formData.focus.trim() || !formData.selfTalk.trim() || !formData.physicalSensations.trim()) {
+        setError('Please fill in all required fields (focus, self-talk, and physical sensations)')
+        setLoading(false)
+        return
+      }
+
+      // Validate coordinates are valid numbers between 0 and 1
+      if (typeof coordinates.x !== 'number' || typeof coordinates.y !== 'number' ||
+          coordinates.x < 0 || coordinates.x > 1 || coordinates.y < 0 || coordinates.y > 1) {
+        setError('Invalid mood coordinates. Please select your mood again.')
+        setLoading(false)
+        return
+      }
+
+      // Build entry data
+      // Note: Temporarily excluding emotion_name if schema cache hasn't refreshed
+      const emotionName = getEmotionName()
+      const entryData: any = {
+        user_id: user.id,
+        happiness_level: Math.max(0, Math.min(1, coordinates.y)), // Ensure between 0 and 1
+        motivation_level: Math.max(0, Math.min(1, coordinates.x)), // Ensure between 0 and 1
+        focus: formData.focus.trim(),
+        self_talk: formData.selfTalk.trim(),
+        physical_sensations: formData.physicalSensations.trim(),
+      }
+
+      // Only include emotion_name if schema cache has refreshed
+      // You can remove this check once Supabase schema cache updates (usually 1-5 minutes)
+      // For now, try including it - if it fails, the error handler will catch it
+      if (emotionName) {
+        entryData.emotion_name = emotionName
+      }
+
+      // Only include notes if it exists
+      const notes = formData.notes?.trim()
+      if (notes) {
+        entryData.notes = notes
+      }
+
+      console.log('Attempting to insert entry:', entryData)
+
+      const { data, error } = await supabase
         .from('mood_entries')
-        .insert({
-          user_id: user.id,
-          happiness_level: coordinates.y,
-          motivation_level: coordinates.x,
-          focus: formData.focus,
-          self_talk: formData.selfTalk,
-          physical_sensations: formData.physicalSensations,
-          emotion_name: getEmotionName(),
-          notes: formData.notes || null
-        })
+        .insert(entryData)
+        .select()
 
       if (error) {
-        setError(error.message)
-      } else {
-        // Clear stored coordinates
+        console.error('Database error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          fullError: JSON.stringify(error, null, 2)
+        })
+        
+        // If error is about emotion_name column, try again without it
+        if (error.message?.includes('emotion_name') && entryData.emotion_name) {
+          console.log('Schema cache not updated yet. Retrying without emotion_name...')
+          const entryDataWithoutEmotion = { ...entryData }
+          delete entryDataWithoutEmotion.emotion_name
+          
+          const { data: retryData, error: retryError } = await supabase
+            .from('mood_entries')
+            .insert(entryDataWithoutEmotion)
+            .select()
+          
+          if (retryError) {
+            const errorMessage = retryError.message || retryError.details || retryError.hint || 'Failed to save entry. Please check your connection and try again.'
+            setError(`Failed to save entry: ${errorMessage}`)
+          } else if (retryData && retryData.length > 0) {
+            // Success - entry saved without emotion_name
+            // The emotion_name will be null for now until schema cache refreshes
+            localStorage.removeItem('moodCoordinates')
+            router.push('/success')
+            return
+          }
+        }
+        
+        const errorMessage = error.message || error.details || error.hint || 'Failed to save entry. Please check your connection and try again.'
+        setError(`Failed to save entry: ${errorMessage}`)
+      } else if (data && data.length > 0) {
+        // Success - clear stored coordinates and redirect
         localStorage.removeItem('moodCoordinates')
         router.push('/success')
+      } else {
+        // No error but also no data returned
+        console.warn('Insert succeeded but no data returned')
+        setError('Entry saved but no confirmation received. Please refresh and check your entries.')
       }
-    } catch {
-      setError('An unexpected error occurred')
+    } catch (err: any) {
+      console.error('Unexpected error:', err)
+      setError(`An unexpected error occurred: ${err?.message || 'Unknown error'}`)
     } finally {
       setLoading(false)
     }

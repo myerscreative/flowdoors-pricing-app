@@ -61,3 +61,34 @@ export interface MoodStats {
   most_common_focus: string
   patterns_unlocked: boolean
 }
+
+// Recipe types (Pro tier)
+export interface RecipeStep {
+  step: number
+  focus: string
+  instruction: string
+  duration: number
+}
+
+export interface Recipe {
+  id: string
+  user_id: string
+  title: string
+  target_emotion: string
+  duration: string
+  steps: RecipeStep[]
+  why_this_works: string
+  is_favorite: boolean
+  use_count: number
+  created_at: string
+  last_used_at?: string | null
+}
+
+export interface RecipeInput {
+  title: string
+  target_emotion: string
+  duration?: string
+  steps: RecipeStep[]
+  why_this_works: string
+  is_favorite?: boolean
+}

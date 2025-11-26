@@ -295,13 +295,23 @@ export default function LandingPage() {
       <div className="relative z-1 pt-8">
         {/* Header */}
         <header className="container">
-          <Logo variant="full" href="/" size="md" />
-          <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-surface)] border border-black/6 rounded-3xl text-[var(--color-trust)] font-medium text-sm shadow-sm">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              <path d="M9 12l2 2 4-4"/>
-            </svg>
-            Privacy First
+          <div className="flex items-center justify-between">
+            <Logo variant="full" href="/" size="md" />
+            <div className="flex items-center gap-4">
+              <Link
+                href="/home"
+                className="text-[var(--color-text)] hover:text-[var(--color-text-soft)] font-medium text-sm transition-colors"
+              >
+                Sign In
+              </Link>
+              <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-surface)] border border-black/6 rounded-3xl text-[var(--color-trust)] font-medium text-sm shadow-sm">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <path d="M9 12l2 2 4-4"/>
+                </svg>
+                Privacy First
+              </div>
+            </div>
           </div>
         </header>
 

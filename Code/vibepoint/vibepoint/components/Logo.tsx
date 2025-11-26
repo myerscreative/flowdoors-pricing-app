@@ -32,6 +32,7 @@ export default function Logo({
         <img
           src="/logo.svg"
           alt="Vibepoint"
+          className="h-full w-auto block"
           style={{ 
             height: '100%', 
             width: 'auto',
@@ -47,6 +48,7 @@ export default function Logo({
         <img
           src="/logo-icon.svg"
           alt="Vibepoint"
+          className="h-full w-auto block"
           style={{ 
             height: '100%', 
             width: 'auto',

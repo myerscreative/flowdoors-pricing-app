@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { MoodEntry } from '@/types'
 import { format, startOfWeek, startOfMonth, isWithinInterval } from 'date-fns'
+import MiniGradientPreview from '@/components/MiniGradientPreview'
 
 type FilterType = 'all' | 'week' | 'month'
 
@@ -85,13 +86,6 @@ export default function HistoryPage() {
     setExpandedEntry(expandedEntry === entryId ? null : entryId)
   }
 
-  const getMoodColor = (happiness: number, motivation: number) => {
-    // Convert coordinates to HSL color
-    const hue = motivation * 240 // 0 = red (unmotivated), 240 = blue (motivated)
-    const saturation = 70
-    const lightness = 30 + (happiness * 40) // 30-70% lightness based on happiness
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`
-  }
 
   if (loading) {
     return (
@@ -172,10 +166,11 @@ export default function HistoryPage() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      {/* Mood Color Indicator */}
-                      <div
-                        className="w-4 h-4 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: getMoodColor(entry.happiness_level, entry.motivation_level) }}
+                      {/* Mini gradient preview square with dot showing mood position */}
+                      <MiniGradientPreview
+                        happiness={entry.happiness_level}
+                        motivation={entry.motivation_level}
+                        size={48}
                       />
 
                       <div>

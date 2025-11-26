@@ -55,9 +55,22 @@ export default function PatternsPage() {
         const analyzedPatterns = analyzePatterns(moodEntries)
         setPatterns(analyzedPatterns)
 
-        // Generate insights
-        const generatedInsights = generateInsights(moodEntries, analyzedPatterns)
-        setInsights(generatedInsights)
+        // Generate algorithmic insights first
+        const algorithmicInsights = generateInsights(moodEntries, analyzedPatterns)
+        
+        // Try to enhance with AI insights (will fall back to algorithmic if AI unavailable)
+        try {
+          const { getCombinedInsights } = await import('@/lib/ai-insights')
+          const combinedInsights = await getCombinedInsights(
+            moodEntries,
+            analyzedPatterns,
+            algorithmicInsights
+          )
+          setInsights(combinedInsights)
+        } catch (error) {
+          console.error('Failed to load AI insights, using algorithmic:', error)
+          setInsights(algorithmicInsights)
+        }
       }
     } catch (error) {
       console.error('Failed to load data:', error)

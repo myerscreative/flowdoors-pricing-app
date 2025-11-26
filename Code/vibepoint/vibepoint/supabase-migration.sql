@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS mood_entries (
   focus TEXT NOT NULL,
   self_talk TEXT NOT NULL,
   physical_sensations TEXT NOT NULL,
+  emotion_name TEXT,
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -48,6 +49,9 @@ CREATE TABLE IF NOT EXISTS user_profiles (
   onboarding_completed BOOLEAN DEFAULT FALSE,
   total_entries INTEGER DEFAULT 0,
   patterns_unlocked BOOLEAN DEFAULT FALSE,
+  -- AI rate limiting fields
+  last_ai_request TIMESTAMPTZ,
+  ai_request_count INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

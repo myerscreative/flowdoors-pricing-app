@@ -38,20 +38,29 @@ export default function MoodInputPage() {
         return
       }
 
+      // Validate required fields
+      if (!focus.trim() || !selfTalk.trim() || !body.trim()) {
+        alert('Please fill in all required fields (focus, self-talk, and physical sensations)')
+        return
+      }
+
       const entry = {
         user_id: user.id,
         happiness_level: happiness,
         motivation_level: motivation,
-        focus: focus || '',
-        self_talk: selfTalk || '',
-        physical_sensations: body || '',
-        emotion_name: getEmotionName(),
-        notes: notes || null,
+        focus: focus.trim(),
+        self_talk: selfTalk.trim(),
+        physical_sensations: body.trim(),
+        emotion_name: getEmotionName() || null,
+        notes: notes?.trim() || null,
         timestamp: new Date().toISOString(),
       }
 
       // save to supabase
-      const { error } = await supabase.from('mood_entries').insert(entry)
+      const { data, error } = await supabase
+        .from('mood_entries')
+        .insert(entry)
+        .select()
       
       if (error) {
         console.error('Save error:', error)
@@ -66,9 +75,9 @@ export default function MoodInputPage() {
         setEmotionCustom('')
         setNotes('')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Unexpected error:', error)
-      alert('An unexpected error occurred. Please try again.')
+      alert(`An unexpected error occurred: ${error?.message || 'Unknown error'}`)
     }
   }
 

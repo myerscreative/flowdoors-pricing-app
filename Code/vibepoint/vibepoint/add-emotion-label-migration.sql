@@ -7,3 +7,4 @@ ADD COLUMN IF NOT EXISTS emotion_label TEXT;
 -- Add a comment to document the field
 COMMENT ON COLUMN mood_entries.emotion_label IS 'User-provided label for the emotion/mood (e.g., happy, carefree, worried, angry)';
 
+

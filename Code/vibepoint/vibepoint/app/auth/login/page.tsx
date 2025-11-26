@@ -19,17 +19,24 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
         password,
       })
 
       if (error) {
+        console.error('Login error:', error)
         setError(handleAuthError(error))
       } else {
+        // Refresh the session to ensure it's properly set
+        await supabase.auth.getSession()
+        // Small delay to ensure cookies are set
+        await new Promise(resolve => setTimeout(resolve, 100))
         router.push('/home')
+        router.refresh() // Refresh the router to update auth state
       }
-    } catch (err) {
+    } catch (err: any) {
+      console.error('Login exception:', err)
       setError(handleAuthError(err))
     } finally {
       setLoading(false)
@@ -41,17 +48,23 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: 'dev@vibepoint.local',
         password: 'dev123456',
       })
 
       if (error) {
+        console.error('Dev login error:', error)
         setError(handleAuthError(error))
       } else {
+        // Refresh the session to ensure it's properly set
+        await supabase.auth.getSession()
+        await new Promise(resolve => setTimeout(resolve, 100))
         router.push('/home')
+        router.refresh()
       }
-    } catch (err) {
+    } catch (err: any) {
+      console.error('Dev login exception:', err)
       setError(handleAuthError(err))
     } finally {
       setLoading(false)

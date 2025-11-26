@@ -27,3 +27,4 @@ END $$;
 -- Add a comment to document the field
 COMMENT ON COLUMN mood_entries.emotion_name IS 'User-provided name for the emotion/mood (from dropdown or custom input)';
 
+
