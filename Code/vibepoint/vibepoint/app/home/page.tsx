@@ -3,20 +3,19 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { startOfWeek, isWithinInterval } from 'date-fns'
+
 import { supabase, handleAuthError } from '@/lib/supabase'
 import { MoodEntry, MoodStats } from '@/types'
-import { startOfWeek, isWithinInterval } from 'date-fns'
 import Logo from '@/components/Logo'
-
-// === NEW COMPONENT IMPORTS ===
+import { GradientBackground } from '@/components/GradientBackground'
 import StreakCard from '@/components/dashboard/streak/StreakCard'
 import TrendChart from '@/components/dashboard/charts/TrendChart'
-import EmotionPatternCard from '@/components/dashboard/emotions/EmotionPatternCard'
 import MoodSnapshot from '@/components/dashboard/snapshot/MoodSnapshot'
 import InsightCard from '@/components/dashboard/insights/InsightCard'
-import RecentEntries from '@/components/dashboard/entries/RecentEntries'
-import Encouragement from '@/components/dashboard/encouragement/Encouragement'
 import UnlockMessage from '@/components/dashboard/unlock/UnlockMessage'
+import { UpgradeModal } from '@/components/UpgradeModal'
+import { ProUpgradeCard } from '@/components/dashboard/pro/ProUpgradeCard'
 
 export default function HomePage() {
   const [stats, setStats] = useState<MoodStats | null>(null)
@@ -27,6 +26,7 @@ export default function HomePage() {
   const [password, setPassword] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
   const [loginError, setLoginError] = useState('')
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -284,111 +284,263 @@ export default function HomePage() {
     )
   }
 
+  // TODO: integrate real Pro status from server when available
+  const isProUser = false
+
+  const name =
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    (user?.email ? user.email.split('@')[0] : '')
+
+  const hour = new Date().getHours()
+  const timeOfDay = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'
+  const greeting = name
+    ? `Good ${timeOfDay}, ${name}`
+    : `Good ${timeOfDay}`
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b pt-2.5">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex-shrink-0">
-            <Logo variant="full" href="/home" size="md" />
-          </div>
+    <div className="relative min-h-screen text-text-primary">
+      <GradientBackground />
+
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[480px] md:max-w-[600px] lg:max-w-[720px] xl:max-w-[800px] flex-col px-5 py-6 md:px-6 lg:px-8">
+        {/* Header */}
+        <header className="mb-4 flex items-center justify-between pt-1">
+          <Logo variant="full" href="/home" size="md" />
           <button
             onClick={handleLogout}
-            className="text-gray-600 hover:text-gray-900 text-sm"
+            className="rounded-full border border-black/8 bg-white/70 px-4 py-1.5 text-sm font-medium text-text-secondary shadow-sm backdrop-blur-lg transition hover:bg-white/90 hover:text-text-primary"
           >
             Logout
           </button>
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* Welcome */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Welcome back! 👋
-          </h2>
-          <p className="text-gray-600">
-            Track your mood and discover what creates your emotional patterns.
-          </p>
-        </div>
+        <main className="flex-1 pb-10">
+          {/* Welcome Section */}
+          <section className="mb-8 text-center animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            <h1 className="font-display text-2xl md:text-[2.2rem] lg:text-[2.5rem] font-semibold text-text-primary mb-2">
+              {greeting}{' '}
+              <span className="inline-block align-middle animate-wave">👋</span>
+            </h1>
+            <p className="text-base text-text-secondary">
+              Your emotions are messengers. Let&apos;s listen.
+            </p>
+          </section>
 
-        {/* =======================
-            EXISTING STATS CARDS
-        ======================== */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <p className="text-sm font-medium text-gray-600">
-                Entries This Week
-              </p>
-              <p className="text-3xl font-bold text-gray-900">
-                {stats.entries_this_week}
-              </p>
-            </div>
+          {/* Primary CTA */}
+          <button
+            type="button"
+            onClick={() => router.push('/mood/new')}
+            className="mb-6 w-full rounded-3xl px-8 py-5 lg:py-6 text-lg lg:text-xl font-semibold text-white shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl animate-fade-in-up"
+            style={{ 
+              background: 'linear-gradient(135deg, #f97316 0%, #c026d3 50%, #7c3aed 100%)',
+              boxShadow: '0 8px 30px rgba(192, 38, 211, 0.3)',
+              animationDelay: '0.2s'
+            }}
+          >
+            <span className="flex items-center justify-center gap-3">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/25">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4"
+                  aria-hidden="true"
+                  fill="white"
+                >
+                  <path
+                    d="M12 4v16M4 12h16"
+                    stroke="white"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+              Log Your Mood
+            </span>
+          </button>
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <p className="text-sm font-medium text-gray-600">Total Entries</p>
-              <p className="text-3xl font-bold text-gray-900">
-                {stats.total_entries}
-              </p>
-            </div>
+          {/* Quick Nav Row */}
+          <div className="mb-7 flex justify-center gap-3 animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
+            <button
+              type="button"
+              onClick={() =>
+                isProUser ? router.push('/recipes') : setIsUpgradeOpen(true)
+              }
+              className={`flex items-center gap-2 rounded-full border px-5 py-3 lg:px-6 lg:py-3.5 text-sm lg:text-base font-medium text-text-primary shadow-md backdrop-blur-md transition hover:-translate-y-0.5 hover:shadow-lg ${
+                !isProUser 
+                  ? 'bg-gradient-to-b from-white to-[#fff5f8] border-pro-primary/20' 
+                  : 'bg-white/90 border-white/50'
+              }`}
+            >
+              {!isProUser && (
+                <svg
+                  viewBox="0 0 24 24"
+                  width={14}
+                  height={14}
+                  className="text-pro-primary"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M18 8h-1V6a5 5 0 0 0-10 0v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3-9H9V6a3 3 0 0 1 6 0z"
+                    fill="currentColor"
+                  />
+                </svg>
+              )}
+              <span className={!isProUser ? 'bg-gradient-to-r from-pro-primary to-pro-secondary bg-clip-text text-transparent font-semibold' : ''}>
+                My Recipes
+              </span>
+              {!isProUser && (
+                <span className="rounded-full bg-gradient-to-r from-pro-primary to-pro-secondary px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-white shadow-md">
+                  Pro
+                </span>
+              )}
+            </button>
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <p className="text-sm font-medium text-gray-600">Avg Happiness</p>
-              <p className="text-3xl font-bold text-gray-900">
-                {Math.round(stats.average_happiness * 100)}%
-              </p>
-            </div>
+            <button
+              type="button"
+              onClick={() => router.push('/history')}
+              className="flex items-center gap-2 rounded-full border border-white/50 bg-white/90 px-5 py-3 lg:px-6 lg:py-3.5 text-sm lg:text-base font-medium text-text-primary shadow-md backdrop-blur-md transition hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width={18}
+                height={18}
+                aria-hidden="true"
+                className="text-text-secondary"
+              >
+                <path
+                  d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V3z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span>View History</span>
+            </button>
           </div>
-        )}
 
-        {/* =======================
-            NEW COMPONENTS SECTION
-        ======================== */}
-        <div className="space-y-10">
-          <StreakCard entries={entries} />
+          {/* Stats Grid */}
+          {stats && (
+            <div className="mb-6 grid grid-cols-3 gap-3 md:gap-4 lg:gap-5 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+              <div className="rounded-3xl border border-white/30 bg-white/85 p-4 md:p-5 lg:p-6 text-center shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-md">
+                <div className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold mb-2" style={{
+                  background: 'linear-gradient(135deg, #f97316, #c026d3)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
+                  {stats.entries_this_week}
+                </div>
+                <div className="text-xs md:text-sm font-semibold uppercase tracking-wide text-text-secondary">
+                  This Week
+                </div>
+              </div>
+              <div className="rounded-3xl border border-white/30 bg-white/85 p-4 md:p-5 lg:p-6 text-center shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-md">
+                <div className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold mb-2" style={{
+                  background: 'linear-gradient(135deg, #f97316, #c026d3)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
+                  {stats.total_entries}
+                </div>
+                <div className="text-xs md:text-sm font-semibold uppercase tracking-wide text-text-secondary">
+                  Total
+                </div>
+              </div>
+              <div className="rounded-3xl border border-white/30 bg-white/85 p-4 md:p-5 lg:p-6 text-center shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-md">
+                <div className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold mb-2" style={{
+                  background: 'linear-gradient(135deg, #f97316, #c026d3)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
+                  {Math.round(stats.average_happiness * 100)}%
+                </div>
+                <div className="text-xs md:text-sm font-semibold uppercase tracking-wide text-text-secondary">
+                  Avg Happy
+                </div>
+              </div>
+            </div>
+          )}
 
-          <TrendChart entries={entries} />
+          {/* Streak Card */}
+          <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            <StreakCard entries={entries} />
+          </div>
 
-          <EmotionPatternCard entries={entries} />
+          {/* 7-Day Trend */}
+          <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+            <TrendChart entries={entries} />
+          </div>
 
-          <MoodSnapshot entries={entries} />
+          {/* Latest Mood Snapshot */}
+          <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+            <MoodSnapshot entries={entries} />
+          </div>
 
-          <InsightCard entries={entries} />
+          {/* Quick Insight */}
+          <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.7s' }}>
+            <InsightCard entries={entries} />
+          </div>
 
-          <RecentEntries entries={entries} />
+          {/* PRO Upgrade Card (for free users) */}
+          {!isProUser && (
+            <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.75s' }}>
+              <ProUpgradeCard onUpgrade={() => setIsUpgradeOpen(true)} />
+            </div>
+          )}
 
-          {/* Encouragement optionally always on */}
-          <Encouragement enabled={true} />
+          {/* Unlock Patterns / Pro messaging */}
+          {stats && stats.total_entries < 10 && (
+            <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
+              <UnlockMessage totalEntries={stats.total_entries} />
+            </div>
+          )}
 
-          <UnlockMessage totalEntries={stats?.total_entries || 0} />
-        </div>
+          {/* Quick Actions */}
+          <div className="mb-10 grid grid-cols-2 gap-3 md:gap-4 animate-fade-in-up" style={{ animationDelay: '0.9s' }}>
+            <button
+              type="button"
+              onClick={() => router.push('/patterns')}
+              className="flex items-center justify-center gap-2 rounded-2xl border border-white/30 bg-white/85 px-4 py-3.5 md:py-4 text-sm md:text-base font-medium text-text-primary shadow-sm backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-[#c026d3]/30"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4 md:h-5 md:w-5"
+                aria-hidden="true"
+                style={{ fill: '#c026d3' }}
+              >
+                <path
+                  d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span>Patterns</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push('/entries')}
+              className="flex items-center justify-center gap-2 rounded-2xl border border-white/30 bg-white/85 px-4 py-3.5 md:py-4 text-sm md:text-base font-medium text-text-primary shadow-sm backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-[#c026d3]/30"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4 md:h-5 md:w-5"
+                aria-hidden="true"
+                style={{ fill: '#c026d3' }}
+              >
+                <path
+                  d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span>Export</span>
+            </button>
+          </div>
+        </main>
+      </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-          <Link
-            href="/mood"
-            className="bg-indigo-600 text-white rounded-lg p-6 hover:bg-indigo-700"
-          >
-            Log New Mood
-          </Link>
-
-          <Link
-            href="/history"
-            className="bg-white text-gray-900 rounded-lg p-6 border border-gray-200 hover:border-gray-300"
-          >
-            View History
-          </Link>
-
-          <Link
-            href="/recipes"
-            className="bg-linear-to-r from-pink-600 to-orange-600 text-white rounded-lg p-6 hover:from-pink-700 hover:to-orange-700 flex items-center justify-center space-x-2"
-          >
-            <span>My Recipes</span>
-            <span className="text-xs bg-white bg-opacity-20 px-2 py-1 rounded-full">PRO</span>
-          </Link>
-        </div>
-      </main>
+      {/* Upgrade modal for free users */}
+      <UpgradeModal
+        isOpen={!isProUser && isUpgradeOpen}
+        onClose={() => setIsUpgradeOpen(false)}
+      />
     </div>
   )
 }

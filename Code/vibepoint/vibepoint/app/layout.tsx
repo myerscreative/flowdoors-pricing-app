@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
-import { Playfair_Display, DM_Sans } from "next/font/google";
+import { Outfit, Fraunces } from "next/font/google";
 import "./globals.css";
 
-const playfairDisplay = Playfair_Display({
-  variable: "--font-playfair",
+const outfit = Outfit({
   subsets: ["latin"],
-  weight: ["600", "700"],
+  variable: "--font-outfit",
 });
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const fraunces = Fraunces({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  variable: "--font-fraunces",
 });
 
 export const metadata: Metadata = {
@@ -31,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${playfairDisplay.variable} ${dmSans.variable} antialiased`}
+        className={`${outfit.variable} ${fraunces.variable} antialiased`}
       >
         {children}
       </body>
