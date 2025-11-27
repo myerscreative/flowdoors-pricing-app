@@ -27,11 +27,24 @@ export default function HomePage() {
   const [loginLoading, setLoginLoading] = useState(false)
   const [loginError, setLoginError] = useState('')
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false)
+  const [showWelcomeCard, setShowWelcomeCard] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     checkAuthAndLoadStats()
   }, [])
+
+  useEffect(() => {
+    // Check if welcome card should be shown (client-side only)
+    if (typeof window !== 'undefined') {
+      const dismissed = localStorage.getItem('welcomeCardDismissed')
+      if (stats && stats.total_entries === 0 && !dismissed) {
+        setShowWelcomeCard(true)
+      } else {
+        setShowWelcomeCard(false)
+      }
+    }
+  }, [stats])
 
   const checkAuthAndLoadStats = async () => {
     try {
@@ -326,6 +339,51 @@ export default function HomePage() {
             </p>
           </section>
 
+          {/* Welcome Learn Card - Only show if user has 0 entries and hasn't dismissed */}
+          {showWelcomeCard && (
+            <div id="welcomeLearnCard" className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+              <div
+                className="rounded-3xl border p-6 md:p-7 lg:p-8 text-center shadow-lg backdrop-blur-xl"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(192, 38, 211, 0.1) 100%)',
+                  borderColor: 'rgba(56, 189, 248, 0.3)'
+                }}
+              >
+                <div className="mb-3 text-5xl">🧠</div>
+                <h3 className="mb-2 font-display text-xl md:text-2xl font-semibold text-text-primary">
+                  Welcome to Vibepoint!
+                </h3>
+                <p className="mb-5 text-sm md:text-base text-text-secondary">
+                  Want to understand how tracking your emotional patterns works?
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    type="button"
+                    onClick={() => router.push('/learn')}
+                    className="px-6 py-3 rounded-2xl font-semibold text-base text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
+                    style={{
+                      background: 'linear-gradient(135deg, #c026d3, #7c3aed)'
+                    }}
+                  >
+                    Read the Guide
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem('welcomeCardDismissed', 'true')
+                        setShowWelcomeCard(false)
+                      }
+                    }}
+                    className="px-6 py-3 rounded-2xl font-medium text-base text-text-secondary bg-white/50 border border-black/10 backdrop-blur-md transition-all hover:bg-white/70"
+                  >
+                    Skip for now
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Primary CTA */}
           <button
             type="button"
@@ -358,7 +416,7 @@ export default function HomePage() {
           </button>
 
           {/* Quick Nav Row */}
-          <div className="mb-7 flex justify-center gap-3 animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
+          <div className="mb-7 flex justify-center gap-3 flex-wrap animate-fade-in-up" style={{ animationDelay: '0.25s' }}>
             <button
               type="button"
               onClick={() =>
@@ -412,6 +470,26 @@ export default function HomePage() {
                 />
               </svg>
               <span>View History</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push('/learn')}
+              className="flex items-center gap-2 rounded-full border border-white/50 bg-white/90 px-5 py-3 lg:px-6 lg:py-3.5 text-sm lg:text-base font-medium text-text-primary shadow-md backdrop-blur-md transition hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width={18}
+                height={18}
+                aria-hidden="true"
+                className="text-text-secondary"
+              >
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span>How It Works</span>
             </button>
           </div>
 

@@ -67,6 +67,12 @@ CREATE TABLE mood_entries (
   self_talk TEXT NOT NULL,
   physical_sensations TEXT NOT NULL,
   notes TEXT,
+  
+  -- Rapid shift tracking
+  is_rapid_shift BOOLEAN DEFAULT FALSE,
+  rapid_shift_context TEXT,
+  minutes_since_last_entry INTEGER,
+  
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -86,7 +92,9 @@ CREATE TABLE patterns (
 -- Create indexes for performance
 CREATE INDEX idx_mood_entries_user_id ON mood_entries(user_id);
 CREATE INDEX idx_mood_entries_timestamp ON mood_entries(timestamp DESC);
+CREATE INDEX idx_mood_entries_rapid_shift ON mood_entries(user_id, is_rapid_shift) WHERE is_rapid_shift = true;
 CREATE INDEX idx_patterns_user_id ON patterns(user_id);
+CREATE INDEX idx_patterns_type ON patterns(user_id, pattern_type);
 
 -- Enable Row Level Security
 ALTER TABLE mood_entries ENABLE ROW LEVEL SECURITY;
@@ -172,12 +180,18 @@ export interface MoodEntry {
   id: string
   user_id: string
   timestamp: string
-  happiness_level: number // 0-1
-  motivation_level: number // 0-1
+  happiness_level: number // 0-1 (y coordinate)
+  motivation_level: number // 0-1 (x coordinate)
   focus: string
   self_talk: string
   physical_sensations: string
   notes?: string
+  
+  // Rapid shift tracking
+  is_rapid_shift?: boolean
+  rapid_shift_context?: string
+  minutes_since_last_entry?: number
+  
   created_at: string
 }
 
@@ -203,12 +217,21 @@ export interface MoodCoordinates {
 
 ### Phase 1: Build the Gradient Selector
 
+**⚠️ CRITICAL: MUST use HTML5 Canvas with bilinear interpolation - CSS gradients will NOT work!**
+
 Start with the core feature - the gradient mood selector:
 
 1. Create `components/GradientSelector.tsx`
-2. Implement click/touch handling
-3. Calculate coordinates (0-1 range)
-4. Display visual feedback
+2. **Use Canvas API** with pixel-level bilinear interpolation (see IMPLEMENTATION_GUIDE.md for algorithm)
+3. Implement click/touch handling
+4. Calculate coordinates (0-1 range)
+5. Display visual indicator at selected position
+
+**Gradient Corner Colors:**
+- Top-left (happy + unmotivated): `#5BC0EB` (Cyan)
+- Top-right (happy + motivated): `#FDE74C` (Yellow/Gold)
+- Bottom-left (unhappy + unmotivated): `#3A506B` (Deep Blue)
+- Bottom-right (unhappy + motivated): `#E63946` (Red/Coral)
 
 ### Phase 2: Questions Form
 
@@ -264,27 +287,33 @@ In Vercel dashboard:
 
 ## Key Implementation Tips
 
-### Gradient Colors
+### ⚠️ Gradient Rendering - CRITICAL
 
-Use CSS linear-gradient with multiple stops to create the mood gradient:
+**DO NOT use CSS gradients!** You MUST use HTML5 Canvas with bilinear interpolation. See `docs/IMPLEMENTATION_GUIDE.md` for the complete algorithm.
 
-```css
-background: linear-gradient(
-  to bottom right,
-  #87CEEB, /* top-left: happy + unmotivated (light blue) */
-  #FFD700, /* top-right: happy + motivated (gold) */
-  #4B0082, /* bottom-left: unhappy + unmotivated (indigo) */
-  #8B0000  /* bottom-right: unhappy + motivated (dark red) */
-);
-```
+### Entry Throttling System
+
+Implement a 30-minute minimum buffer between entries:
+- Show warning if user tries to log within 30 minutes
+- Allow up to 3 overrides per day
+- Mark rapid shift entries with `is_rapid_shift: true`
+- Capture `rapid_shift_context` when override is used
+
+### Pattern Insights Threshold
+
+- **7 entries**: Start showing basic pattern insights (not 10 or 20!)
+- **5 entries**: Show mood map visualization
+- **15 entries**: Show correlation insights
+- **30+ entries**: Show deep multi-variable insights
 
 ### Capturing Coordinates
 
 ```typescript
-const handleGradientClick = (e: React.MouseEvent<HTMLDivElement>) => {
-  const rect = e.currentTarget.getBoundingClientRect()
-  const x = (e.clientX - rect.left) / rect.width // motivation
-  const y = 1 - (e.clientY - rect.top) / rect.height // happiness (inverted because top = happy)
+const handleGradientClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const canvas = e.currentTarget
+  const rect = canvas.getBoundingClientRect()
+  const x = (e.clientX - rect.left) / rect.width // motivation (0-1)
+  const y = 1 - (e.clientY - rect.top) / rect.height // happiness (0-1, inverted)
   
   setMoodCoordinates({ x, y })
 }
@@ -292,7 +321,7 @@ const handleGradientClick = (e: React.MouseEvent<HTMLDivElement>) => {
 
 ### Pattern Analysis
 
-After 20+ entries, run analysis to find correlations:
+After 7+ entries, run analysis to find correlations:
 
 ```typescript
 // Example: Find most common focus areas
@@ -318,7 +347,9 @@ const analyzePatterns = async (userId: string) => {
 
 ## Need Help?
 
-Refer to the full [PROJECT_INSTRUCTIONS.md](./PROJECT_INSTRUCTIONS.md) for detailed specifications and implementation guidance.
+- **Full Implementation Guide:** See [docs/IMPLEMENTATION_GUIDE.md](./docs/IMPLEMENTATION_GUIDE.md) for complete specifications, algorithms, and critical design decisions
+- **Project Overview:** See [PROJECT_INSTRUCTIONS.md](./PROJECT_INSTRUCTIONS.md) for original project specification
+- **Database Schema:** See [DATABASE.md](./DATABASE.md) for complete database structure
 
 ---
 

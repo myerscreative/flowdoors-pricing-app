@@ -197,7 +197,7 @@ export default function RecipePlayerPage() {
             
             <div className="flex flex-col space-y-4 w-full max-w-xs mx-auto pt-8">
               <Link 
-                href="/mood/log"
+                href="/mood/new"
                 className="w-full py-4 bg-gradient-to-r from-pink-600 to-blue-600 rounded-xl font-bold shadow-lg shadow-pink-500/20 hover:shadow-pink-500/40 transition-all active:scale-95"
               >
                 Log New Mood

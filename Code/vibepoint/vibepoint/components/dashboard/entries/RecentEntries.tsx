@@ -13,15 +13,15 @@ const RecentEntries: React.FC<RecentEntriesProps> = React.memo(({ entries }) => 
 
   if (recent.length === 0) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 text-gray-500">
+      <div className="rounded-3xl border border-white/30 bg-white/85 p-6 text-sm text-text-secondary shadow-sm backdrop-blur-xl">
         No recent entries yet.
       </div>
     )
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+    <div className="rounded-3xl border border-white/30 bg-white/85 p-6 shadow-sm backdrop-blur-xl">
+      <h3 className="mb-4 font-display text-lg font-semibold text-text-primary">
         Recent Entries
       </h3>
       <div className="space-y-4">
@@ -52,25 +52,27 @@ const RecentEntries: React.FC<RecentEntriesProps> = React.memo(({ entries }) => 
           return (
             <div
               key={entry.id}
-              className="flex items-center gap-4 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition"
+              className="flex items-center gap-4 rounded-2xl border border-white/50 bg-white/80 p-3 transition hover:bg-white"
             >
               {/* Gradient swatch */}
               <div
-                className="h-16 w-16 rounded-lg border border-gray-300 shadow-inner bg-white flex-shrink-0"
+                className="flex-shrink-0 h-16 w-16 rounded-2xl border border-white/70 bg-white shadow-inner"
                 style={gradientStyle}
               />
               <div className="flex-1">
-                <p className="text-sm text-gray-600 mb-1">
+                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-text-secondary">
                   {formatDate(entry.timestamp)}
                 </p>
-                <p className="text-gray-900 font-medium">
-                  Happiness: <span className="font-semibold">{happiness}%</span>
+                <p className="text-sm font-medium text-text-primary">
+                  <span className="text-text-secondary">Happiness</span>{' '}
+                  <span className="font-semibold">{happiness}%</span>
                 </p>
-                <p className="text-gray-900 font-medium">
-                  Motivation: <span className="font-semibold">{motivation}%</span>
+                <p className="text-sm font-medium text-text-primary">
+                  <span className="text-text-secondary">Motivation</span>{' '}
+                  <span className="font-semibold">{motivation}%</span>
                 </p>
                 {entry.emotion_name && (
-                  <p className="text-indigo-600 text-sm font-medium mt-1 capitalize">
+                  <p className="mt-1 text-xs font-medium capitalize text-pro-primary">
                     Emotion: {entry.emotion_name}
                   </p>
                 )}

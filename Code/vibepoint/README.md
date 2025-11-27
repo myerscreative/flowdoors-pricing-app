@@ -41,7 +41,10 @@ Vibepoint teaches you that moods aren't random or beyond your control. By tracki
 
 ## Getting Started
 
-Full development instructions are available in [PROJECT_INSTRUCTIONS.md](./PROJECT_INSTRUCTIONS.md)
+- **New to the project?** Start with [QUICK_START.md](./QUICK_START.md) for setup instructions
+- **Building features?** See [docs/IMPLEMENTATION_GUIDE.md](./docs/IMPLEMENTATION_GUIDE.md) for complete technical specifications
+- **Understanding the vision?** See [PROJECT_INSTRUCTIONS.md](./PROJECT_INSTRUCTIONS.md) for the original project specification
+- **Documentation conflicts?** See [docs/DOCUMENTATION_MAP.md](./docs/DOCUMENTATION_MAP.md) for guidance
 
 ## Domain
 

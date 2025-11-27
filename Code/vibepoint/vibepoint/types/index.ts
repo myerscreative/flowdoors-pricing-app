@@ -2,6 +2,7 @@ export interface MoodEntry {
   id: string
   user_id: string
   timestamp: string
+  created_at?: string // Database timestamp when entry was created
   // Core numeric mood coordinates (0–1 floats)
   happiness_level: number
   motivation_level: number
@@ -13,6 +14,10 @@ export interface MoodEntry {
   emotion_name?: string | null
   // Optional notes field (future use)
   notes?: string | null
+  // Rapid shift tracking (entry throttling)
+  is_rapid_shift?: boolean
+  rapid_shift_context?: string | null
+  minutes_since_last_entry?: number | null
 }
 
 export interface Pattern {

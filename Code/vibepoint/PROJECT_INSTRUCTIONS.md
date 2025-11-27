@@ -1,5 +1,9 @@
 # Vibepoint App - Project Instructions
 
+> **⚠️ Note:** This document contains the original project specification. For current implementation details, technical specifications, and the latest design decisions, please refer to **[docs/IMPLEMENTATION_GUIDE.md](./docs/IMPLEMENTATION_GUIDE.md)** which is the source of truth for all implementation decisions.
+>
+> **See [docs/DOCUMENTATION_MAP.md](./docs/DOCUMENTATION_MAP.md) for guidance on which document to use when.**
+
 ## Project Overview
 Vibepoint is a mood mapping application that teaches users to understand and control their emotional states by tracking the mental patterns that create their moods. The app uses an intuitive gradient interface where users plot their current mood, then answer reflective questions to build awareness of the thoughts, focus, and physical sensations driving their emotions.
 
@@ -67,15 +71,13 @@ After mood selection, user answers three core questions:
 
 ### Pattern Recognition Features
 
-**After 10+ Entries:**
-- Show user their mood map (scatter plot of all mood selections on gradient)
-- Identify most common mood zones
+> **Current Implementation:** See [docs/IMPLEMENTATION_GUIDE.md](./docs/IMPLEMENTATION_GUIDE.md) for the latest pattern insight thresholds and progressive disclosure system.
 
-**After 20+ Entries:**
-- Begin showing correlations:
-  - "When you focus on [work deadlines], you tend to be in the [bottom-right quadrant]"
-  - "When you tell yourself [positive affirmations], your mood averages [higher on happiness scale]"
-  - "Physical sensation [tight chest] appears in [% of unhappy entries]"
+**Progressive Insight Unlocking:**
+- **5 entries:** Show user their mood map (scatter plot of all mood selections on gradient)
+- **7 entries:** Early patterns emerging (basic observations)
+- **15 entries:** Pattern correlations ("When you focus on [work deadlines], you tend to be in the [bottom-right quadrant]")
+- **30+ entries:** Deep insights (multi-variable, predictive patterns)
 
 **Pattern Insights Display:**
 - "Your Patterns" dashboard
@@ -112,6 +114,36 @@ After mood selection, user answers three core questions:
 - User owns their data
 - Optional export functionality
 - No social features (this is personal work)
+
+### 5. Entry Throttling System
+> **Current Implementation:** See [docs/IMPLEMENTATION_GUIDE.md](./docs/IMPLEMENTATION_GUIDE.md) for complete entry throttling specification.
+
+- **30-minute minimum buffer** between entries (soft limit)
+- Users can override up to **3 times per day** for rapid mood shifts
+- Rapid shift entries are tracked separately for pattern analysis
+- This ensures data quality while allowing users to log significant mood changes
+
+### 6. Free vs Premium Tiers
+> **Current Implementation:** See [docs/IMPLEMENTATION_GUIDE.md](./docs/IMPLEMENTATION_GUIDE.md) for complete Premium feature specification.
+
+**Free Tier:**
+- Unlimited mood logging
+- View mood history timeline
+- Mood map visualization
+- Basic pattern insights
+- Automatic shift detection
+- 90-day history retention
+
+**Premium Tier ($4.99/mo or $39.99/yr):**
+- Everything in Free, plus:
+- **"My Recipes"** - Save proven state-shift formulas
+- **"Up Your Vibe"** - Active recipe suggestions after low mood logs
+- Recipe effectiveness tracking
+- Adaptive learning (recipes improve based on feedback)
+- Recipe builder (create custom recipes)
+- Advanced pattern insights (multi-variable correlations, time-of-day patterns)
+- Unlimited history retention
+- Priority support
 
 ## Technical Requirements
 
@@ -212,6 +244,8 @@ After mood selection, user answers three core questions:
 ```
 
 #### mood_entries
+> **Current Schema:** See [docs/IMPLEMENTATION_GUIDE.md](./docs/IMPLEMENTATION_GUIDE.md) or [DATABASE.md](./DATABASE.md) for the complete database schema including Premium features.
+
 ```sql
 - id (uuid, primary key)
 - user_id (uuid, foreign key -> users.id)
@@ -222,8 +256,18 @@ After mood selection, user answers three core questions:
 - self_talk (text)
 - physical_sensations (text)
 - notes (text, nullable)
+- is_rapid_shift (boolean) -- true if logged within 30 minutes of previous entry
+- rapid_shift_context (text) -- optional context for rapid shift entries
+- minutes_since_last_entry (integer) -- minutes since last entry, if rapid shift
 - created_at (timestamp)
 ```
+
+**Additional Tables (Premium Features):**
+- `recipes` - User-created mood shift recipes
+- `recipe_attempts` - Tracking recipe effectiveness
+- `user_subscription` - Free vs Premium tier management
+
+See [docs/IMPLEMENTATION_GUIDE.md](./docs/IMPLEMENTATION_GUIDE.md) for complete schema.
 
 #### patterns (generated insights)
 ```sql

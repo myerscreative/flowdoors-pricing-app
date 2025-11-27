@@ -13,6 +13,7 @@ interface GradientSelectorProps {
   showStats?: boolean
   showHeader?: boolean
   className?: string
+  gradientClassName?: string
 }
 
 // Four corner colors - EXACT from app
@@ -53,16 +54,18 @@ const bilinearInterpolate = (
   return { r, g, b }
 }
 
-export default function GradientSelector({ 
-  onMoodSelect, 
-  selectedMood, 
-  showStats = true, 
+export default function GradientSelector({
+  onMoodSelect,
+  selectedMood,
+  showStats = true,
   showHeader = true,
-  className = ""
+  className = '',
+  gradientClassName = '',
 }: GradientSelectorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [internalMood, setInternalMood] = useState<MoodCoordinates | null>(null)
+  const isDraggingRef = useRef(false)
   
   // Use controlled state if provided, otherwise internal state
   const currentMood = selectedMood !== undefined ? selectedMood : internalMood
@@ -135,6 +138,20 @@ export default function GradientSelector({
     }
   }, [drawGradient])
 
+  useEffect(() => {
+    const stopDragging = () => {
+      isDraggingRef.current = false
+    }
+
+    window.addEventListener('mouseup', stopDragging)
+    window.addEventListener('touchend', stopDragging)
+
+    return () => {
+      window.removeEventListener('mouseup', stopDragging)
+      window.removeEventListener('touchend', stopDragging)
+    }
+  }, [])
+
   const handleInteraction = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     const container = containerRef.current
     if (!container) return
@@ -144,6 +161,10 @@ export default function GradientSelector({
     let clientY: number
 
     if ('touches' in e) {
+      if (e.touches.length === 0) return
+      if (typeof e.preventDefault === 'function') {
+        e.preventDefault()
+      }
       clientX = e.touches[0].clientX
       clientY = e.touches[0].clientY
     } else {
@@ -164,6 +185,20 @@ export default function GradientSelector({
     onMoodSelect(mood)
   }
 
+  const handlePointerDown = (event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    isDraggingRef.current = true
+    handleInteraction(event)
+  }
+
+  const handlePointerMove = (event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return
+    handleInteraction(event)
+  }
+
+  const handlePointerUp = () => {
+    isDraggingRef.current = false
+  }
+
   const getMoodLabel = (coords: MoodCoordinates) => {
     const { x, y } = coords
 
@@ -176,50 +211,77 @@ export default function GradientSelector({
   return (
     <div className={`w-full ${showHeader ? 'max-w-2xl mx-auto px-4 py-8' : ''} ${className}`}>
       {showHeader && (
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-3">How are you feeling?</h1>
-          <p className="text-gray-600 text-lg">Tap anywhere on the gradient to show your current mood</p>
+        <div className="mb-8 text-center">
+          <h1 className="mb-3 text-4xl font-bold">How are you feeling?</h1>
+          <p className="text-lg text-gray-600">Tap anywhere on the gradient to show your current mood</p>
         </div>
       )}
 
       {/* Gradient Container */}
       <div
         ref={containerRef}
-        className="relative w-full aspect-square rounded-3xl overflow-hidden cursor-crosshair shadow-2xl"
-        onClick={handleInteraction}
-        onTouchStart={handleInteraction}
+        className={`relative w-full aspect-square cursor-crosshair overflow-hidden rounded-3xl border border-white/20 bg-black/10 shadow-2xl ${gradientClassName}`}
+        onMouseDown={handlePointerDown}
+        onMouseMove={handlePointerMove}
+        onMouseUp={handlePointerUp}
+        onMouseLeave={handlePointerUp}
+        onTouchStart={handlePointerDown}
+        onTouchMove={handlePointerMove}
+        onTouchEnd={handlePointerUp}
       >
         {/* Axis labels positioned inside the gradient */}
-        <div className="axis-label absolute top-1/2 whitespace-nowrap" style={{ left: '16px', transformOrigin: 'left center', transform: 'translateY(-50%) rotate(90deg) translateX(-50%)' }}>
-          Unmotivated
-        </div>
-        <div className="axis-label absolute top-1/2 whitespace-nowrap" style={{ right: '16px', transformOrigin: 'right center', transform: 'translateY(-50%) rotate(-90deg) translateX(50%)' }}>
-          Motivated
-        </div>
-        <div className="axis-label absolute left-1/2 -translate-x-1/2" style={{ bottom: '16px' }}>
-          Unhappy
-        </div>
-        <div className="axis-label absolute left-1/2 -translate-x-1/2" style={{ top: '16px' }}>
+        <span
+          className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 whitespace-nowrap text-sm font-semibold uppercase tracking-[0.25em] text-white"
+          style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
+        >
           Happy
-        </div>
+        </span>
+        <span
+          className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm font-semibold uppercase tracking-[0.25em] text-white"
+          style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
+        >
+          Unhappy
+        </span>
+        <span
+          className="pointer-events-none absolute top-1/2 whitespace-nowrap text-sm font-semibold uppercase tracking-[0.25em] text-white"
+          style={{
+            left: '16px',
+            transformOrigin: 'left center',
+            transform: 'translateY(-50%) rotate(90deg) translateX(-50%)',
+            textShadow: '0 1px 4px rgba(0,0,0,0.4)',
+          }}
+        >
+          Unmotivated
+        </span>
+        <span
+          className="pointer-events-none absolute top-1/2 whitespace-nowrap text-sm font-semibold uppercase tracking-[0.25em] text-white"
+          style={{
+            right: '16px',
+            transformOrigin: 'right center',
+            transform: 'translateY(-50%) rotate(-90deg) translateX(50%)',
+            textShadow: '0 1px 4px rgba(0,0,0,0.4)',
+          }}
+        >
+          Motivated
+        </span>
 
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 w-full h-full"
-          style={{ display: 'block' }}
-        />
+        <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" style={{ display: 'block' }} />
 
         {/* Selection Indicator */}
         {currentMood && (
           <div
-            className="absolute w-6 h-6 -ml-3 -mt-3 pointer-events-none transition-all duration-75 ease-out"
+            className="pointer-events-none absolute h-7 w-7 transition-all duration-75 ease-out"
             style={{
               left: `${currentMood.x * 100}%`,
               top: `${(1 - currentMood.y) * 100}%`,
+              transform: 'translate(-50%, -50%)',
             }}
           >
-            <div className="w-full h-full rounded-full border-2 border-white shadow-lg animate-pulse" />
-            <div className="absolute inset-0 w-full h-full rounded-full border-2 border-white/50 scale-150" />
+            <div
+              className="h-full w-full rounded-full border-[3px] border-white shadow-lg"
+              style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3), inset 0 0 0 2px rgba(255,255,255,0.3)' }}
+            />
+            <div className="absolute inset-0 scale-150 rounded-full border-2 border-white/50" />
           </div>
         )}
       </div>

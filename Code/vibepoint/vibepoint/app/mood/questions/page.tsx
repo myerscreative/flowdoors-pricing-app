@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { MoodCoordinates } from '@/types'
+import { checkThrottle, getLastMoodEntry, calculateMinutesSince } from '@/lib/moodUtils'
+import { ThrottleWarningModal } from '@/components/ThrottleWarningModal'
+import { HardLimitModal } from '@/components/HardLimitModal'
+import { RapidShiftContextPrompt } from '@/components/RapidShiftContextPrompt'
 
 interface QuestionData {
   focus: string
@@ -39,6 +43,16 @@ export default function QuestionsPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  
+  // Throttle modal states
+  const [showThrottleWarning, setShowThrottleWarning] = useState(false)
+  const [showHardLimit, setShowHardLimit] = useState(false)
+  const [showContextPrompt, setShowContextPrompt] = useState(false)
+  const [throttleInfo, setThrottleInfo] = useState<{
+    minutesSince: number
+    overridesLeft: number
+    minutesUntilNext: number | null
+  } | null>(null)
 
   useEffect(() => {
     // Get coordinates from localStorage
@@ -55,8 +69,8 @@ export default function QuestionsPage() {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  // Save entry with throttle data
+  const saveEntry = async (isRapidShift: boolean = false, rapidShiftContext: string | null = null) => {
     if (!coordinates) return
 
     setLoading(true)
@@ -69,41 +83,34 @@ export default function QuestionsPage() {
         return
       }
 
-      // Validate required fields
-      if (!formData.focus.trim() || !formData.selfTalk.trim() || !formData.physicalSensations.trim()) {
-        setError('Please fill in all required fields (focus, self-talk, and physical sensations)')
-        setLoading(false)
-        return
-      }
-
-      // Validate coordinates are valid numbers between 0 and 1
-      if (typeof coordinates.x !== 'number' || typeof coordinates.y !== 'number' ||
-          coordinates.x < 0 || coordinates.x > 1 || coordinates.y < 0 || coordinates.y > 1) {
-        setError('Invalid mood coordinates. Please select your mood again.')
-        setLoading(false)
-        return
-      }
+      // Get last entry to calculate minutes since
+      const lastEntry = await getLastMoodEntry(user.id)
+      // Use created_at for throttle checking (when entry was actually created)
+      const minutesSince = lastEntry 
+        ? calculateMinutesSince(lastEntry.created_at || lastEntry.timestamp) 
+        : null
 
       // Build entry data
-      // Note: Temporarily excluding emotion_name if schema cache hasn't refreshed
       const emotionName = getEmotionName()
       const entryData: any = {
         user_id: user.id,
-        happiness_level: Math.max(0, Math.min(1, coordinates.y)), // Ensure between 0 and 1
-        motivation_level: Math.max(0, Math.min(1, coordinates.x)), // Ensure between 0 and 1
+        happiness_level: Math.max(0, Math.min(1, coordinates.y)),
+        motivation_level: Math.max(0, Math.min(1, coordinates.x)),
         focus: formData.focus.trim(),
         self_talk: formData.selfTalk.trim(),
         physical_sensations: formData.physicalSensations.trim(),
+        is_rapid_shift: isRapidShift,
+        minutes_since_last_entry: minutesSince,
       }
 
-      // Only include emotion_name if schema cache has refreshed
-      // You can remove this check once Supabase schema cache updates (usually 1-5 minutes)
-      // For now, try including it - if it fails, the error handler will catch it
       if (emotionName) {
         entryData.emotion_name = emotionName
       }
 
-      // Only include notes if it exists
+      if (rapidShiftContext) {
+        entryData.rapid_shift_context = rapidShiftContext
+      }
+
       const notes = formData.notes?.trim()
       if (notes) {
         entryData.notes = notes
@@ -140,8 +147,6 @@ export default function QuestionsPage() {
             const errorMessage = retryError.message || retryError.details || retryError.hint || 'Failed to save entry. Please check your connection and try again.'
             setError(`Failed to save entry: ${errorMessage}`)
           } else if (retryData && retryData.length > 0) {
-            // Success - entry saved without emotion_name
-            // The emotion_name will be null for now until schema cache refreshes
             localStorage.removeItem('moodCoordinates')
             router.push('/success')
             return
@@ -151,11 +156,9 @@ export default function QuestionsPage() {
         const errorMessage = error.message || error.details || error.hint || 'Failed to save entry. Please check your connection and try again.'
         setError(`Failed to save entry: ${errorMessage}`)
       } else if (data && data.length > 0) {
-        // Success - clear stored coordinates and redirect
         localStorage.removeItem('moodCoordinates')
         router.push('/success')
       } else {
-        // No error but also no data returned
         console.warn('Insert succeeded but no data returned')
         setError('Entry saved but no confirmation received. Please refresh and check your entries.')
       }
@@ -165,6 +168,95 @@ export default function QuestionsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!coordinates) return
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/auth/login')
+        setLoading(false)
+        return
+      }
+
+      // Validate required fields
+      if (!formData.focus.trim() || !formData.selfTalk.trim() || !formData.physicalSensations.trim()) {
+        setError('Please fill in all required fields (focus, self-talk, and physical sensations)')
+        setLoading(false)
+        return
+      }
+
+      // Validate coordinates
+      if (typeof coordinates.x !== 'number' || typeof coordinates.y !== 'number' ||
+          coordinates.x < 0 || coordinates.x > 1 || coordinates.y < 0 || coordinates.y > 1) {
+        setError('Invalid mood coordinates. Please select your mood again.')
+        setLoading(false)
+        return
+      }
+
+      // Check throttle
+      const throttle = await checkThrottle(user.id)
+
+      if (throttle.shouldThrottle) {
+        setLoading(false)
+        
+        if (throttle.minutesUntilNext !== null) {
+          // Hard limit reached
+          setThrottleInfo({
+            minutesSince: throttle.minutesSince || 0,
+            overridesLeft: 0,
+            minutesUntilNext: throttle.minutesUntilNext,
+          })
+          setShowHardLimit(true)
+          return
+        } else {
+          // Can override - show warning
+          const overridesLeft = 3 - throttle.overridesToday
+          setThrottleInfo({
+            minutesSince: throttle.minutesSince || 0,
+            overridesLeft,
+            minutesUntilNext: null,
+          })
+          setShowThrottleWarning(true)
+          return
+        }
+      }
+
+      // No throttle - save directly
+      await saveEntry(false, null)
+    } catch (err: any) {
+      console.error('Unexpected error:', err)
+      setError(`An unexpected error occurred: ${err?.message || 'Unknown error'}`)
+      setLoading(false)
+    }
+  }
+
+  // Handle throttle warning modal actions
+  const handleThrottleWait = () => {
+    setShowThrottleWarning(false)
+    setThrottleInfo(null)
+  }
+
+  const handleThrottleOverride = () => {
+    setShowThrottleWarning(false)
+    setShowContextPrompt(true)
+  }
+
+  // Handle rapid shift context submission
+  const handleContextSubmit = async (context: string) => {
+    setShowContextPrompt(false)
+    await saveEntry(true, context || null)
+  }
+
+  const handleContextCancel = () => {
+    setShowContextPrompt(false)
+    setThrottleInfo(null)
   }
 
   if (!coordinates) {
@@ -297,6 +389,32 @@ export default function QuestionsPage() {
           </button>
         </form>
       </div>
+
+      {/* Throttle Modals */}
+      {throttleInfo && (
+        <>
+          <ThrottleWarningModal
+            isOpen={showThrottleWarning}
+            minutesSince={throttleInfo.minutesSince}
+            overridesLeft={throttleInfo.overridesLeft}
+            onWait={handleThrottleWait}
+            onOverride={handleThrottleOverride}
+          />
+          <HardLimitModal
+            isOpen={showHardLimit}
+            minutesUntilNext={throttleInfo.minutesUntilNext || 0}
+            onDismiss={() => {
+              setShowHardLimit(false)
+              setThrottleInfo(null)
+            }}
+          />
+        </>
+      )}
+      <RapidShiftContextPrompt
+        isOpen={showContextPrompt}
+        onCancel={handleContextCancel}
+        onSubmit={handleContextSubmit}
+      />
     </div>
   )
 }

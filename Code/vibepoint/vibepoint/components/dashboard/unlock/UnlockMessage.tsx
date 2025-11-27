@@ -1,4 +1,5 @@
 import React from 'react'
+import Link from 'next/link'
 
 interface UnlockMessageProps {
   totalEntries: number
@@ -40,6 +41,13 @@ const UnlockMessage: React.FC<UnlockMessageProps> = React.memo(({ totalEntries }
           }}
         />
       </div>
+      <Link
+        href="/learn"
+        className="mt-4 inline-block text-sm md:text-base font-medium transition-opacity hover:opacity-80"
+        style={{ color: '#c026d3' }}
+      >
+        Learn how pattern detection works →
+      </Link>
     </div>
   )
 })

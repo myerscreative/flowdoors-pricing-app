@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { MoodEntry } from '@/types'
 import { format, startOfWeek, startOfMonth, isWithinInterval } from 'date-fns'
-import MiniGradientPreview from '@/components/MiniGradientPreview'
+import { GradientBackground } from '@/components/GradientBackground'
+import { MiniMoodDisplay } from '@/components/MiniMoodDisplay'
 
 type FilterType = 'all' | 'week' | 'month'
 
@@ -86,162 +87,247 @@ export default function HistoryPage() {
     setExpandedEntry(expandedEntry === entryId ? null : entryId)
   }
 
+  // Calculate stats from filtered entries
+  const stats = useMemo(() => {
+    if (filteredEntries.length === 0) {
+      return {
+        total: 0,
+        avgHappiness: 0,
+        avgMotivation: 0,
+      }
+    }
+
+    const avgHappiness =
+      filteredEntries.reduce((sum, e) => sum + e.happiness_level, 0) / filteredEntries.length
+    const avgMotivation =
+      filteredEntries.reduce((sum, e) => sum + e.motivation_level, 0) / filteredEntries.length
+
+    return {
+      total: filteredEntries.length,
+      avgHappiness: Math.round(avgHappiness * 100),
+      avgMotivation: Math.round(avgMotivation * 100),
+    }
+  }, [filteredEntries])
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your history...</p>
+      <div className="relative min-h-screen flex items-center justify-center text-text-primary">
+        <GradientBackground />
+        <div className="relative z-10 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#c026d3] mx-auto mb-4"></div>
+          <p className="text-text-secondary">Loading your history...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b pt-2.5">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Link href="/home" className="text-gray-600 hover:text-gray-900">
-              ← Back to Home
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900">Mood History</h1>
-          </div>
-        </div>
-      </header>
+    <div className="relative min-h-screen text-text-primary">
+      <GradientBackground />
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* Filters */}
-        <div className="mb-6">
-          <div className="flex space-x-2">
-            {[
-              { key: 'all' as FilterType, label: 'All Entries' },
-              { key: 'week' as FilterType, label: 'This Week' },
-              { key: 'month' as FilterType, label: 'This Month' }
-            ].map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => setFilter(key)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  filter === key
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[480px] md:max-w-[600px] lg:max-w-[720px] xl:max-w-[800px] flex-col px-5 py-6 md:px-6 lg:px-8">
+        {/* Header */}
+        <header className="mb-6 flex items-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+          <Link
+            href="/home"
+            className="flex items-center gap-1.5 rounded-full border border-white/30 bg-white/85 px-4 py-2.5 text-sm font-medium text-text-primary shadow-sm backdrop-blur-lg transition-all hover:bg-white/95 hover:-translate-x-0.5"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Home
+          </Link>
+          <h1 className="font-display text-2xl md:text-[2rem] lg:text-[2.2rem] font-semibold text-text-primary">
+            Mood History
+          </h1>
+        </header>
+
+        {/* Filter Tabs */}
+        <div className="mb-6 flex gap-2 flex-wrap animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          {[
+            { key: 'all' as FilterType, label: 'All Entries' },
+            { key: 'week' as FilterType, label: 'This Week' },
+            { key: 'month' as FilterType, label: 'This Month' },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setFilter(key)}
+              className={`rounded-full px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-medium transition-all ${
+                filter === key
+                  ? 'bg-gradient-to-r from-[#f97316] via-[#c026d3] to-[#7c3aed] text-white shadow-lg shadow-[#c026d3]/30'
+                  : 'bg-white/85 border border-white/30 text-text-secondary backdrop-blur-md hover:bg-white/95 hover:text-text-primary'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Stats Summary */}
+        <div className="mb-6 grid grid-cols-3 gap-3 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <div className="rounded-2xl border border-white/30 bg-white/85 p-3.5 md:p-4 text-center shadow-sm backdrop-blur-xl">
+            <div className="font-display text-xl md:text-2xl font-semibold text-text-primary">
+              {stats.total}
+            </div>
+            <div className="mt-1 text-[0.7rem] font-medium uppercase tracking-wide text-text-secondary">
+              Entries
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/30 bg-white/85 p-3.5 md:p-4 text-center shadow-sm backdrop-blur-xl">
+            <div className="font-display text-xl md:text-2xl font-semibold text-text-primary">
+              {stats.avgHappiness}%
+            </div>
+            <div className="mt-1 text-[0.7rem] font-medium uppercase tracking-wide text-text-secondary">
+              Avg Happy
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/30 bg-white/85 p-3.5 md:p-4 text-center shadow-sm backdrop-blur-xl">
+            <div className="font-display text-xl md:text-2xl font-semibold text-text-primary">
+              {stats.avgMotivation}%
+            </div>
+            <div className="mt-1 text-[0.7rem] font-medium uppercase tracking-wide text-text-secondary">
+              Avg Motivated
+            </div>
           </div>
         </div>
 
         {/* Entries List */}
         {filteredEntries.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">📝</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          <div className="py-16 text-center animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            <div className="mb-4 text-5xl">📝</div>
+            <h2 className="mb-2 font-display text-xl md:text-2xl font-semibold text-text-primary">
               {filter === 'all' ? 'No mood entries yet' : `No entries ${filter === 'week' ? 'this week' : 'this month'}`}
-            </h3>
-            <p className="text-gray-600 mb-6">
+            </h2>
+            <p className="mb-6 text-sm md:text-base text-text-secondary">
               {filter === 'all'
-                ? 'Start tracking your moods to see your history here.'
+                ? 'Start tracking your mood to see your history here.'
                 : 'Try changing the filter to see more entries.'
               }
             </p>
             <Link
-              href="/mood"
-              className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+              href="/mood/new"
+              className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-base font-semibold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
+              style={{
+                background: 'linear-gradient(135deg, #f97316 0%, #c026d3 50%, #7c3aed 100%)',
+                boxShadow: '0 4px 20px rgba(192, 38, 211, 0.3)',
+              }}
             >
               Log Your First Mood
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredEntries.map((entry) => (
-              <div key={entry.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="flex flex-col gap-3 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            {filteredEntries.map((entry, index) => {
+              const isExpanded = expandedEntry === entry.id
+              const happiness = Math.round(entry.happiness_level * 100)
+              const motivation = Math.round(entry.motivation_level * 100)
+
+              return (
                 <div
-                  className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => toggleExpanded(entry.id)}
+                  key={entry.id}
+                  className={`rounded-[20px] lg:rounded-3xl border border-white/30 bg-white/85 overflow-hidden shadow-sm backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-lg ${
+                    isExpanded ? 'shadow-lg' : ''
+                  }`}
+                  style={{ animationDelay: `${0.4 + index * 0.05}s` }}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      {/* Mini gradient preview square with dot showing mood position */}
-                      <MiniGradientPreview
+                  <div
+                    className="flex items-center gap-4 p-4 md:p-5 lg:p-6 cursor-pointer"
+                    onClick={() => toggleExpanded(entry.id)}
+                  >
+                    {/* Mini Mood Display - responsive sizing: 56px mobile, 64px tablet, 72px desktop */}
+                    <div className="w-[56px] h-[56px] md:w-16 md:h-16 lg:w-[72px] lg:h-[72px] flex-shrink-0">
+                      <MiniMoodDisplay
                         happiness={entry.happiness_level}
                         motivation={entry.motivation_level}
-                        size={48}
                       />
+                    </div>
 
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {format(new Date(entry.timestamp), 'MMM d, yyyy • h:mm a')}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Happiness: {Math.round(entry.happiness_level * 100)}% •
-                          Motivation: {Math.round(entry.motivation_level * 100)}%
-                        </p>
+                    {/* Entry Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="mb-1 text-base md:text-lg font-semibold text-text-primary">
+                        {format(new Date(entry.timestamp), 'MMM d, yyyy • h:mm a')}
+                      </div>
+                      <div className="text-sm md:text-base text-text-secondary">
+                        Happiness: <span className="font-semibold text-text-primary">{happiness}%</span> • Motivation:{' '}
+                        <span className="font-semibold text-text-primary">{motivation}%</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-500">
-                        {expandedEntry === entry.id ? 'Hide' : 'Show'} details
-                      </span>
+                    {/* Toggle Button */}
+                    <button
+                      className="flex items-center gap-1.5 rounded-lg bg-transparent p-2 text-sm text-text-secondary transition-all hover:bg-black/5 hover:text-text-primary"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleExpanded(entry.id)
+                      }}
+                    >
+                      <span>Details</span>
                       <svg
-                        className={`w-5 h-5 text-gray-400 transform transition-transform ${
-                          expandedEntry === entry.id ? 'rotate-180' : ''
-                        }`}
+                        viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        viewBox="0 0 24 24"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`h-4.5 w-4.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path d="M6 9l6 6 6-6"/>
                       </svg>
-                    </div>
+                    </button>
                   </div>
-                </div>
 
-                {/* Expanded Details */}
-                {expandedEntry === entry.id && (
-                  <div className="px-4 pb-4 border-t border-gray-100">
-                    <div className="pt-4 space-y-3">
+                  {/* Expanded Details */}
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${
+                      isExpanded ? 'max-h-[400px]' : 'max-h-0'
+                    }`}
+                  >
+                    <div className="border-t border-black/5 bg-black/5 p-4 md:p-5 lg:p-6 space-y-3.5">
                       <div>
-                        <h4 className="font-medium text-gray-900 mb-1">What I was focusing on:</h4>
-                        <p className="text-gray-700 bg-gray-50 p-3 rounded-md">{entry.focus}</p>
+                        <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+                          What were you focusing on?
+                        </div>
+                        <div className="text-sm md:text-base leading-relaxed text-text-primary">
+                          {entry.focus}
+                        </div>
                       </div>
 
                       <div>
-                        <h4 className="font-medium text-gray-900 mb-1">What I was telling myself:</h4>
-                        <p className="text-gray-700 bg-gray-50 p-3 rounded-md">{entry.self_talk}</p>
+                        <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+                          What were you telling yourself?
+                        </div>
+                        <div className="text-sm md:text-base leading-relaxed text-text-primary">
+                          {entry.self_talk}
+                        </div>
                       </div>
 
                       <div>
-                        <h4 className="font-medium text-gray-900 mb-1">Physical sensations:</h4>
-                        <p className="text-gray-700 bg-gray-50 p-3 rounded-md">{entry.physical_sensations}</p>
+                        <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+                          Physical sensations
+                        </div>
+                        <div className="text-sm md:text-base leading-relaxed text-text-primary">
+                          {entry.physical_sensations}
+                        </div>
                       </div>
 
                       {entry.emotion_name && (
                         <div>
-                          <h4 className="font-medium text-gray-900 mb-1">Emotion/Mood Name:</h4>
-                          <p className="text-gray-700 bg-gray-50 p-3 rounded-md">{entry.emotion_name}</p>
-                        </div>
-                      )}
-
-                      {entry.notes && (
-                        <div>
-                          <h4 className="font-medium text-gray-900 mb-1">Notes:</h4>
-                          <p className="text-gray-700 bg-gray-50 p-3 rounded-md">{entry.notes}</p>
+                          <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+                            Emotion
+                          </div>
+                          <div className="text-sm md:text-base leading-relaxed text-text-primary capitalize">
+                            {entry.emotion_name}
+                          </div>
                         </div>
                       )}
                     </div>
                   </div>
-                )}
-              </div>
-            ))}
+                </div>
+              )
+            })}
           </div>
         )}
-      </main>
+      </div>
     </div>
   )
 }

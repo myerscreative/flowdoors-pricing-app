@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react'
+import Link from 'next/link'
 
 import { MoodEntry } from '@/types'
 
@@ -25,7 +26,14 @@ const InsightCard: React.FC<InsightCardProps> = React.memo(({ entries }) => {
           Quick Insight
         </h3>
       </div>
-      <p className="text-sm leading-relaxed text-text-primary">{insight}</p>
+      <p className="text-sm leading-relaxed text-text-primary mb-3">{insight}</p>
+      <Link
+        href="/learn#ingredients"
+        className="inline-block text-xs md:text-sm font-medium transition-opacity hover:opacity-80"
+        style={{ color: '#7c3aed' }}
+      >
+        Learn how we detect patterns like this →
+      </Link>
     </div>
   )
 })
