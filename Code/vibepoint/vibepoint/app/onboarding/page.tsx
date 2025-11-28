@@ -1,122 +1,168 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-
-const slides = [
-  {
-    title: "Welcome to Vibepoint",
-    subtitle: "Understand and control your emotional states",
-    content: "Vibepoint helps you discover the patterns between what you focus on, what you tell yourself, and how you feel physically. By tracking these connections, you'll learn to create the moods you want.",
-    visual: "🎨"
-  },
-  {
-    title: "How It Works",
-    subtitle: "Simple, powerful mood tracking",
-    content: "1. Tap anywhere on the mood gradient to capture how you feel\n2. Answer 3 reflective questions about your current experience\n3. Over time, discover what creates your emotional patterns",
-    visual: "🔄"
-  },
-  {
-    title: "Your Privacy Matters",
-    subtitle: "Safe space for honest self-reflection",
-    content: "Your mood data stays yours. We use end-to-end encryption and never share your personal insights with anyone. This is your private journey of self-discovery.",
-    visual: "🔒"
-  }
-]
 
 export default function OnboardingPage() {
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [touchStart, setTouchStart] = useState(0)
+  const [touchEnd, setTouchEnd] = useState(0)
   const router = useRouter()
 
-  const nextSlide = () => {
-    if (currentSlide < slides.length - 1) {
-      setCurrentSlide(currentSlide + 1)
-    } else {
-      // Complete onboarding
-      completeOnboarding()
-    }
-  }
-
-  const prevSlide = () => {
-    if (currentSlide > 0) {
-      setCurrentSlide(currentSlide - 1)
-    }
-  }
-
-  const completeOnboarding = async () => {
-    try {
-      // Mark onboarding as complete (you could store this in user profile)
+  const goNext = useCallback(() => {
+    if (currentSlide === 2) {
+      // Last slide - mark onboarding as complete and go to home
       localStorage.setItem('onboardingCompleted', 'true')
       router.push('/home')
-    } catch (error) {
-      console.error('Failed to complete onboarding:', error)
-      router.push('/home')
+    } else {
+      setCurrentSlide(prev => prev + 1)
+    }
+  }, [currentSlide, router])
+
+  const goBack = useCallback(() => {
+    if (currentSlide > 0) {
+      setCurrentSlide(prev => prev - 1)
+    }
+  }, [currentSlide])
+
+  const skipTutorial = useCallback(() => {
+    localStorage.setItem('onboardingCompleted', 'true')
+    router.push('/home')
+  }, [router])
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' || e.key === 'Enter') {
+        goNext()
+      } else if (e.key === 'ArrowLeft') {
+        goBack()
+      } else if (e.key === 'Escape') {
+        skipTutorial()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [goNext, goBack, skipTutorial])
+
+  // Swipe gesture handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.touches[0].clientX)
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+    
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > 50
+    const isRightSwipe = distance < -50
+
+    if (isLeftSwipe) {
+      goNext()
+    }
+    if (isRightSwipe) {
+      goBack()
     }
   }
 
-  const currentSlideData = slides[currentSlide]
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center py-8 px-4">
-      <div className="max-w-md w-full">
-        {/* Progress Indicator */}
-        <div className="flex justify-center mb-8">
-          {slides.map((_, index) => (
-            <div
-              key={index}
-              className={`w-3 h-3 rounded-full mx-1 transition-colors ${
-                index === currentSlide ? 'bg-indigo-600' : 'bg-gray-300'
-              }`}
-            />
-          ))}
+    <div className="onboarding-page">
+      {/* Animated background orbs */}
+      <div className="bg-orbs">
+        <div className="orb orb-1"></div>
+        <div className="orb orb-2"></div>
+        <div className="orb orb-3"></div>
+      </div>
+
+      {/* Main container */}
+      <div className="onboarding-container">
+        {/* Progress indicators */}
+        <div className="progress-dots">
+          <span className={`dot ${currentSlide === 0 ? 'active' : ''}`}></span>
+          <span className={`dot ${currentSlide === 1 ? 'active' : ''}`}></span>
+          <span className={`dot ${currentSlide === 2 ? 'active' : ''}`}></span>
         </div>
 
-        {/* Slide Content */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-          <div className="text-6xl mb-6">{currentSlideData.visual}</div>
+        {/* Content card */}
+        <div 
+          className="onboarding-card"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Slide 1: Welcome */}
+          {currentSlide === 0 && (
+            <div className="slide" key="slide-1">
+              <div className="slide-icon">🎨</div>
+              <h1 className="slide-title">Welcome to Vibepoint</h1>
+              <p className="slide-subtitle">Understand and control your emotional states</p>
+              <p className="slide-body">
+                Vibepoint helps you discover the patterns between what you focus on, 
+                what you tell yourself, and how you feel physically. By tracking these 
+                connections, you'll learn to create the moods you want.
+              </p>
+            </div>
+          )}
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {currentSlideData.title}
-          </h1>
+          {/* Slide 2: How It Works */}
+          {currentSlide === 1 && (
+            <div className="slide" key="slide-2">
+              <div className="slide-icon">🔄</div>
+              <h1 className="slide-title">How It Works</h1>
+              <p className="slide-subtitle">Simple, powerful mood tracking</p>
+              <div className="slide-steps">
+                <div className="step">
+                  <span className="step-number">1</span>
+                  <p>Tap anywhere on the mood gradient to capture how you feel</p>
+                </div>
+                <div className="step">
+                  <span className="step-number">2</span>
+                  <p>Answer 3 reflective questions about your current experience</p>
+                </div>
+                <div className="step">
+                  <span className="step-number">3</span>
+                  <p>Over time, discover what creates your emotional patterns</p>
+                </div>
+              </div>
+            </div>
+          )}
 
-          <h2 className="text-lg text-indigo-600 font-medium mb-4">
-            {currentSlideData.subtitle}
-          </h2>
+          {/* Slide 3: Privacy */}
+          {currentSlide === 2 && (
+            <div className="slide" key="slide-3">
+              <div className="slide-icon">🔒</div>
+              <h1 className="slide-title">Your Privacy Matters</h1>
+              <p className="slide-subtitle">Safe space for honest self-reflection</p>
+              <p className="slide-body">
+                Your mood data stays yours. We use end-to-end encryption and never 
+                share your personal insights with anyone. This is your private journey 
+                of self-discovery.
+              </p>
+            </div>
+          )}
 
-          <p className="text-gray-600 leading-relaxed mb-8">
-            {currentSlideData.content}
-          </p>
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between items-center">
-            <button
-              onClick={prevSlide}
-              disabled={currentSlide === 0}
-              className="px-6 py-3 text-gray-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:text-gray-900 transition-colors"
-            >
-              Back
-            </button>
-
-            <button
-              onClick={nextSlide}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
-            >
-              {currentSlide === slides.length - 1 ? 'Get Started' : 'Next'}
+          {/* Navigation */}
+          <div className="slide-navigation">
+            {currentSlide > 0 && (
+              <button className="nav-btn nav-btn-back" onClick={goBack}>
+                Back
+              </button>
+            )}
+            <button className="nav-btn nav-btn-next" onClick={goNext}>
+              {currentSlide === 2 ? 'Get Started' : 'Next'}
             </button>
           </div>
         </div>
 
-        {/* Skip Option */}
-        <div className="text-center mt-6">
-          <Link
-            href="/home"
-            className="text-gray-500 hover:text-gray-700 text-sm"
-            onClick={() => localStorage.setItem('onboardingCompleted', 'true')}
-          >
-            Skip tutorial
-          </Link>
-        </div>
+        {/* Skip link */}
+        <button className="skip-tutorial" onClick={skipTutorial}>
+          Skip tutorial
+        </button>
       </div>
     </div>
   )

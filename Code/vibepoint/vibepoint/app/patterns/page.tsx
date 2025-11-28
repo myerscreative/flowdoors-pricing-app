@@ -7,13 +7,25 @@ import { supabase } from '@/lib/supabase'
 import { MoodEntry, Pattern, PatternInsight } from '@/types'
 import { analyzePatterns, generateInsights } from '@/lib/pattern-analysis'
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { GradientBackground } from '@/components/GradientBackground'
+import { getMoodColor } from '@/components/dashboard/utils/dashboardUtils'
+
+type TabType = 'map' | 'insights' | 'focus' | 'self-talk' | 'physical'
+
+const tabs = [
+  { id: 'map' as TabType, label: 'Mood Map', icon: '🗺️' },
+  { id: 'insights' as TabType, label: 'AI Insights', icon: '🤖' },
+  { id: 'focus' as TabType, label: 'Focus', icon: '🎯' },
+  { id: 'self-talk' as TabType, label: 'Self-Talk', icon: '💭' },
+  { id: 'physical' as TabType, label: 'Physical', icon: '💪' }
+]
 
 export default function PatternsPage() {
   const [entries, setEntries] = useState<MoodEntry[]>([])
   const [patterns, setPatterns] = useState<Pattern[]>([])
   const [insights, setInsights] = useState<PatternInsight[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'map' | 'insights' | 'focus' | 'self-talk' | 'physical'>('map')
+  const [activeTab, setActiveTab] = useState<TabType>('map')
   const router = useRouter()
 
   useEffect(() => {
@@ -93,311 +105,396 @@ export default function PatternsPage() {
       .slice(0, 5)
   }
 
-  const getMoodColor = (happiness: number, motivation: number) => {
-    const hue = motivation * 2.4 // 0-240 degrees
-    const saturation = 70
-    const lightness = 30 + (happiness * 40)
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`
+  const getPatternColor = (happiness: number, motivation: number) => {
+    return getMoodColor(happiness, motivation)
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Analyzing your patterns...</p>
+      <div className="relative min-h-screen flex items-center justify-center text-text-primary">
+        <GradientBackground />
+        <div className="relative z-10 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#c026d3] mx-auto mb-4"></div>
+          <p className="text-text-secondary">Analyzing your patterns...</p>
         </div>
       </div>
     )
   }
+
+  const entryCount = entries.length
+  const entriesNeeded = 10 - entryCount
 
   if (entries.length < 10) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm border-b pt-2.5">
-          <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <Link href="/home" className="text-gray-600 hover:text-gray-900">
-                ← Back to Home
-              </Link>
-              <h1 className="text-2xl font-bold text-gray-900">Your Patterns</h1>
-            </div>
-          </div>
-        </header>
+      <div className="relative min-h-screen text-text-primary">
+        <GradientBackground />
+        
+        <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[480px] md:max-w-[600px] lg:max-w-[720px] xl:max-w-[800px] flex-col px-5 py-6 md:px-6 lg:px-8">
+          {/* Header */}
+          <header className="patterns-header mb-8">
+            <button 
+              className="back-button"
+              onClick={() => router.push('/home')}
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6"/>
+              </svg>
+              <span>Back to Home</span>
+            </button>
+            <h1 className="patterns-title">Your Patterns</h1>
+            <p className="patterns-subtitle">Discover what creates your moods</p>
+          </header>
 
-        <main className="max-w-4xl mx-auto px-4 py-16 text-center">
-          <div className="text-6xl mb-4">🔒</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Patterns Unlock at 10 Entries
-          </h2>
-          <p className="text-gray-600 mb-6">
-            You&apos;ve logged {entries.length} mood entries. Keep tracking to discover your patterns!
-          </p>
-          <Link
-            href="/mood"
-            className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
-          >
-            Log Another Mood
-          </Link>
-        </main>
+          {/* Unlock Card */}
+          <div className="unlock-patterns-card">
+            <div className="unlock-icon">🔒</div>
+            <h3>Unlock Pattern Insights</h3>
+            <p className="unlock-message">
+              Log <strong>{entriesNeeded} more {entriesNeeded === 1 ? 'entry' : 'entries'}</strong> to unlock pattern analysis
+            </p>
+            <div className="unlock-progress-bar">
+              <div 
+                className="unlock-progress-fill" 
+                style={{ width: `${(entryCount / 10) * 100}%` }}
+              />
+            </div>
+            <p className="unlock-count">{entryCount} of 10 entries</p>
+            <button 
+              className="unlock-cta" 
+              onClick={() => router.push('/mood/new')}
+            >
+              Log Your Mood
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b pt-2.5">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Link href="/home" className="text-gray-600 hover:text-gray-900">
-              ← Back to Home
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900">Your Patterns</h1>
-          </div>
-        </div>
-      </header>
+  const avgHappiness = entries.length > 0 
+    ? Math.round(entries.reduce((sum, e) => sum + e.happiness_level, 0) / entries.length * 100)
+    : 0
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+  return (
+    <div className="relative min-h-screen text-text-primary">
+      <GradientBackground />
+      
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[480px] md:max-w-[600px] lg:max-w-[720px] xl:max-w-[1200px] flex-col px-5 py-6 md:px-6 lg:px-8">
+        {/* Header */}
+        <header className="patterns-header mb-8">
+          <button 
+            className="back-button"
+            onClick={() => router.push('/home')}
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+            <span>Back to Home</span>
+          </button>
+          <h1 className="patterns-title">Your Patterns</h1>
+          <p className="patterns-subtitle">Discover what creates your moods</p>
+        </header>
+
         {/* Tab Navigation */}
-        <div className="mb-8">
-          <nav className="flex space-x-1 bg-white p-1 rounded-lg shadow-sm">
-            {[
-              { key: 'map', label: 'Mood Map' },
-              { key: 'insights', label: 'AI Insights' },
-              { key: 'focus', label: 'Focus Areas' },
-              { key: 'self-talk', label: 'Self-Talk' },
-              { key: 'physical', label: 'Physical State' }
-            ].map(({ key, label }) => (
+        <div className="tabs-container mb-8">
+          <div className="tabs-nav">
+            {tabs.map(tab => (
               <button
-                key={key}
-                onClick={() => setActiveTab(key as typeof activeTab)}
-                className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                  activeTab === key
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
+                key={tab.id}
+                className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
               >
-                {label}
+                <span className="tab-icon">{tab.icon}</span>
+                <span className="tab-label">{tab.label}</span>
               </button>
             ))}
-          </nav>
+          </div>
         </div>
 
-        {/* Mood Map Tab */}
-        {activeTab === 'map' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Mood Map</h2>
-            <p className="text-gray-600 mb-6">
-              Each dot represents a mood entry. The color shows the intensity of your emotional state.
-            </p>
-
-            <div className="h-96">
-              <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart
-                  data={getMoodData()}
-                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    type="number"
-                    dataKey="x"
-                    name="Motivation"
-                    domain={[0, 100]}
-                    label={{ value: 'Motivation →', position: 'insideBottom', offset: -10 }}
-                  />
-                  <YAxis
-                    type="number"
-                    dataKey="y"
-                    name="Happiness"
-                    domain={[0, 100]}
-                    label={{ value: 'Happiness →', angle: -90, position: 'insideLeft' }}
-                  />
-                  <Tooltip
-                    formatter={(value: number, name: string) => [
-                      `${Math.round(value)}%`,
-                      name === 'x' ? 'Motivation' : 'Happiness'
-                    ]}
-                    labelFormatter={(label, payload) => {
-                      if (payload && payload[0]) {
-                        const data = payload[0].payload as { focus: string }
-                        return `Focus: ${data.focus}`
-                      }
-                      return label
-                    }}
-                  />
-                  <Scatter dataKey="y">
-                    {getMoodData().map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={getMoodColor(entry.y / 100, entry.x / 100)}
-                      />
-                    ))}
-                  </Scatter>
-                </ScatterChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-4 text-sm text-gray-600">
-              <div>📊 {entries.length} total entries</div>
-              <div>🎯 Average happiness: {Math.round(entries.reduce((sum, e) => sum + e.happiness_level, 0) / entries.length * 100)}%</div>
-            </div>
-          </div>
-        )}
-
-        {/* AI Insights Tab */}
-        {activeTab === 'insights' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">AI-Generated Insights</h2>
-              <p className="text-gray-600 mb-6">
-                Based on your {entries.length} mood entries, here are the patterns we&apos;ve discovered:
+        {/* Tab Content */}
+        <div className="tab-content">
+          {/* Mood Map Tab */}
+          {activeTab === 'map' && (
+            <div className="content-card">
+              <h3 className="content-card-title">Mood Map</h3>
+              <p className="content-card-subtitle">
+                {entries.length} entries · {avgHappiness}% avg happiness
               </p>
-            </div>
 
-            {insights.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-                <p className="text-gray-600">Analyzing your data... Insights will appear here soon!</p>
+              <div className="mood-chart-container">
+                <ResponsiveContainer width="100%" height={400}>
+                  <ScatterChart
+                    data={getMoodData()}
+                    margin={{ top: 20, right: 20, bottom: 40, left: 40 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
+                    <XAxis
+                      type="number"
+                      dataKey="x"
+                      name="Motivation"
+                      domain={[0, 100]}
+                      stroke="var(--text-secondary)"
+                      style={{ fontSize: '0.85rem' }}
+                      label={{ 
+                        value: 'Motivation →', 
+                        position: 'insideBottom', 
+                        offset: -10,
+                        style: { fill: 'var(--text-secondary)', fontSize: '0.85rem' }
+                      }}
+                    />
+                    <YAxis
+                      type="number"
+                      dataKey="y"
+                      name="Happiness"
+                      domain={[0, 100]}
+                      stroke="var(--text-secondary)"
+                      style={{ fontSize: '0.85rem' }}
+                      label={{ 
+                        value: 'Happiness →', 
+                        angle: -90, 
+                        position: 'insideLeft',
+                        style: { fill: 'var(--text-secondary)', fontSize: '0.85rem' }
+                      }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: 'rgba(255, 255, 255, 0.95)',
+                        border: '1px solid rgba(0,0,0,0.1)',
+                        borderRadius: '12px',
+                        padding: '12px',
+                        fontFamily: 'Outfit, sans-serif',
+                        fontSize: '0.9rem'
+                      }}
+                      formatter={(value: number, name: string) => [
+                        `${Math.round(value)}%`,
+                        name === 'x' ? 'Motivation' : 'Happiness'
+                      ]}
+                      labelFormatter={(label, payload) => {
+                        if (payload && payload[0]) {
+                          const data = payload[0].payload as { focus: string }
+                          return `Focus: ${data.focus}`
+                        }
+                        return label
+                      }}
+                    />
+                    <Scatter dataKey="y" name="Moods">
+                      {getMoodData().map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={getMoodColor(entry.y / 100, entry.x / 100)}
+                        />
+                      ))}
+                    </Scatter>
+                  </ScatterChart>
+                </ResponsiveContainer>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {insights.map((insight, index) => (
-                  <div key={index} className="bg-white rounded-lg shadow-sm p-6">
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0">
-                        {insight.type === 'correlation' && '🔗'}
-                        {insight.type === 'trend' && '📈'}
-                        {insight.type === 'suggestion' && '💡'}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-2">{insight.title}</h3>
-                        <p className="text-gray-700 mb-3">{insight.description}</p>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <span>Confidence: {Math.round(insight.confidence * 100)}%</span>
+
+              <div className="mood-map-legend">
+                <div className="legend-item">
+                  <div className="legend-dot" style={{ background: 'rgb(180, 220, 255)' }}></div>
+                  <span>Happy + Unmotivated</span>
+                </div>
+                <div className="legend-item">
+                  <div className="legend-dot" style={{ background: 'rgb(255, 240, 50)' }}></div>
+                  <span>Happy + Motivated</span>
+                </div>
+                <div className="legend-item">
+                  <div className="legend-dot" style={{ background: 'rgb(40, 35, 45)' }}></div>
+                  <span>Unhappy + Unmotivated</span>
+                </div>
+                <div className="legend-item">
+                  <div className="legend-dot" style={{ background: 'rgb(255, 20, 0)' }}></div>
+                  <span>Unhappy + Motivated</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* AI Insights Tab */}
+          {activeTab === 'insights' && (
+            <div className="content-card">
+              <h3 className="content-card-title">AI Insights</h3>
+              <p className="content-card-subtitle">
+                Patterns discovered from your mood data
+              </p>
+
+              {insights.length === 0 ? (
+                <div className="empty-state">
+                  <span className="empty-icon">🤖</span>
+                  <p>Analyzing your data... Insights will appear here soon!</p>
+                </div>
+              ) : (
+                <div className="insights-grid">
+                  {insights.map((insight, index) => {
+                    const icon = insight.type === 'correlation' ? '🔗' : insight.type === 'trend' ? '📈' : '💡'
+                    const confidencePercent = Math.round(insight.confidence * 100)
+                    return (
+                      <div key={index} className="insight-card">
+                        <div className="insight-header">
+                          <span className="insight-icon">{icon}</span>
+                          <span className="insight-type">{insight.type}</span>
+                        </div>
+                        <h4 className="insight-title">{insight.title}</h4>
+                        <p className="insight-description">{insight.description}</p>
+                        <div className="insight-confidence">
+                          <div className="confidence-bar">
+                            <div 
+                              className="confidence-fill" 
+                              style={{ width: `${confidencePercent}%` }}
+                            />
+                          </div>
+                          <span className="confidence-text">{confidencePercent}% confidence</span>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Focus Areas Tab */}
-        {activeTab === 'focus' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Top Focus Areas</h2>
-            <p className="text-gray-600 mb-6">
-              What you focus on most frequently and how it affects your mood:
-            </p>
-
-            <div className="space-y-4">
-              {getTopPatterns('focus').map((pattern, index) => (
-                <div key={pattern.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium text-gray-900">#{index + 1} Most Common Focus</h3>
-                    <span className="text-sm text-gray-500">{pattern.occurrence_count} times</span>
-                  </div>
-                  <p className="text-gray-700 mb-3">&ldquo;{pattern.trigger_text}&rdquo;</p>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">Avg Happiness:</span>
-                      <span className="ml-2 font-medium">{Math.round(pattern.avg_happiness * 100)}%</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Avg Motivation:</span>
-                      <span className="ml-2 font-medium">{Math.round(pattern.avg_motivation * 100)}%</span>
-                    </div>
-                  </div>
+                    )
+                  })}
                 </div>
-              ))}
-
-              {getTopPatterns('focus').length === 0 && (
-                <p className="text-gray-600 text-center py-8">
-                  Not enough data yet. Keep logging to see focus patterns!
-                </p>
               )}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Self-Talk Tab */}
-        {activeTab === 'self-talk' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Self-Talk Patterns</h2>
-            <p className="text-gray-600 mb-6">
-              The internal dialogue that shapes your emotional experience:
-            </p>
+          {/* Focus Areas Tab */}
+          {activeTab === 'focus' && (
+            <div className="content-card">
+              <h3 className="content-card-title">Top Focus Areas</h3>
+              <p className="content-card-subtitle">
+                What you focus on most often
+              </p>
 
-            <div className="space-y-4">
-              {getTopPatterns('self_talk').map((pattern, index) => (
-                <div key={pattern.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium text-gray-900">#{index + 1} Common Self-Talk</h3>
-                    <span className="text-sm text-gray-500">{pattern.occurrence_count} times</span>
-                  </div>
-                  <p className="text-gray-700 mb-3">&ldquo;{pattern.trigger_text}&rdquo;</p>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">Avg Happiness:</span>
-                      <span className="ml-2 font-medium">{Math.round(pattern.avg_happiness * 100)}%</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Avg Motivation:</span>
-                      <span className="ml-2 font-medium">{Math.round(pattern.avg_motivation * 100)}%</span>
-                    </div>
-                  </div>
+              {getTopPatterns('focus').length === 0 ? (
+                <div className="empty-state">
+                  <span className="empty-icon">📊</span>
+                  <p>No patterns detected yet. Keep logging to discover trends!</p>
                 </div>
-              ))}
-
-              {getTopPatterns('self_talk').length === 0 && (
-                <p className="text-gray-600 text-center py-8">
-                  Not enough data yet. Keep logging to see self-talk patterns!
-                </p>
+              ) : (
+                <div className="patterns-list">
+                  {getTopPatterns('focus').map((pattern, index) => (
+                    <div key={pattern.id} className="pattern-item">
+                      <div className="pattern-rank">{index + 1}</div>
+                      <div className="pattern-content">
+                        <h4 className="pattern-text">&ldquo;{pattern.trigger_text}&rdquo;</h4>
+                        <div className="pattern-stats">
+                          <span className="pattern-count">
+                            {pattern.occurrence_count} {pattern.occurrence_count === 1 ? 'time' : 'times'}
+                          </span>
+                          <span className="pattern-separator">•</span>
+                          <span className="pattern-mood">
+                            {Math.round(pattern.avg_happiness * 100)}% happy
+                          </span>
+                          <span className="pattern-separator">•</span>
+                          <span className="pattern-motivation">
+                            {Math.round(pattern.avg_motivation * 100)}% motivated
+                          </span>
+                        </div>
+                      </div>
+                      <div 
+                        className="pattern-indicator" 
+                        style={{ 
+                          background: getPatternColor(pattern.avg_happiness, pattern.avg_motivation) 
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Physical State Tab */}
-        {activeTab === 'physical' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Physical State Patterns</h2>
-            <p className="text-gray-600 mb-6">
-              How your body sensations correlate with your emotional state:
-            </p>
+          {/* Self-Talk Tab */}
+          {activeTab === 'self-talk' && (
+            <div className="content-card">
+              <h3 className="content-card-title">Self-Talk Patterns</h3>
+              <p className="content-card-subtitle">
+                The internal dialogue that shapes your emotional experience
+              </p>
 
-            <div className="space-y-4">
-              {getTopPatterns('physical').map((pattern, index) => (
-                <div key={pattern.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium text-gray-900">#{index + 1} Common Sensation</h3>
-                    <span className="text-sm text-gray-500">{pattern.occurrence_count} times</span>
-                  </div>
-                  <p className="text-gray-700 mb-3">&ldquo;{pattern.trigger_text}&rdquo;</p>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">Avg Happiness:</span>
-                      <span className="ml-2 font-medium">{Math.round(pattern.avg_happiness * 100)}%</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Avg Motivation:</span>
-                      <span className="ml-2 font-medium">{Math.round(pattern.avg_motivation * 100)}%</span>
-                    </div>
-                  </div>
+              {getTopPatterns('self_talk').length === 0 ? (
+                <div className="empty-state">
+                  <span className="empty-icon">📊</span>
+                  <p>No patterns detected yet. Keep logging to discover trends!</p>
                 </div>
-              ))}
-
-              {getTopPatterns('physical').length === 0 && (
-                <p className="text-gray-600 text-center py-8">
-                  Not enough data yet. Keep logging to see physical state patterns!
-                </p>
+              ) : (
+                <div className="patterns-list">
+                  {getTopPatterns('self_talk').map((pattern, index) => (
+                    <div key={pattern.id} className="pattern-item">
+                      <div className="pattern-rank">{index + 1}</div>
+                      <div className="pattern-content">
+                        <h4 className="pattern-text">&ldquo;{pattern.trigger_text}&rdquo;</h4>
+                        <div className="pattern-stats">
+                          <span className="pattern-count">
+                            {pattern.occurrence_count} {pattern.occurrence_count === 1 ? 'time' : 'times'}
+                          </span>
+                          <span className="pattern-separator">•</span>
+                          <span className="pattern-mood">
+                            {Math.round(pattern.avg_happiness * 100)}% happy
+                          </span>
+                          <span className="pattern-separator">•</span>
+                          <span className="pattern-motivation">
+                            {Math.round(pattern.avg_motivation * 100)}% motivated
+                          </span>
+                        </div>
+                      </div>
+                      <div 
+                        className="pattern-indicator" 
+                        style={{ 
+                          background: getPatternColor(pattern.avg_happiness, pattern.avg_motivation) 
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-          </div>
-        )}
-      </main>
+          )}
+
+          {/* Physical State Tab */}
+          {activeTab === 'physical' && (
+            <div className="content-card">
+              <h3 className="content-card-title">Physical State Patterns</h3>
+              <p className="content-card-subtitle">
+                How your body sensations correlate with your emotional state
+              </p>
+
+              {getTopPatterns('physical').length === 0 ? (
+                <div className="empty-state">
+                  <span className="empty-icon">📊</span>
+                  <p>No patterns detected yet. Keep logging to discover trends!</p>
+                </div>
+              ) : (
+                <div className="patterns-list">
+                  {getTopPatterns('physical').map((pattern, index) => (
+                    <div key={pattern.id} className="pattern-item">
+                      <div className="pattern-rank">{index + 1}</div>
+                      <div className="pattern-content">
+                        <h4 className="pattern-text">&ldquo;{pattern.trigger_text}&rdquo;</h4>
+                        <div className="pattern-stats">
+                          <span className="pattern-count">
+                            {pattern.occurrence_count} {pattern.occurrence_count === 1 ? 'time' : 'times'}
+                          </span>
+                          <span className="pattern-separator">•</span>
+                          <span className="pattern-mood">
+                            {Math.round(pattern.avg_happiness * 100)}% happy
+                          </span>
+                          <span className="pattern-separator">•</span>
+                          <span className="pattern-motivation">
+                            {Math.round(pattern.avg_motivation * 100)}% motivated
+                          </span>
+                        </div>
+                      </div>
+                      <div 
+                        className="pattern-indicator" 
+                        style={{ 
+                          background: getPatternColor(pattern.avg_happiness, pattern.avg_motivation) 
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

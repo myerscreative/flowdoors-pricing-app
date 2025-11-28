@@ -14,7 +14,7 @@ const StreakCard: React.FC<StreakCardProps> = React.memo(({ entries }) => {
   return (
     <div 
       className="relative overflow-hidden rounded-3xl p-6 text-white shadow-xl"
-      style={{ background: 'linear-gradient(135deg, #f97316 0%, #c026d3 50%, #7c3aed 100%)' }}
+      style={{ background: 'linear-gradient(45deg, #7c3aed 0%, #c026d3 50%, #f97316 100%)' }}
     >
       <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-white/15 blur-3xl" />
       <div className="relative flex items-center gap-4">
