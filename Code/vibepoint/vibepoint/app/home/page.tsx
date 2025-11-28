@@ -2,15 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { startOfWeek, isWithinInterval } from 'date-fns'
 
 import { supabase, handleAuthError } from '@/lib/supabase'
 import { MoodEntry, MoodStats } from '@/types'
 import Logo from '@/components/Logo'
 import { GradientBackground } from '@/components/GradientBackground'
-import StreakCard from '@/components/dashboard/streak/StreakCard'
 import TrendChart from '@/components/dashboard/charts/TrendChart'
+import { computeStreak } from '@/components/dashboard/utils/dashboardUtils'
 import MoodSnapshot from '@/components/dashboard/snapshot/MoodSnapshot'
 import InsightCard from '@/components/dashboard/insights/InsightCard'
 import UnlockMessage from '@/components/dashboard/unlock/UnlockMessage'
@@ -22,10 +21,6 @@ export default function HomePage() {
   const [entries, setEntries] = useState<MoodEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loginLoading, setLoginLoading] = useState(false)
-  const [loginError, setLoginError] = useState('')
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false)
   const [showWelcomeCard, setShowWelcomeCard] = useState(false)
   const router = useRouter()
@@ -33,6 +28,13 @@ export default function HomePage() {
   useEffect(() => {
     checkAuthAndLoadStats()
   }, [])
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/auth/login')
+    }
+  }, [loading, user, router])
 
   useEffect(() => {
     // Check if welcome card should be shown (client-side only)
@@ -56,6 +58,16 @@ export default function HomePage() {
         setUser(null)
         return
       }
+      
+      // Check if onboarding is complete (client-side only)
+      if (typeof window !== 'undefined') {
+        const onboardingCompleted = localStorage.getItem('onboardingCompleted')
+        if (!onboardingCompleted) {
+          router.push('/onboarding')
+          return
+        }
+      }
+      
       setUser(currentUser)
       await loadStats(currentUser.id)
     } catch (error) {
@@ -66,62 +78,6 @@ export default function HomePage() {
     }
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoginLoading(true)
-    setLoginError('')
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      })
-
-      if (error) {
-        console.error('Login error:', error)
-        setLoginError(handleAuthError(error))
-      } else {
-        // Refresh the session to ensure it's properly set
-        await supabase.auth.getSession()
-        await new Promise(resolve => setTimeout(resolve, 100))
-        // Reload the page data
-        await checkAuthAndLoadStats()
-        router.refresh()
-      }
-    } catch (err: any) {
-      console.error('Login exception:', err)
-      setLoginError(handleAuthError(err))
-    } finally {
-      setLoginLoading(false)
-    }
-  }
-
-  const handleDevLogin = async () => {
-    setLoginLoading(true)
-    setLoginError('')
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: 'dev@vibepoint.local',
-        password: 'dev123456',
-      })
-
-      if (error) {
-        console.error('Dev login error:', error)
-        setLoginError(handleAuthError(error))
-      } else {
-        await supabase.auth.getSession()
-        await new Promise(resolve => setTimeout(resolve, 100))
-        await checkAuthAndLoadStats()
-        router.refresh()
-      }
-    } catch (err: any) {
-      console.error('Dev login exception:', err)
-      setLoginError(handleAuthError(err))
-    } finally {
-      setLoginLoading(false)
-    }
-  }
 
   const loadStats = async (userId: string) => {
     try {
@@ -198,101 +154,14 @@ export default function HomePage() {
     )
   }
 
-  // Show login form if not authenticated
+  // Show loading or redirect to login if not authenticated
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm border-b pt-2.5">
-          <div className="max-w-4xl mx-auto px-4 py-4 flex items-center">
-            <div className="flex-shrink-0">
-              <Logo variant="full" href="/home" size="md" />
-            </div>
-          </div>
-        </header>
-
-        <main className="max-w-md mx-auto px-4 py-12">
-          <div className="bg-white rounded-lg shadow-sm p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
-              Sign in to VibePoint
-            </h2>
-            <p className="text-gray-600 text-center mb-8">
-              Track your mood and discover your patterns
-            </p>
-
-            <form onSubmit={handleLogin} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email address
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-
-              {loginError && (
-                <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-md">
-                  {loginError}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loginLoading}
-                className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 font-medium"
-              >
-                {loginLoading ? 'Signing in...' : 'Sign in'}
-              </button>
-
-              <div className="text-center">
-                <Link
-                  href="/auth/signup"
-                  className="text-sm text-indigo-600 hover:text-indigo-500"
-                >
-                  Don&apos;t have an account? Sign up
-                </Link>
-              </div>
-            </form>
-
-            {/* Dev Sign-In Button */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <button
-                  onClick={handleDevLogin}
-                  disabled={loginLoading}
-                  className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 text-sm font-medium"
-                >
-                  {loginLoading ? 'Signing in...' : '🚀 Dev Sign-In (dev@vibepoint.local)'}
-                </button>
-                <p className="mt-2 text-xs text-center text-gray-500">
-                  Development only
-                </p>
-              </div>
-            )}
-          </div>
-        </main>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting to login...</p>
+        </div>
       </div>
     )
   }
@@ -362,7 +231,7 @@ export default function HomePage() {
                     onClick={() => router.push('/learn')}
                     className="px-6 py-3 rounded-2xl font-semibold text-base text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
                     style={{
-                      background: 'linear-gradient(135deg, #c026d3, #7c3aed)'
+                      background: 'linear-gradient(45deg, #7c3aed, #c026d3)'
                     }}
                   >
                     Read the Guide
@@ -390,7 +259,7 @@ export default function HomePage() {
             onClick={() => router.push('/mood/new')}
             className="mb-6 w-full rounded-3xl px-8 py-5 lg:py-6 text-lg lg:text-xl font-semibold text-white shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl animate-fade-in-up"
             style={{ 
-              background: 'linear-gradient(135deg, #f97316 0%, #c026d3 50%, #7c3aed 100%)',
+              background: 'linear-gradient(45deg, #7c3aed 0%, #c026d3 50%, #f97316 100%)',
               boxShadow: '0 8px 30px rgba(192, 38, 211, 0.3)',
               animationDelay: '0.2s'
             }}
@@ -493,55 +362,104 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* Stats Grid */}
+          {/* Stats Grid - 4 Column Layout */}
           {stats && (
-            <div className="mb-6 grid grid-cols-3 gap-3 md:gap-4 lg:gap-5 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              <div className="rounded-3xl border border-white/30 bg-white/85 p-4 md:p-5 lg:p-6 text-center shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-md">
-                <div className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold mb-2" style={{
-                  background: 'linear-gradient(135deg, #f97316, #c026d3)',
+            <div className="stats-grid-four mb-6 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+              {/* Card 1: Current Streak */}
+              <div className="stat-card rounded-[20px] border border-white/30 bg-white/85 p-4 md:p-5 lg:p-6 text-center shadow-sm backdrop-blur-xl">
+                <div className="stat-icon text-2xl md:text-3xl mb-2">🔥</div>
+                <div className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold mb-1" style={{
+                  background: 'linear-gradient(45deg, #c026d3, #f97316)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
+                  {computeStreak(entries)}
+                </div>
+                <div className="text-xs md:text-sm font-semibold uppercase tracking-wide text-text-primary mb-0.5">
+                  {computeStreak(entries) === 1 ? 'day' : 'days'}
+                </div>
+                <div className="text-[0.65rem] md:text-[0.7rem] font-medium text-text-secondary">
+                  Current Streak
+                </div>
+              </div>
+
+              {/* Card 2: This Week */}
+              <button
+                type="button"
+                onClick={() => router.push('/history?filter=week')}
+                className="stat-card stat-card-clickable rounded-[20px] border border-white/30 bg-white/85 p-4 md:p-5 lg:p-6 text-center shadow-sm backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-lg hover:border-[#c026d3]/30 focus:outline-none focus:ring-2 focus:ring-[#c026d3]/20 focus:ring-offset-2 relative overflow-hidden"
+                aria-label="View entries from this week - Navigate to history"
+              >
+                <div className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold mb-2 relative z-10" style={{
+                  background: 'linear-gradient(45deg, #c026d3, #f97316)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text'
                 }}>
                   {stats.entries_this_week}
                 </div>
-                <div className="text-xs md:text-sm font-semibold uppercase tracking-wide text-text-secondary">
+                <div className="text-xs md:text-sm font-semibold uppercase tracking-wide text-text-secondary relative z-10">
                   This Week
                 </div>
-              </div>
-              <div className="rounded-3xl border border-white/30 bg-white/85 p-4 md:p-5 lg:p-6 text-center shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-md">
-                <div className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold mb-2" style={{
-                  background: 'linear-gradient(135deg, #f97316, #c026d3)',
+                <div className="stat-card-hint absolute bottom-3 right-3 text-[#c026d3] opacity-0 transition-all duration-300 transform translate-x-[-5px] z-10">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                  </svg>
+                </div>
+              </button>
+
+              {/* Card 3: Total */}
+              <button
+                type="button"
+                onClick={() => router.push('/history')}
+                className="stat-card stat-card-clickable rounded-[20px] border border-white/30 bg-white/85 p-4 md:p-5 lg:p-6 text-center shadow-sm backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-lg hover:border-[#c026d3]/30 focus:outline-none focus:ring-2 focus:ring-[#c026d3]/20 focus:ring-offset-2 relative overflow-hidden"
+                aria-label="View all entries - Navigate to history"
+              >
+                <div className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold mb-2 relative z-10" style={{
+                  background: 'linear-gradient(45deg, #c026d3, #f97316)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text'
                 }}>
                   {stats.total_entries}
                 </div>
-                <div className="text-xs md:text-sm font-semibold uppercase tracking-wide text-text-secondary">
+                <div className="text-xs md:text-sm font-semibold uppercase tracking-wide text-text-secondary relative z-10">
                   Total
                 </div>
-              </div>
-              <div className="rounded-3xl border border-white/30 bg-white/85 p-4 md:p-5 lg:p-6 text-center shadow-sm backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-md">
-                <div className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold mb-2" style={{
-                  background: 'linear-gradient(135deg, #f97316, #c026d3)',
+                <div className="stat-card-hint absolute bottom-3 right-3 text-[#c026d3] opacity-0 transition-all duration-300 transform translate-x-[-5px] z-10">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                  </svg>
+                </div>
+              </button>
+
+              {/* Card 4: Avg Happy */}
+              <button
+                type="button"
+                onClick={() => router.push('/patterns')}
+                className="stat-card stat-card-clickable rounded-[20px] border border-white/30 bg-white/85 p-4 md:p-5 lg:p-6 text-center shadow-sm backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-lg hover:border-[#c026d3]/30 focus:outline-none focus:ring-2 focus:ring-[#c026d3]/20 focus:ring-offset-2 relative overflow-hidden"
+                aria-label="View happiness patterns - Navigate to patterns page"
+              >
+                <div className="font-display text-2xl md:text-3xl lg:text-4xl font-semibold mb-2 relative z-10" style={{
+                  background: 'linear-gradient(45deg, #c026d3, #f97316)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text'
                 }}>
                   {Math.round(stats.average_happiness * 100)}%
                 </div>
-                <div className="text-xs md:text-sm font-semibold uppercase tracking-wide text-text-secondary">
+                <div className="text-xs md:text-sm font-semibold uppercase tracking-wide text-text-secondary relative z-10">
                   Avg Happy
                 </div>
-              </div>
+                <div className="stat-card-hint absolute bottom-3 right-3 text-[#c026d3] opacity-0 transition-all duration-300 transform translate-x-[-5px] z-10">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                  </svg>
+                </div>
+              </button>
             </div>
           )}
-
-          {/* Streak Card */}
-          <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-            <StreakCard entries={entries} />
-          </div>
 
           {/* 7-Day Trend */}
           <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
