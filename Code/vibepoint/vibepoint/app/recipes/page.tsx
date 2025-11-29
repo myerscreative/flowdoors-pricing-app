@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Recipe } from '@/types'
 import { ProBadge } from '@/components/ProBadge'
+import { checkProStatusClient, ProTierStatus } from '@/lib/pro-tier'
+import { UpgradeModal } from '@/components/UpgradeModal'
 
 export default function RecipesPage() {
   const router = useRouter()
@@ -12,12 +14,10 @@ export default function RecipesPage() {
   const [activeFilter, setActiveFilter] = useState<'all' | 'favorites'>('all')
   const [isLoading, setIsLoading] = useState(true)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [proStatus, setProStatus] = useState<ProTierStatus | null>(null)
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false)
 
-  useEffect(() => {
-    loadRecipes()
-  }, [activeFilter])
-
-  const loadRecipes = async () => {
+  const loadRecipes = useCallback(async () => {
     try {
       setIsLoading(true)
       const params = new URLSearchParams()
@@ -28,15 +28,48 @@ export default function RecipesPage() {
       const res = await fetch(`/api/recipes?${params.toString()}`)
       const data = await res.json()
 
-      if (!res.ok) throw new Error(data.error || 'Failed to load recipes')
+      if (!res.ok) {
+        // If 403 (Pro required), that's okay - just show empty state
+        if (res.status === 403) {
+          setRecipes([])
+          return
+        }
+        throw new Error(data.error || 'Failed to load recipes')
+      }
       
       setRecipes(data.recipes || [])
     } catch (err: any) {
       console.error('Error loading recipes:', err)
+      // Don't block the page - just show empty state
+      setRecipes([])
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [activeFilter])
+
+  const checkProAndLoad = useCallback(async () => {
+    const status = await checkProStatusClient()
+    setProStatus(status)
+    
+    // Always try to load recipes - API will handle Pro check
+    // This allows free users to see the page and upgrade prompt
+    try {
+      await loadRecipes()
+    } catch (err) {
+      // If API blocks, that's okay - we'll show upgrade prompt
+      console.log('Recipes require Pro subscription')
+    }
+    
+    // Show upgrade modal for free users, but don't block page access
+    if (!status.isPro) {
+      // Don't auto-open modal - let them see the page first
+      // setIsUpgradeOpen(true)
+    }
+  }, [loadRecipes])
+
+  useEffect(() => {
+    checkProAndLoad()
+  }, [checkProAndLoad])
 
   const toggleFavorite = async (recipeId: string, currentStatus: boolean) => {
     try {
@@ -136,7 +169,17 @@ export default function RecipesPage() {
               My Recipes
             </h1>
           </div>
-          <ProBadge size="md" />
+          <div className="flex items-center gap-3">
+            {proStatus?.isPro && (
+              <Link
+                href="/recipes/new"
+                className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#1a1a2e] shadow-md transition-transform hover:scale-105"
+              >
+                + New
+              </Link>
+            )}
+            <ProBadge size="md" />
+          </div>
         </header>
 
         {/* Filter Tabs */}
@@ -185,7 +228,7 @@ export default function RecipesPage() {
         )}
 
         {/* Empty State */}
-        {!isLoading && filteredRecipes.length === 0 && (
+        {!isLoading && filteredRecipes.length === 0 && proStatus?.isPro && (
           <div className="rounded-[20px] bg-white p-12 text-center shadow-[0_2px_16px_rgba(0,0,0,0.08)]">
             <div className="mb-4 text-6xl">📝</div>
             <h3 className="mb-2 font-serif text-xl font-semibold text-[#1a1a2e]">
@@ -194,19 +237,63 @@ export default function RecipesPage() {
             <p className="mb-6 text-sm text-[#4a4a6a]">
               {activeFilter === 'favorites'
                 ? "You haven't favorited any recipes yet. Mark recipes as favorites to find them quickly."
-                : "Create your first mood-shifting recipe to get started. Build routines that help you shift your emotional state."}
+                : "Create your first mood-shifting recipe! Turn patterns you've noticed into actionable routines you can use anytime."}
             </p>
             {activeFilter === 'all' && (
               <Link
-                href="/patterns"
+                href="/recipes/new"
                 className="inline-block rounded-[24px] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(168,85,247,0.3)] transition-transform hover:scale-105"
                 style={{
                   background: 'linear-gradient(90deg, #A855F7 0%, #EC4899 50%, #F97316 100%)',
                 }}
               >
-                Create Recipe
+                Create Your First Recipe
               </Link>
             )}
+          </div>
+        )}
+
+        {/* Pro Upgrade Prompt (when not Pro and no recipes) */}
+        {!proStatus?.isPro && !isLoading && recipes.length === 0 && (
+          <div className="rounded-[20px] bg-white p-12 text-center shadow-[0_2px_16px_rgba(0,0,0,0.08)]">
+            <div className="mb-4 text-6xl">🧪</div>
+            <h3 className="mb-2 font-serif text-xl font-semibold text-[#1a1a2e]">
+              Unlock Mood Recipes
+            </h3>
+            <p className="mb-6 text-sm text-[#4a4a6a]">
+              Create personalized routines that shift your emotional state. Save what works, build your mood toolkit.
+            </p>
+            <button
+              onClick={() => setIsUpgradeOpen(true)}
+              className="inline-block rounded-[24px] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(192,38,211,0.3)] transition-transform hover:scale-105"
+              style={{
+                background: 'linear-gradient(45deg, #7c3aed 0%, #c026d3 50%, #f97316 100%)',
+              }}
+            >
+              Upgrade to Pro
+            </button>
+          </div>
+        )}
+
+        {/* Upgrade banner for free users (even if they can see recipes) */}
+        {!proStatus?.isPro && recipes.length > 0 && (
+          <div className="mb-6 rounded-[20px] border-2 border-pro-primary/30 bg-gradient-to-br from-[#fff5f8] to-white p-5 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="mb-1 font-display text-lg font-semibold text-text-primary">
+                  🔒 Pro Feature
+                </h3>
+                <p className="text-sm text-text-secondary">
+                  Upgrade to create and manage recipes
+                </p>
+              </div>
+              <button
+                onClick={() => setIsUpgradeOpen(true)}
+                className="rounded-full bg-gradient-to-r from-pro-primary to-pro-secondary px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-transform hover:scale-105"
+              >
+                Upgrade
+              </button>
+            </div>
           </div>
         )}
 
@@ -348,6 +435,12 @@ export default function RecipesPage() {
           </div>
         </div>
       )}
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={isUpgradeOpen}
+        onClose={() => setIsUpgradeOpen(false)}
+      />
     </div>
   )
 }

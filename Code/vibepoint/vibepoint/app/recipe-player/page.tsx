@@ -69,13 +69,30 @@ function RecipePlayerPage() {
     }
   }, [recipe, recipeAttemptId])
 
+  const fetchRecipe = useCallback(async (id: string) => {
+    try {
+      const res = await fetch(`/api/recipes/${id}`)
+      const data = await res.json()
+      
+      if (res.ok && data.recipe) {
+        setRecipe(data.recipe)
+      } else {
+        console.error('Failed to load recipe')
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     if (recipeId) {
       fetchRecipe(recipeId)
     } else {
       setLoading(false)
     }
-  }, [recipeId])
+  }, [recipeId, fetchRecipe])
 
   useEffect(() => {
     if (!isPlaying || screen !== 'player') return
@@ -98,22 +115,6 @@ function RecipePlayerPage() {
     return () => clearInterval(interval)
   }, [isPlaying, currentStepIndex, recipe, screen, loadStep, completeRecipe])
 
-  const fetchRecipe = async (id: string) => {
-    try {
-      const res = await fetch(`/api/recipes/${id}`)
-      const data = await res.json()
-      
-      if (res.ok && data.recipe) {
-        setRecipe(data.recipe)
-      } else {
-        console.error('Failed to load recipe')
-      }
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const startRecipe = useCallback(async () => {
     if (!recipe?.recipe_steps || recipe.recipe_steps.length === 0) return

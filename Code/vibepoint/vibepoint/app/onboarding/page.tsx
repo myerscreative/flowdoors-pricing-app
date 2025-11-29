@@ -104,7 +104,7 @@ export default function OnboardingPage() {
               <p className="slide-body">
                 Vibepoint helps you discover the patterns between what you focus on, 
                 what you tell yourself, and how you feel physically. By tracking these 
-                connections, you'll learn to create the moods you want.
+                connections, you&apos;ll learn to create the moods you want.
               </p>
             </div>
           )}
