@@ -38,6 +38,7 @@ function HistoryPageContent() {
 
   useEffect(() => {
     checkAuthAndLoadEntries()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -46,9 +47,14 @@ function HistoryPageContent() {
 
   const checkAuthAndLoadEntries = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/auth/login')
+      // AUTH DISABLED FOR DEVELOPMENT - Try to get user but don't require it
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !user) {
+        console.warn('No user found - showing empty history for development')
+        setUserId(null)
+        setEntries([])
+        setLoading(false)
         return
       }
 
@@ -56,7 +62,9 @@ function HistoryPageContent() {
       await loadEntries(user.id)
     } catch (error) {
       console.error('Auth check failed:', error)
-      router.push('/auth/login')
+      // Continue without user in development
+      setUserId(null)
+      setEntries([])
     } finally {
       setLoading(false)
     }
@@ -226,7 +234,7 @@ function HistoryPageContent() {
     <div className="relative min-h-screen text-text-primary">
       <GradientBackground />
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[480px] md:max-w-[600px] lg:max-w-[720px] xl:max-w-[800px] flex-col px-5 py-6 md:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[480px] md:max-w-[600px] lg:max-w-[720px] xl:max-w-[800px] flex-col px-5 py-6 md:px-6 lg:px-8 pb-24">
         {/* Header */}
         <header className="mb-6 flex items-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
           <Link
@@ -255,7 +263,7 @@ function HistoryPageContent() {
               onClick={() => setFilter(key)}
               className={`rounded-full px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-medium transition-all ${
                 filter === key
-                  ? 'bg-gradient-to-r from-[#f97316] via-[#c026d3] to-[#7c3aed] text-white shadow-lg shadow-[#c026d3]/30'
+                  ? 'bg-gradient-to-r from-[#7c3aed] via-[#c026d3] to-[#f97316] text-white shadow-lg shadow-[#c026d3]/30'
                   : 'bg-white/85 border border-white/30 text-text-secondary backdrop-blur-md hover:bg-white/95 hover:text-text-primary'
               }`}
             >
@@ -309,7 +317,7 @@ function HistoryPageContent() {
               href="/mood/new"
               className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-base font-semibold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
               style={{
-                background: 'linear-gradient(135deg, #f97316 0%, #c026d3 50%, #7c3aed 100%)',
+                background: 'linear-gradient(45deg, #7c3aed 0%, #c026d3 50%, #f97316 100%)',
                 boxShadow: '0 4px 20px rgba(192, 38, 211, 0.3)',
               }}
             >

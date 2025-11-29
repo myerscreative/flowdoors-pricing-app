@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
-import GradientSelector from '@/components/GradientSelector'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import MoodSelector from '@/components/MoodSelector'
 import { supabase } from '@/lib/supabase'
 
 const primaryEmotions = [
@@ -48,6 +49,7 @@ const emotionGroups = [
 export default function MoodInputPage() {
   const [happiness, setHappiness] = useState(0.5)
   const [motivation, setMotivation] = useState(0.5)
+  const [selectedColor, setSelectedColor] = useState('#1A1A2E')
 
   const [focus, setFocus] = useState('')
   const [selfTalk, setSelfTalk] = useState('')
@@ -57,6 +59,120 @@ export default function MoodInputPage() {
   const [notes, setNotes] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [showEmotionList, setShowEmotionList] = useState(false)
+
+  // Corner colors in HSL (Hue, Saturation, Lightness)
+  const cornersHSL = {
+    topLeft: { h: 195, s: 70, l: 65 },      // Cyan/Sky Blue (happy + unmotivated)
+    topRight: { h: 45, s: 100, l: 55 },     // Bright Yellow/Gold (happy + motivated)
+    bottomLeft: { h: 260, s: 75, l: 35 },   // Deep Purple/Indigo (unhappy + unmotivated)
+    bottomRight: { h: 348, s: 80, l: 50 }   // Vibrant Red/Crimson (unhappy + motivated)
+  }
+
+  // HSL to RGB conversion function
+  const hslToRgb = (h: number, s: number, l: number): { r: number, g: number, b: number } => {
+    s /= 100
+    l /= 100
+    
+    const c = (1 - Math.abs(2 * l - 1)) * s
+    const x = c * (1 - Math.abs((h / 60) % 2 - 1))
+    const m = l - c / 2
+    
+    let r = 0, g = 0, b = 0
+    
+    if (h >= 0 && h < 60) {
+      r = c; g = x; b = 0
+    } else if (h >= 60 && h < 120) {
+      r = x; g = c; b = 0
+    } else if (h >= 120 && h < 180) {
+      r = 0; g = c; b = x
+    } else if (h >= 180 && h < 240) {
+      r = 0; g = x; b = c
+    } else if (h >= 240 && h < 300) {
+      r = x; g = 0; b = c
+    } else if (h >= 300 && h < 360) {
+      r = c; g = 0; b = x
+    }
+    
+    return {
+      r: Math.round((r + m) * 255),
+      g: Math.round((g + m) * 255),
+      b: Math.round((b + m) * 255)
+    }
+  }
+
+  // Bilinear interpolation in HSL space
+  const bilinearInterpolateHSL = (
+    x: number, 
+    y: number, 
+    c00: { h: number, s: number, l: number }, 
+    c10: { h: number, s: number, l: number }, 
+    c01: { h: number, s: number, l: number }, 
+    c11: { h: number, s: number, l: number }
+  ): { r: number, g: number, b: number } => {
+    // Interpolate Hue (handle circular nature - 0° = 360°)
+    const interpolateHue = (h1: number, h2: number, h3: number, h4: number) => {
+      // Convert to radians for circular interpolation
+      const toRad = (h: number) => (h * Math.PI) / 180
+      const toDeg = (r: number) => (r * 180) / Math.PI
+      
+      const h1r = toRad(h1), h2r = toRad(h2), h3r = toRad(h3), h4r = toRad(h4)
+      
+      // Interpolate in circular space
+      const hx = Math.sin(h1r) * (1 - x) * (1 - y) +
+                 Math.sin(h2r) * x * (1 - y) +
+                 Math.sin(h3r) * (1 - x) * y +
+                 Math.sin(h4r) * x * y
+      
+      const hy = Math.cos(h1r) * (1 - x) * (1 - y) +
+                 Math.cos(h2r) * x * (1 - y) +
+                 Math.cos(h3r) * (1 - x) * y +
+                 Math.cos(h4r) * x * y
+      
+      let hue = toDeg(Math.atan2(hx, hy))
+      if (hue < 0) hue += 360
+      
+      return hue
+    }
+    
+    // Standard bilinear for Saturation and Lightness
+    const h = interpolateHue(c00.h, c10.h, c01.h, c11.h)
+    
+    const s = c00.s * (1 - x) * (1 - y) +
+              c10.s * x * (1 - y) +
+              c01.s * (1 - x) * y +
+              c11.s * x * y
+    
+    const l = c00.l * (1 - x) * (1 - y) +
+              c10.l * x * (1 - y) +
+              c01.l * (1 - x) * y +
+              c11.l * x * y
+    
+    // Convert back to RGB
+    return hslToRgb(h, s, l)
+  }
+
+  // Calculate color from mood coordinates using HSL interpolation
+  const calculateColor = (x: number, y: number) => {
+    const xRatio = x
+    const yRatio = 1 - y // Inverted for gradient space
+
+    const color = bilinearInterpolateHSL(
+      xRatio,
+      yRatio,
+      cornersHSL.topLeft,
+      cornersHSL.topRight,
+      cornersHSL.bottomLeft,
+      cornersHSL.bottomRight
+    )
+
+    return `rgb(${color.r}, ${color.g}, ${color.b})`
+  }
+
+  // Update color when mood changes
+  useEffect(() => {
+    const color = calculateColor(motivation, happiness)
+    setSelectedColor(color)
+  }, [motivation, happiness])
 
   const backgroundStyle = {
     background: 'linear-gradient(135deg, #d4f1f9 0%, #f8e8f0 35%, #fdf6e9 65%, #f5e6e0 100%)',
@@ -90,7 +206,7 @@ export default function MoodInputPage() {
         onClick={() => handleChipClick(emotion)}
         className={`rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
           isSelected
-            ? 'bg-gradient-to-r from-[#f97316] via-[#c026d3] to-[#7c3aed] text-white shadow-lg shadow-[#c026d3]/30'
+            ? 'bg-gradient-to-r from-[#7c3aed] via-[#c026d3] to-[#f97316] text-white shadow-lg shadow-[#c026d3]/30'
             : 'bg-white/30 border border-white/50 text-[#4a4a6a]/70 opacity-70 hover:opacity-100 hover:bg-white hover:text-[#1a1a2e]'
         }`}
         style={!isSelected ? bodyFont : undefined}
@@ -112,8 +228,9 @@ export default function MoodInputPage() {
       } = await supabase.auth.getUser()
 
       if (authError || !user) {
-        console.error('Authentication required:', authError)
-        alert('Please log in to save your mood entry.')
+        console.warn('No user found - cannot save entry without authentication')
+        alert('Authentication required to save entries. Please log in first.')
+        setIsSaving(false)
         return
       }
 
@@ -144,60 +261,8 @@ export default function MoodInputPage() {
       const { data, error } = await supabase.from('mood_entries').insert(entry).select()
 
       if (error) {
-        // Log the raw error first to see its actual structure
-        console.error('Raw error object:', error)
-        console.error('Error type:', typeof error)
-        console.error('Error constructor:', error?.constructor?.name)
-        
-        // Try to extract error message in multiple ways
-        const errorMessage = 
-          (typeof error === 'string' ? error : null) ||
-          (error && typeof error === 'object' && 'message' in error ? error.message : null) ||
-          (error && typeof error === 'object' && 'details' in error ? error.details : null) ||
-          (error && typeof error === 'object' && 'hint' in error ? error.hint : null) ||
-          (error && typeof error === 'object' && String(error) !== '[object Object]' ? String(error) : null) ||
-          'Failed to save entry. Please check your connection and try again.'
-        
-        // Check if error is about emotion_name column
-        const errorString = typeof error === 'string' 
-          ? error 
-          : (error && typeof error === 'object' ? JSON.stringify(error) : String(error))
-        
-        const isEmotionNameError = errorString?.includes('emotion_name') ||
-                                   (error && typeof error === 'object' && 'message' in error && error.message?.includes('emotion_name'))
-        
-        // If error is about emotion_name column, try again without it
-        if (isEmotionNameError && entry.emotion_name) {
-          console.log('Schema cache not updated yet. Retrying without emotion_name...')
-          const entryWithoutEmotion = { ...entry }
-          delete entryWithoutEmotion.emotion_name
-          
-          const { data: retryData, error: retryError } = await supabase
-            .from('mood_entries')
-            .insert(entryWithoutEmotion)
-            .select()
-          
-          if (retryError) {
-            const retryErrorMessage = 
-              (typeof retryError === 'string' ? retryError : null) ||
-              (retryError && typeof retryError === 'object' && 'message' in retryError ? retryError.message : null) ||
-              (retryError && typeof retryError === 'object' && 'details' in retryError ? retryError.details : null) ||
-              (retryError && typeof retryError === 'object' && 'hint' in retryError ? retryError.hint : null) ||
-              'Failed to save entry. Please check your connection and try again.'
-            alert(`Failed to save entry: ${retryErrorMessage}`)
-            return
-          } else if (retryData && retryData.length > 0) {
-            alert('Mood entry saved successfully! (Note: emotion name was not saved - please run the migration to add the emotion_name column)')
-            setFocus('')
-            setSelfTalk('')
-            setBody('')
-            setSelectedEmotion('')
-            setEmotionCustom('')
-            setNotes('')
-            return
-          }
-        }
-        
+        console.error('Error saving entry:', error)
+        const errorMessage = error.message || error.details || error.hint || 'Failed to save entry. Please check your connection and try again.'
         alert(`Failed to save entry: ${errorMessage}`)
         return
       }
@@ -272,44 +337,20 @@ export default function MoodInputPage() {
             Intuitive Mood Mapping
           </p>
 
-          <div className="relative mt-6 rounded-[28px] border border-white/50 bg-white/40 p-4 shadow-[0_12px_50px_rgba(15,23,42,0.08)]">
-            <div className="relative mb-5 px-4">
-              <div className="relative w-full overflow-hidden rounded-3xl" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.1), 0 8px 40px rgba(0,0,0,0.05)' }}>
-                <GradientSelector
-                  onMoodSelect={({ x, y }) => {
-                    setMotivation(x)
-                    setHappiness(y)
-                  }}
-                  showHeader={false}
-                  showStats={false}
-                  selectedMood={{ x: motivation, y: happiness }}
-                  gradientClassName="aspect-square"
-                />
-              </div>
-            </div>
-
-            <p className="text-center text-base font-medium text-[#4a4a6a]" style={bodyFont}>
-              Tap anywhere to capture your current state
-            </p>
-
-            <div className="mt-6 grid gap-6 border-t border-white/60 pt-6 text-center sm:grid-cols-2">
-              <div className="rounded-2xl bg-white/60 px-6 py-4">
-                <p className="text-sm uppercase tracking-[0.25em] text-[#4a4a6a]" style={bodyFont}>
-                  Happiness
-                </p>
-                <p className="text-4xl font-semibold text-[#1a1a2e]" style={displayFont}>
-                  {Math.round(happiness * 100)}%
-                </p>
-              </div>
-              <div className="rounded-2xl bg-white/60 px-6 py-4">
-                <p className="text-sm uppercase tracking-[0.25em] text-[#4a4a6a]" style={bodyFont}>
-                  Motivation
-                </p>
-                <p className="text-4xl font-semibold text-[#1a1a2e]" style={displayFont}>
-                  {Math.round(motivation * 100)}%
-                </p>
-              </div>
-            </div>
+          <div className="relative mt-6">
+            <MoodSelector
+              onMoodSelect={({ x, y }) => {
+                setMotivation(x)
+                setHappiness(y)
+              }}
+              onColorChange={(color) => {
+                setSelectedColor(color)
+              }}
+              showHeader={false}
+              showStats={true}
+              selectedMood={{ x: motivation, y: happiness }}
+              gradientClassName="aspect-square"
+            />
           </div>
         </section>
 
@@ -445,7 +486,7 @@ export default function MoodInputPage() {
             disabled={isSaving}
             className="w-full rounded-3xl py-5 text-lg font-semibold text-white shadow-lg shadow-[#c026d3]/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#c026d3]/40 disabled:cursor-not-allowed disabled:opacity-60"
             style={{
-              background: 'linear-gradient(90deg, #f97316 0%, #c026d3 50%, #7c3aed 100%)',
+              background: 'linear-gradient(90deg, #7c3aed 0%, #c026d3 50%, #f97316 100%)',
               fontFamily: 'var(--font-body)',
             }}
           >

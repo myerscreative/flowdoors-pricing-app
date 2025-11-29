@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { startOfWeek, isWithinInterval } from 'date-fns'
 
 import { supabase, handleAuthError } from '@/lib/supabase'
@@ -29,12 +30,12 @@ export default function HomePage() {
     checkAuthAndLoadStats()
   }, [])
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/auth/login')
-    }
-  }, [loading, user, router])
+  // AUTH DISABLED FOR DEVELOPMENT - No redirect to login
+  // useEffect(() => {
+  //   if (!loading && !user) {
+  //     router.push('/auth/login')
+  //   }
+  // }, [loading, user, router])
 
   useEffect(() => {
     // Check if welcome card should be shown (client-side only)
@@ -50,12 +51,25 @@ export default function HomePage() {
 
   const checkAuthAndLoadStats = async () => {
     try {
+      // AUTH DISABLED FOR DEVELOPMENT - Try to get user but don't require it
       const {
         data: { user: currentUser },
         error,
       } = await supabase.auth.getUser()
+      
       if (error || !currentUser) {
+        // No user - load empty stats for development
         setUser(null)
+        setStats({
+          total_entries: 0,
+          entries_this_week: 0,
+          average_happiness: 0,
+          average_motivation: 0,
+          most_common_focus: 'No entries yet',
+          patterns_unlocked: false,
+        })
+        setEntries([])
+        setLoading(false)
         return
       }
       
@@ -63,8 +77,9 @@ export default function HomePage() {
       if (typeof window !== 'undefined') {
         const onboardingCompleted = localStorage.getItem('onboardingCompleted')
         if (!onboardingCompleted) {
-          router.push('/onboarding')
-          return
+          // Don't redirect - just continue
+          // router.push('/onboarding')
+          // return
         }
       }
       
@@ -72,7 +87,17 @@ export default function HomePage() {
       await loadStats(currentUser.id)
     } catch (error) {
       console.error('Auth check failed:', handleAuthError(error))
+      // Continue without user in development
       setUser(null)
+      setStats({
+        total_entries: 0,
+        entries_this_week: 0,
+        average_happiness: 0,
+        average_motivation: 0,
+        most_common_focus: 'No entries yet',
+        patterns_unlocked: false,
+      })
+      setEntries([])
     } finally {
       setLoading(false)
     }
@@ -139,8 +164,13 @@ export default function HomePage() {
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/auth/login')
+    try {
+      await supabase.auth.signOut()
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+    // Just refresh the page - no redirect needed in dev mode
+    window.location.reload()
   }
 
   if (loading) {
@@ -154,17 +184,17 @@ export default function HomePage() {
     )
   }
 
-  // Show loading or redirect to login if not authenticated
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Redirecting to login...</p>
-        </div>
-      </div>
-    )
-  }
+  // AUTH DISABLED FOR DEVELOPMENT - Show page even without user
+  // if (!user) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center bg-gray-50">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+  //         <p className="text-gray-600">Redirecting to login...</p>
+  //       </div>
+  //     </div>
+  //   )
+  // }
 
   // TODO: integrate real Pro status from server when available
   const isProUser = false
@@ -172,7 +202,7 @@ export default function HomePage() {
   const name =
     user?.user_metadata?.full_name ||
     user?.user_metadata?.name ||
-    (user?.email ? user.email.split('@')[0] : '')
+    (user?.email ? user.email.split('@')[0] : 'Developer')
 
   const hour = new Date().getHours()
   const timeOfDay = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'
@@ -184,7 +214,7 @@ export default function HomePage() {
     <div className="relative min-h-screen text-text-primary">
       <GradientBackground />
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[480px] md:max-w-[600px] lg:max-w-[720px] xl:max-w-[800px] flex-col px-5 py-6 md:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[480px] md:max-w-[600px] lg:max-w-[720px] xl:max-w-[800px] flex-col px-5 py-6 md:px-6 lg:px-8 pb-24">
         {/* Header */}
         <header className="mb-4 flex items-center justify-between pt-1">
           <Logo variant="full" href="/home" size="md" />
@@ -489,6 +519,39 @@ export default function HomePage() {
               <UnlockMessage totalEntries={stats.total_entries} />
             </div>
           )}
+
+          {/* PRO Features Section */}
+          <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.85s' }}>
+            <div className="rounded-2xl border border-white/30 bg-white/85 p-5 md:p-6 shadow-sm backdrop-blur-xl">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="font-display text-lg md:text-xl font-semibold text-text-primary">
+                  PRO Features
+                </h3>
+                <span className="rounded-full bg-gradient-to-r from-[#F5A623] to-[#FFD700] px-3 py-1 text-xs font-semibold text-white">
+                  PRO
+                </span>
+              </div>
+              <Link
+                href="/recipes"
+                className="flex items-center justify-between rounded-xl border border-white/30 bg-white/50 p-4 transition-all hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#A855F7] to-[#EC4899] text-white">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-text-primary">Recipes</div>
+                    <div className="text-xs text-text-secondary">Guided mood-shifting routines</div>
+                  </div>
+                </div>
+                <svg className="h-5 w-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+          </div>
 
           {/* Quick Actions */}
           <div className="mb-10 grid grid-cols-2 gap-3 md:gap-4 animate-fade-in-up" style={{ animationDelay: '0.9s' }}>

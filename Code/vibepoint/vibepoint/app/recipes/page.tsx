@@ -1,222 +1,353 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Recipe } from '@/types';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Recipe } from '@/types'
+import { ProBadge } from '@/components/ProBadge'
 
 export default function RecipesPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [filter, setFilter] = useState<'all' | 'favorites'>('all');
-  const [error, setError] = useState('');
+  const router = useRouter()
+  const [recipes, setRecipes] = useState<Recipe[]>([])
+  const [activeFilter, setActiveFilter] = useState<'all' | 'favorites'>('all')
+  const [isLoading, setIsLoading] = useState(true)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   useEffect(() => {
-    loadRecipes();
-  }, [filter]);
+    loadRecipes()
+  }, [activeFilter])
 
   const loadRecipes = async () => {
     try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (filter === 'favorites') {
-        params.append('favoritesOnly', 'true');
+      setIsLoading(true)
+      const params = new URLSearchParams()
+      if (activeFilter === 'favorites') {
+        params.append('favoritesOnly', 'true')
       }
 
-      const res = await fetch(`/api/recipes?${params.toString()}`);
-      const data = await res.json();
+      const res = await fetch(`/api/recipes?${params.toString()}`)
+      const data = await res.json()
 
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) throw new Error(data.error || 'Failed to load recipes')
       
-      setRecipes(data.recipes || []);
+      setRecipes(data.recipes || [])
     } catch (err: any) {
-      setError(err.message);
+      console.error('Error loading recipes:', err)
     } finally {
-      setLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
-  const toggleFavorite = async (id: string, currentStatus: boolean) => {
+  const toggleFavorite = async (recipeId: string, currentStatus: boolean) => {
     try {
       // Optimistic update
       setRecipes(recipes.map(r => 
-        r.id === id ? { ...r, is_favorite: !currentStatus } : r
-      ));
+        r.id === recipeId ? { ...r, is_favorite: !currentStatus } : r
+      ))
 
-      const res = await fetch(`/api/recipes/${id}`, {
+      const res = await fetch(`/api/recipes/${recipeId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           action: 'favorite', 
           isFavorite: !currentStatus 
         }),
-      });
+      })
 
-      if (!res.ok) throw new Error('Failed to update favorite');
+      if (!res.ok) throw new Error('Failed to update favorite')
     } catch (err) {
-      console.error(err);
+      console.error(err)
       // Revert on error
-      loadRecipes();
+      loadRecipes()
     }
-  };
+  }
 
-  const deleteRecipe = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this recipe?')) return;
-
+  const handleDelete = async (recipeId: string) => {
     try {
-      const res = await fetch(`/api/recipes/${id}`, {
+      const res = await fetch(`/api/recipes/${recipeId}`, {
         method: 'DELETE',
-      });
+      })
 
-      if (!res.ok) throw new Error('Failed to delete recipe');
+      if (!res.ok) throw new Error('Failed to delete recipe')
       
-      setRecipes(recipes.filter(r => r.id !== id));
+      setRecipes(recipes.filter(r => r.id !== recipeId))
+      setDeleteTarget(null)
     } catch (err) {
-      console.error(err);
-      alert('Failed to delete recipe');
+      console.error(err)
+      alert('Failed to delete recipe')
     }
-  };
+  }
+
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    if (mins > 0) {
+      return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`
+    }
+    return `${secs}s`
+  }
+
+  const filteredRecipes = activeFilter === 'favorites'
+    ? recipes.filter(r => r.is_favorite)
+    : recipes
+
+  const getStepTags = (steps: Recipe['recipe_steps']): string[] => {
+    if (!steps || steps.length === 0) return []
+    
+    const tags: string[] = []
+    steps.forEach(step => {
+      const title = step.title.toLowerCase()
+      if (title.includes('breath')) tags.push('Breathing')
+      else if (title.includes('movement') || title.includes('stretch') || title.includes('body')) tags.push('Movement')
+      else if (title.includes('visual') || title.includes('imagine') || title.includes('picture')) tags.push('Visualization')
+      else if (title.includes('gratitude') || title.includes('appreciat')) tags.push('Gratitude')
+      else if (title.includes('affirm') || title.includes('say')) tags.push('Affirmations')
+    })
+    
+    // Return unique tags, limit to 3
+    return [...new Set(tags)].slice(0, 3)
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-md mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Link href="/patterns" className="text-slate-400 hover:text-slate-600 transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div 
+      className="min-h-screen pb-24"
+      style={{ 
+        background: 'linear-gradient(45deg, #A855F7 0%, #EC4899 50%, #F97316 100%)',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      <div className="relative z-10 mx-auto max-w-[480px] md:max-w-[600px] px-5 py-6 md:px-6">
+        {/* Header */}
+        <header className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/home"
+              className="flex items-center gap-2 rounded-[24px] border-2 border-black/10 bg-white px-4 py-2 text-sm font-medium text-[#1a1a2e] transition-colors hover:bg-gray-50"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
+              <span>Back</span>
             </Link>
-            <h1 className="font-bold text-xl text-slate-800">My Recipes</h1>
+            <h1 
+              className="font-serif text-[32px] font-semibold text-white"
+              style={{ fontFamily: 'var(--font-fraunces)' }}
+            >
+              My Recipes
+            </h1>
           </div>
-          <Link 
-            href="/patterns"
-            className="text-sm font-medium text-pink-600 hover:text-pink-700 transition-colors"
-          >
-            + New
-          </Link>
-        </div>
-      </header>
+          <ProBadge size="md" />
+        </header>
 
-      <main className="max-w-md mx-auto px-4 py-6">
-        {/* Filters */}
-        <div className="flex space-x-2 mb-6">
+        {/* Filter Tabs */}
+        <div className="mb-6 flex gap-3 rounded-[20px] bg-white p-2 shadow-[0_2px_16px_rgba(0,0,0,0.08)]">
           <button
-            onClick={() => setFilter('all')}
-            className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors ${
-              filter === 'all'
-                ? 'bg-slate-800 text-white shadow-md'
-                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            onClick={() => setActiveFilter('all')}
+            className={`flex-1 rounded-[16px] px-4 py-2.5 text-sm font-semibold transition-all ${
+              activeFilter === 'all'
+                ? 'text-white shadow-[0_2px_8px_rgba(168,85,247,0.3)]'
+                : 'text-[#4a4a6a] hover:bg-gray-50'
             }`}
+            style={
+              activeFilter === 'all'
+                ? {
+                    background: 'linear-gradient(90deg, #A855F7 0%, #EC4899 50%, #F97316 100%)',
+                  }
+                : {}
+            }
           >
             All Recipes
           </button>
           <button
-            onClick={() => setFilter('favorites')}
-            className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors ${
-              filter === 'favorites'
-                ? 'bg-pink-100 text-pink-700 border border-pink-200 shadow-sm'
-                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            onClick={() => setActiveFilter('favorites')}
+            className={`flex-1 rounded-[16px] px-4 py-2.5 text-sm font-semibold transition-all ${
+              activeFilter === 'favorites'
+                ? 'text-white shadow-[0_2px_8px_rgba(168,85,247,0.3)]'
+                : 'text-[#4a4a6a] hover:bg-gray-50'
             }`}
+            style={
+              activeFilter === 'favorites'
+                ? {
+                    background: 'linear-gradient(90deg, #A855F7 0%, #EC4899 50%, #F97316 100%)',
+                  }
+                : {}
+            }
           >
             Favorites
           </button>
         </div>
 
-        {loading ? (
+        {/* Loading State */}
+        {isLoading && (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
+            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-white"></div>
           </div>
-        ) : recipes.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 border-dashed">
-            <div className="w-12 h-12 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-2xl">🧪</span>
-            </div>
-            <h3 className="text-lg font-medium text-slate-800 mb-1">No recipes yet</h3>
-            <p className="text-slate-500 text-sm mb-4">
-              {filter === 'favorites' 
-                ? "You haven't favorited any recipes yet." 
-                : "Generate your first emotion recipe from your patterns!"}
+        )}
+
+        {/* Empty State */}
+        {!isLoading && filteredRecipes.length === 0 && (
+          <div className="rounded-[20px] bg-white p-12 text-center shadow-[0_2px_16px_rgba(0,0,0,0.08)]">
+            <div className="mb-4 text-6xl">📝</div>
+            <h3 className="mb-2 font-serif text-xl font-semibold text-[#1a1a2e]">
+              {activeFilter === 'favorites' ? 'No favorite recipes yet' : 'No recipes yet'}
+            </h3>
+            <p className="mb-6 text-sm text-[#4a4a6a]">
+              {activeFilter === 'favorites'
+                ? "You haven't favorited any recipes yet. Mark recipes as favorites to find them quickly."
+                : "Create your first mood-shifting recipe to get started. Build routines that help you shift your emotional state."}
             </p>
-            {filter === 'all' && (
+            {activeFilter === 'all' && (
               <Link
                 href="/patterns"
-                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-full text-white bg-linear-to-r from-pink-600 to-orange-600 hover:from-pink-700 hover:to-orange-700 shadow-sm"
+                className="inline-block rounded-[24px] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(168,85,247,0.3)] transition-transform hover:scale-105"
+                style={{
+                  background: 'linear-gradient(90deg, #A855F7 0%, #EC4899 50%, #F97316 100%)',
+                }}
               >
-                Go to Patterns
+                Create Recipe
               </Link>
             )}
           </div>
-        ) : (
-          <div className="space-y-4">
-            {recipes.map((recipe) => (
-              <div 
-                key={recipe.id} 
-                className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden transition-all hover:shadow-md"
-              >
-                <div className="p-5">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="font-bold text-slate-800 mb-1">{recipe.title}</h3>
-                      <div className="flex items-center space-x-2 text-xs text-slate-500">
-                        <span className="bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wide font-semibold text-slate-600">
-                          {recipe.target_emotion}
-                        </span>
-                        <span>•</span>
-                        <span>{recipe.duration}</span>
-                        <span>•</span>
-                        <span>Used {recipe.use_count}x</span>
-                      </div>
+        )}
+
+        {/* Recipes Grid */}
+        {!isLoading && filteredRecipes.length > 0 && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {filteredRecipes.map((recipe) => {
+              const stepCount = recipe.recipe_steps?.length || 0
+              const tags = getStepTags(recipe.recipe_steps)
+
+              return (
+                <div
+                  key={recipe.id}
+                  className="group cursor-pointer rounded-[20px] bg-white p-5 shadow-[0_2px_16px_rgba(0,0,0,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(0,0,0,0.12)]"
+                  onClick={() => router.push(`/recipe-player?id=${recipe.id}`)}
+                >
+                  {/* Header with title and actions */}
+                  <div className="mb-3 flex items-start justify-between">
+                    <h3 
+                      className="flex-1 font-serif text-[20px] font-semibold text-[#1a1a2e]"
+                      style={{ fontFamily: 'var(--font-fraunces)' }}
+                    >
+                      {recipe.title}
+                    </h3>
+                    <div className="ml-2 flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleFavorite(recipe.id, recipe.is_favorite)
+                        }}
+                        className={`rounded-full p-1.5 transition-colors ${
+                          recipe.is_favorite
+                            ? 'text-pink-500'
+                            : 'text-gray-300 hover:text-pink-400'
+                        }`}
+                      >
+                        <svg className="h-5 w-5" fill={recipe.is_favorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setDeleteTarget(recipe.id)
+                        }}
+                        className="rounded-full p-1.5 text-gray-400 transition-colors hover:text-red-500"
+                      >
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        toggleFavorite(recipe.id, recipe.is_favorite);
-                      }}
-                      className={`p-2 rounded-full transition-colors ${
-                        recipe.is_favorite 
-                          ? 'text-yellow-400 bg-yellow-50' 
-                          : 'text-slate-300 hover:bg-slate-50'
-                      }`}
-                    >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    </button>
                   </div>
-                  
-                  <p className="text-slate-600 text-sm mb-4 line-clamp-2">
-                    {recipe.why_this_works}
+
+                  {/* Meta info */}
+                  <div className="mb-3 flex items-center gap-4 text-xs text-[#718096]">
+                    <div className="flex items-center gap-1">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>{formatDuration(recipe.total_duration)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>{stepCount} {stepCount === 1 ? 'step' : 'steps'}</span>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <p className="mb-4 line-clamp-2 text-sm text-[#4a4a6a]" style={{ fontFamily: 'var(--font-outfit)' }}>
+                    {recipe.description}
                   </p>
-                  
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                    <button
-                      onClick={() => deleteRecipe(recipe.id)}
-                      className="text-xs font-medium text-slate-400 hover:text-red-500 transition-colors"
-                    >
-                      Delete
-                    </button>
-                    
-                    <Link
-                      href={`/recipe-player?id=${recipe.id}`}
-                      className="inline-flex items-center space-x-1 text-sm font-bold text-pink-600 hover:text-pink-700 transition-colors"
-                    >
-                      <span>Play Recipe</span>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </Link>
-                  </div>
+
+                  {/* Step tags */}
+                  {tags.length > 0 && (
+                    <div className="mb-4 flex flex-wrap gap-2">
+                      {tags.map((tag, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-[#4a4a6a]"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Gradient preview bar */}
+                  <div
+                    className="h-2 rounded-[4px]"
+                    style={{
+                      background: 'linear-gradient(90deg, #A855F7 0%, #EC4899 50%, #F97316 100%)',
+                      opacity: 0.3,
+                    }}
+                  />
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
-      </main>
-    </div>
-  );
-}
+      </div>
 
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div 
+          className="fixed inset-0 z-[1000] flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+          onClick={() => setDeleteTarget(null)}
+        >
+          <div 
+            className="relative z-10 w-full max-w-[400px] rounded-[28px] bg-white p-6 shadow-[0_25px_80px_rgba(0,0,0,0.3)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-4 font-serif text-xl font-semibold text-[#1a1a2e]">
+              Delete Recipe?
+            </h3>
+            <p className="mb-6 text-sm text-[#4a4a6a]">
+              Are you sure you want to delete this recipe? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                className="rounded-[24px] border-2 border-black/10 bg-white px-6 py-2.5 text-sm font-semibold text-[#1a1a2e] transition-colors hover:bg-gray-50"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="rounded-[24px] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(220,38,38,0.3)] transition-all hover:scale-105"
+                style={{
+                  background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+                }}
+                onClick={() => handleDelete(deleteTarget)}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

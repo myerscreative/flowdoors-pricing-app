@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, Fraunces } from "next/font/google";
 import "./globals.css";
+import BottomNavigationWrapper from "@/components/BottomNavigationWrapper";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -32,6 +33,7 @@ export default function RootLayout({
         className={`${outfit.variable} ${fraunces.variable} antialiased`}
       >
         {children}
+        <BottomNavigationWrapper />
       </body>
     </html>
   );

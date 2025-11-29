@@ -34,16 +34,24 @@ export default function PatternsPage() {
 
   const checkAuthAndLoadData = async () => {
     try {
+      // AUTH DISABLED FOR DEVELOPMENT - Try to get user but don't require it
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        router.push('/auth/login')
+        console.warn('No user found - showing empty patterns for development')
+        setEntries([])
+        setPatterns(null)
+        setInsights([])
+        setLoading(false)
         return
       }
 
       await loadData(user.id)
     } catch (error) {
       console.error('Auth check failed:', error)
-      router.push('/auth/login')
+      // Continue without user in development
+      setEntries([])
+      setPatterns(null)
+      setInsights([])
     } finally {
       setLoading(false)
     }
@@ -129,7 +137,7 @@ export default function PatternsPage() {
       <div className="relative min-h-screen text-text-primary">
         <GradientBackground />
         
-        <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[480px] md:max-w-[600px] lg:max-w-[720px] xl:max-w-[800px] flex-col px-5 py-6 md:px-6 lg:px-8">
+        <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[480px] md:max-w-[600px] lg:max-w-[720px] xl:max-w-[800px] flex-col px-5 py-6 md:px-6 lg:px-8 pb-24">
           {/* Header */}
           <header className="patterns-header mb-8">
             <button 
