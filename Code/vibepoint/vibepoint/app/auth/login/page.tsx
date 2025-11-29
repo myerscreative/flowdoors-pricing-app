@@ -1,102 +1,42 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { supabase, handleAuthError } from '@/lib/supabase'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Logo from '@/components/Logo'
+import { supabase, handleAuthError } from '@/lib/supabase'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
-  const router = useRouter()
-  const passwordRef = useRef<HTMLInputElement>(null)
-
-  // Force dark text on password field after render
-  useEffect(() => {
-    const forceDarkText = (input: HTMLInputElement | null) => {
-      if (input) {
-        input.style.color = '#111827'
-        input.style.webkitTextFillColor = '#111827'
-        input.style.caretColor = '#111827'
-      }
-    }
-    
-    forceDarkText(passwordRef.current)
-    
-    // Also set on any autofill
-    const observer = new MutationObserver(() => {
-      forceDarkText(passwordRef.current)
-    })
-    
-    if (passwordRef.current) {
-      observer.observe(passwordRef.current, { attributes: true, attributeFilter: ['style', 'class'] })
-    }
-    
-    return () => observer.disconnect()
-  }, [])
-
-  const validateForm = () => {
-    const newErrors: { email?: string; password?: string } = {}
-    
-    if (!email.trim()) {
-      newErrors.email = 'Email is required'
-    } else if (!email.includes('@') || !email.includes('.')) {
-      newErrors.email = 'Please enter a valid email'
-    }
-    
-    if (!password) {
-      newErrors.password = 'Password is required'
-    }
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    setErrors({} as { email?: string; password?: string })
-
-    if (!validateForm()) {
-      return
-    }
-
     setLoading(true)
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       })
 
-      if (error) {
-        console.error('Login error:', error)
-        setError(handleAuthError(error))
+      if (authError) {
+        setError(handleAuthError(authError))
         setLoading(false)
         return
       }
 
       if (!data.session) {
-        console.error('No session returned after login')
         setError('Login failed: No session created. Please try again.')
         setLoading(false)
         return
       }
 
       // Refresh the session to ensure it's properly set
-      const { data: sessionData } = await supabase.auth.getSession()
-      if (!sessionData.session) {
-        console.error('Session not found after getSession')
-        setError('Login failed: Session not established. Please try again.')
-        setLoading(false)
-        return
-      }
-
-      // Small delay to ensure cookies are set
+      await supabase.auth.getSession()
       await new Promise(resolve => setTimeout(resolve, 100))
       
       // Check if onboarding is complete
@@ -106,173 +46,128 @@ export default function LoginPage() {
       } else {
         router.push('/home')
       }
-      router.refresh() // Refresh the router to update auth state
+      router.refresh()
     } catch (err: any) {
-      console.error('Login exception:', err)
       setError(handleAuthError(err))
       setLoading(false)
-    }
-  }
-
-  const handleDevLogin = async () => {
-    setLoading(true)
-    setError('')
-    setErrors({} as { email?: string; password?: string })
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: 'dev@vibepoint.local',
-        password: 'dev123456',
-      })
-
-      if (error) {
-        console.error('Dev login error:', error)
-        setError(handleAuthError(error))
-      } else {
-        // Refresh the session to ensure it's properly set
-        await supabase.auth.getSession()
-        await new Promise(resolve => setTimeout(resolve, 100))
-        
-        // Check if onboarding is complete
-        const onboardingCompleted = localStorage.getItem('onboardingCompleted')
-        if (!onboardingCompleted) {
-          router.push('/onboarding')
-        } else {
-          router.push('/home')
-        }
-        router.refresh()
-      }
-    } catch (err: any) {
-      console.error('Dev login exception:', err)
-      setError(handleAuthError(err))
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const forceDarkText = (e: React.ChangeEvent<HTMLInputElement> | React.FocusEvent<HTMLInputElement>) => {
-    if (e.target) {
-      e.target.style.color = '#111827'
-      e.target.style.webkitTextFillColor = '#111827'
-      e.target.style.caretColor = '#111827'
     }
   }
 
   return (
-    <div className="auth-page">
-      {/* Animated background orbs */}
-      <div className="bg-orbs">
-        <div className="orb orb-1"></div>
-        <div className="orb orb-2"></div>
-        <div className="orb orb-3"></div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#a8edea] via-[#fed6e3] via-[#fff9e6] to-[#ffd8cc] flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+            Welcome back
+          </h1>
+          <p className="text-gray-700">
+            Log in to continue your journey
+          </p>
+        </div>
 
-      {/* Main container */}
-      <div className="auth-container">
-        <div className="auth-card">
-          {/* Header */}
-          <div className="auth-header">
-            <div className="auth-logo-wrapper">
-              <Logo variant="full" size="md" />
-            </div>
-            <h2 className="auth-title">Sign in to VibePoint</h2>
-            <p className="auth-subtitle">Track your mood and discover your patterns</p>
-          </div>
-
-          {/* Error message */}
-          {error && (
-            <div className="auth-message auth-message-error">
-              {error}
-            </div>
-          )}
-
-          {/* Form */}
-          <form className="auth-form" onSubmit={handleLogin}>
-            {/* Email field */}
-            <div className="form-group">
-              <label htmlFor="email">Email address</label>
+        {/* Form Card */}
+        <div className="bg-white/25 backdrop-blur-md rounded-3xl p-8 border border-white/40 shadow-xl">
+          <form onSubmit={handleLogin} className="space-y-5">
+            {/* Email Input */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-800 mb-2">
+                Email
+              </label>
               <input
                 id="email"
-                name="email"
                 type="email"
-                required
-                className={`form-input ${errors.email ? 'form-input-error' : ''}`}
-                placeholder="you@example.com"
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value)
-                  if (errors.email) {
-                    setErrors({ ...errors, email: undefined })
-                  }
-                }}
-              />
-              {errors.email && <p className="form-error">{errors.email}</p>}
-            </div>
-
-            {/* Password field */}
-            <div className="form-group">
-              <label htmlFor="password">Password</label>
-              <input
-                ref={passwordRef}
-                id="password"
-                name="password"
-                type="password"
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                className={`form-input password-input-dark ${errors.password ? 'form-input-error' : ''}`}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value)
-                  forceDarkText(e)
-                  if (errors.password) {
-                    setErrors({ ...errors, password: undefined })
-                  }
-                }}
-                onFocus={forceDarkText}
-                onBlur={forceDarkText}
-                style={{ color: '#111827', WebkitTextFillColor: '#111827', caretColor: '#111827' }}
+                className="w-full px-4 py-3 rounded-xl
+                         bg-white/50 backdrop-blur-sm
+                         border border-white/60
+                         text-gray-800 placeholder-gray-500
+                         focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent
+                         transition-all duration-200"
+                placeholder="your@email.com"
               />
-              {errors.password && <p className="form-error">{errors.password}</p>}
             </div>
 
-            {/* Submit button */}
+            {/* Password Input */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-800 mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-xl
+                         bg-white/50 backdrop-blur-sm
+                         border border-white/60
+                         text-gray-800 placeholder-gray-500
+                         focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-transparent
+                         transition-all duration-200"
+                placeholder="••••••••"
+              />
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-100/80 backdrop-blur-sm border border-red-300 text-red-700 px-4 py-3 rounded-xl text-sm">
+                {error}
+              </div>
+            )}
+
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className={`auth-button ${loading ? 'auth-button-loading' : ''}`}
+              className="w-full py-4 px-6 rounded-xl font-semibold text-gray-800 text-lg
+                       bg-white/40 backdrop-blur-md
+                       border border-white/50
+                       shadow-lg hover:shadow-xl
+                       hover:bg-white/50
+                       disabled:opacity-50 disabled:cursor-not-allowed
+                       transition-all duration-300
+                       transform hover:scale-[1.02]"
             >
-              {loading ? '' : 'Sign in'}
+              {loading ? 'Logging in...' : 'Log In'}
             </button>
           </form>
 
-          {/* Footer link */}
-          <div className="auth-footer">
-            <p>
-              Don&apos;t have an account?{' '}
-              <Link href="/auth/signup" className="auth-link">Sign up</Link>
-            </p>
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-400/30"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white/30 backdrop-blur-sm text-gray-700 rounded-full">
+                or
+              </span>
+            </div>
           </div>
 
-          {/* Dev Sign-In Section */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="dev-signin-section">
-              <button
-                onClick={handleDevLogin}
-                disabled={loading}
-                className="dev-signin-btn"
-                type="button"
+          {/* Sign Up Link */}
+          <div className="text-center">
+            <p className="text-gray-700">
+              Don't have an account?{' '}
+              <Link 
+                href="/auth/signup" 
+                className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
               >
-                {loading ? '' : '🚀 Dev Sign-In (dev@vibepoint.local)'}
-              </button>
-              <p className="dev-only-label">Development only</p>
-            </div>
-          )}
+                Sign up
+              </Link>
+            </p>
+          </div>
         </div>
 
-        {/* Back to home link */}
-        <Link href="/" className="back-home-link">
+        {/* Back Button */}
+        <button
+          onClick={() => router.push('/')}
+          className="w-full mt-6 py-3 text-gray-700 hover:text-gray-800 font-medium transition-colors"
+        >
           ← Back to home
-        </Link>
+        </button>
       </div>
     </div>
   )
