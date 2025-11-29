@@ -2,12 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { MoodCoordinates } from '@/types'
 import { checkThrottle, getLastMoodEntry, calculateMinutesSince } from '@/lib/moodUtils'
 import { ThrottleWarningModal } from '@/components/ThrottleWarningModal'
 import { HardLimitModal } from '@/components/HardLimitModal'
 import { RapidShiftContextPrompt } from '@/components/RapidShiftContextPrompt'
+import { UpYourVibeModal } from '@/components/UpYourVibeModal'
+import { Recipe } from '@/types'
+import { checkProStatusClient } from '@/lib/pro-tier'
 
 interface QuestionData {
   focus: string
@@ -54,6 +58,11 @@ export default function QuestionsPage() {
     minutesUntilNext: number | null
   } | null>(null)
 
+  // Up Your Vibe modal states
+  const [showUpYourVibe, setShowUpYourVibe] = useState(false)
+  const [suggestedRecipe, setSuggestedRecipe] = useState<Recipe | null>(null)
+  const [lastSavedEntryId, setLastSavedEntryId] = useState<string | null>(null)
+
   useEffect(() => {
     // Get coordinates from localStorage
     const storedCoords = localStorage.getItem('moodCoordinates')
@@ -77,9 +86,11 @@ export default function QuestionsPage() {
     setError('')
 
     try {
+      // AUTH DISABLED FOR DEVELOPMENT - Allow viewing but warn on save
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        router.push('/auth/login')
+        setError('Authentication required to save entries. Please log in first.')
+        setLoading(false)
         return
       }
 
@@ -124,39 +135,42 @@ export default function QuestionsPage() {
         .select()
 
       if (error) {
-        console.error('Database error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code,
-          fullError: JSON.stringify(error, null, 2)
-        })
-        
-        // If error is about emotion_name column, try again without it
-        if (error.message?.includes('emotion_name') && entryData.emotion_name) {
-          console.log('Schema cache not updated yet. Retrying without emotion_name...')
-          const entryDataWithoutEmotion = { ...entryData }
-          delete entryDataWithoutEmotion.emotion_name
-          
-          const { data: retryData, error: retryError } = await supabase
-            .from('mood_entries')
-            .insert(entryDataWithoutEmotion)
-            .select()
-          
-          if (retryError) {
-            const errorMessage = retryError.message || retryError.details || retryError.hint || 'Failed to save entry. Please check your connection and try again.'
-            setError(`Failed to save entry: ${errorMessage}`)
-          } else if (retryData && retryData.length > 0) {
-            localStorage.removeItem('moodCoordinates')
-            router.push('/success')
-            return
-          }
-        }
-        
+        console.error('Database error:', error)
         const errorMessage = error.message || error.details || error.hint || 'Failed to save entry. Please check your connection and try again.'
         setError(`Failed to save entry: ${errorMessage}`)
       } else if (data && data.length > 0) {
+        const savedEntry = data[0]
         localStorage.removeItem('moodCoordinates')
+        
+        // Check if this is a low mood entry and user is Pro
+        const isLowMood = coordinates.y < 0.5
+        if (isLowMood) {
+          try {
+            const proStatus = await checkProStatusClient()
+            if (proStatus.isPro) {
+              // Fetch suggested recipe
+              const suggestResponse = await fetch(
+                `/api/recipes/suggest?entryId=${savedEntry.id}&happinessLevel=${coordinates.y}&motivationLevel=${coordinates.x}`
+              )
+              
+              if (suggestResponse.ok) {
+                const suggestData = await suggestResponse.json()
+                if (suggestData.recipe) {
+                  setSuggestedRecipe(suggestData.recipe)
+                  setLastSavedEntryId(savedEntry.id)
+                  setShowUpYourVibe(true)
+                  setLoading(false)
+                  return // Don't redirect yet - show modal first
+                }
+              }
+            }
+          } catch (err) {
+            console.error('Error checking for recipe suggestion:', err)
+            // Continue to success page even if suggestion fails
+          }
+        }
+        
+        // Not low mood or suggestion failed - proceed normally
         router.push('/success')
       } else {
         console.warn('Insert succeeded but no data returned')
@@ -178,9 +192,10 @@ export default function QuestionsPage() {
     setError('')
 
     try {
+      // AUTH DISABLED FOR DEVELOPMENT - Allow viewing but warn on save
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        router.push('/auth/login')
+        setError('Authentication required to save entries. Please log in first.')
         setLoading(false)
         return
       }
@@ -266,6 +281,19 @@ export default function QuestionsPage() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] py-12 px-4 flex flex-col items-center">
       <div className="w-full max-w-2xl">
+        {/* Navigation */}
+        <div className="mb-6 w-full">
+          <Link
+            href="/mood"
+            className="inline-flex items-center gap-2 text-sm font-medium text-[var(--color-text-soft)] hover:text-[var(--color-text)] transition-colors"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+            Back to Mood Selection
+          </Link>
+        </div>
+        
         <div className="mb-12 text-center">
           <h1 className="text-3xl font-bold mb-3">
             Tell us more about your mood
@@ -414,6 +442,22 @@ export default function QuestionsPage() {
         isOpen={showContextPrompt}
         onCancel={handleContextCancel}
         onSubmit={handleContextSubmit}
+      />
+      <UpYourVibeModal
+        isOpen={showUpYourVibe}
+        recipe={suggestedRecipe}
+        onClose={() => {
+          setShowUpYourVibe(false)
+          router.push('/success')
+        }}
+        onStartRecipe={(recipeId) => {
+          setShowUpYourVibe(false)
+          const params = new URLSearchParams({ id: recipeId })
+          if (lastSavedEntryId) {
+            params.append('triggeredEntryId', lastSavedEntryId)
+          }
+          router.push(`/recipe-player?${params.toString()}`)
+        }}
       />
     </div>
   )

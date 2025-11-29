@@ -67,33 +67,37 @@ export interface MoodStats {
   patterns_unlocked: boolean
 }
 
-// Recipe types (Pro tier)
+// Recipe types (Pro tier) - New schema
 export interface RecipeStep {
-  step: number
-  focus: string
-  instruction: string
-  duration: number
+  id: string
+  recipe_id: string
+  order_index: number
+  title: string
+  description: string
+  duration: number // seconds
+  created_at: string
 }
 
 export interface Recipe {
   id: string
   user_id: string
   title: string
-  target_emotion: string
-  duration: string
-  steps: RecipeStep[]
-  why_this_works: string
+  description: string
+  total_duration: number // total seconds
   is_favorite: boolean
-  use_count: number
   created_at: string
-  last_used_at?: string | null
+  updated_at: string
+  recipe_steps?: RecipeStep[] // populated when fetching with steps
+  // Effectiveness tracking (optional, may not be present if recipe hasn't been used)
+  times_used?: number
+  success_count?: number
+  avg_rating?: number
 }
 
 export interface RecipeInput {
   title: string
-  target_emotion: string
-  duration?: string
-  steps: RecipeStep[]
-  why_this_works: string
+  description: string
+  total_duration: number
   is_favorite?: boolean
+  steps: Omit<RecipeStep, 'id' | 'recipe_id' | 'created_at'>[]
 }

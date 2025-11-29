@@ -1,354 +1,702 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { Recipe } from '@/types';
+import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { Recipe, RecipeStep } from '@/types'
+import { RecipeFeedbackModal } from '@/components/RecipeFeedbackModal'
+import { supabase } from '@/lib/supabase'
 
-// Sample recipe for prototype/demo fallback
-const sampleRecipe: Recipe = {
-  id: 'sample',
-  user_id: 'demo',
-  title: "Your Confidence Recipe",
-  target_emotion: "confident",
-  duration: "60 seconds",
-  steps: [
-    {
-      step: 1,
-      focus: "Mental shift",
-      instruction: "Recall a time when you felt fully prepared. Close your eyes and remember that feeling of 'I've got this.'",
-      duration: 15,
-    },
-    {
-      step: 2,
-      focus: "Body adjustment",
-      instruction: "Stand tall, pull your shoulders back, and take a deep breath. Embody the posture of confidence.",
-      duration: 25,
-    },
-    {
-      step: 3,
-      focus: "Action intent",
-      instruction: "Say out loud: 'I am capable and ready.' Visualise your next successful action.",
-      duration: 20,
-    }
-  ],
-  why_this_works: "This recipe combines memory recall with physiological changes (power posing) to rapidly shift your state.",
-  is_favorite: false,
-  use_count: 0,
-  created_at: new Date().toISOString()
-};
+type Screen = 'pre-start' | 'player' | 'completion'
 
-export default function RecipePlayerPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const recipeId = searchParams.get('id');
+function RecipePlayerPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const recipeId = searchParams.get('id')
   
-  const [loading, setLoading] = useState(!!recipeId);
-  const [recipe, setRecipe] = useState<Recipe>(sampleRecipe);
-  const [activeStep, setActiveStep] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
+  const [recipe, setRecipe] = useState<Recipe | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [screen, setScreen] = useState<Screen>('pre-start')
+  const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [timeRemaining, setTimeRemaining] = useState(0)
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [recipeAttemptId, setRecipeAttemptId] = useState<string | null>(null)
+  const [startingMood, setStartingMood] = useState<{ x: number; y: number } | null>(null)
+
+  const loadStep = useCallback((index: number) => {
+    if (!recipe?.recipe_steps) return
+    
+    setCurrentStepIndex(index)
+    setTimeRemaining(recipe.recipe_steps[index].duration)
+    setIsPlaying(false)
+  }, [recipe])
+
+  const completeRecipe = useCallback(async () => {
+    setIsPlaying(false)
+    
+    // Try to find or create recipe attempt record
+    if (recipe && recipeAttemptId) {
+      // Attempt already exists (from "Up Your Vibe" flow)
+      setShowFeedback(true)
+    } else if (recipe) {
+      // Create new attempt record
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: attemptData, error: attemptError } = await supabase
+            .from('recipe_attempts')
+            .insert({
+              user_id: user.id,
+              recipe_id: recipe.id,
+              completed: false,
+            })
+            .select()
+            .single()
+
+          if (!attemptError && attemptData) {
+            setRecipeAttemptId(attemptData.id)
+          }
+        }
+      } catch (err) {
+        console.error('Error creating recipe attempt:', err)
+      }
+      
+      setShowFeedback(true)
+    } else {
+      setScreen('completion')
+    }
+  }, [recipe, recipeAttemptId])
 
   useEffect(() => {
-    if (recipeId && recipeId !== 'sample') {
-      fetchRecipe(recipeId);
+    if (recipeId) {
+      fetchRecipe(recipeId)
     } else {
-      // Use sample recipe
-      setTimeLeft(sampleRecipe.steps[0].duration);
+      setLoading(false)
     }
-  }, [recipeId]);
+  }, [recipeId])
+
+  useEffect(() => {
+    if (!isPlaying || screen !== 'player') return
+
+    const interval = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev <= 1) {
+          // Auto-advance to next step
+          if (recipe && currentStepIndex < (recipe.recipe_steps?.length || 0) - 1) {
+            loadStep(currentStepIndex + 1)
+          } else {
+            completeRecipe()
+          }
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [isPlaying, currentStepIndex, recipe, screen, loadStep, completeRecipe])
 
   const fetchRecipe = async (id: string) => {
     try {
-      const res = await fetch(`/api/recipes/${id}`);
-      const data = await res.json();
+      const res = await fetch(`/api/recipes/${id}`)
+      const data = await res.json()
       
       if (res.ok && data.recipe) {
-        setRecipe(data.recipe);
-        setTimeLeft(data.recipe.steps[0].duration);
+        setRecipe(data.recipe)
       } else {
-        console.error("Failed to load recipe, using sample");
-        // Keep sample recipe
+        console.error('Failed to load recipe')
       }
     } catch (err) {
-      console.error(err);
+      console.error(err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const trackUsage = async () => {
-    if (recipe.id === 'sample') return;
+  const startRecipe = useCallback(async () => {
+    if (!recipe?.recipe_steps || recipe.recipe_steps.length === 0) return
     
-    try {
-      await fetch(`/api/recipes/${recipe.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'increment_use' }),
-      });
-    } catch (err) {
-      console.error("Failed to track usage", err);
-    }
-  };
+    // Check if this recipe was triggered from a mood entry (Up Your Vibe)
+    // The attempt ID would be in URL params or we'd create one
+    const triggeredEntryId = searchParams.get('triggeredEntryId')
+    
+    if (triggeredEntryId && !recipeAttemptId) {
+      // Find the attempt record created by the suggestion
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: attemptData } = await supabase
+            .from('recipe_attempts')
+            .select('id, starting_mood_x, starting_mood_y')
+            .eq('user_id', user.id)
+            .eq('recipe_id', recipe.id)
+            .eq('triggered_after_entry_id', triggeredEntryId)
+            .eq('completed', false)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single()
 
+          if (attemptData) {
+            setRecipeAttemptId(attemptData.id)
+            if (attemptData.starting_mood_x !== null && attemptData.starting_mood_y !== null) {
+              setStartingMood({
+                x: attemptData.starting_mood_x,
+                y: attemptData.starting_mood_y,
+              })
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error loading recipe attempt:', err)
+      }
+    }
+    
+    setScreen('player')
+    loadStep(0)
+  }, [recipe, loadStep, searchParams, recipeAttemptId])
+
+  const nextStep = useCallback(() => {
+    if (!recipe?.recipe_steps) return
+    
+    setCurrentStepIndex(prev => {
+      if (recipe.recipe_steps && prev < recipe.recipe_steps.length - 1) {
+        const newIndex = prev + 1
+        setTimeRemaining(recipe.recipe_steps[newIndex].duration)
+        setIsPlaying(false)
+        return newIndex
+      } else {
+        completeRecipe()
+        return prev
+      }
+    })
+  }, [recipe, completeRecipe])
+
+  const handleExit = useCallback(() => {
+    setIsPlaying(prev => {
+      if (prev) {
+        setShowExitConfirm(true)
+      } else {
+        router.push('/recipes')
+      }
+      return prev
+    })
+  }, [router])
+
+  const togglePlayPause = useCallback(() => {
+    setIsPlaying(prev => !prev)
+  }, [])
+
+  const previousStep = useCallback(() => {
+    setCurrentStepIndex(prev => {
+      if (prev > 0) {
+        const newIndex = prev - 1
+        if (recipe?.recipe_steps) {
+          setTimeRemaining(recipe.recipe_steps[newIndex].duration)
+          setIsPlaying(false)
+        }
+        return newIndex
+      }
+      return prev
+    })
+  }, [recipe])
+
+  // Keyboard shortcuts
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    if (screen !== 'player') return
 
-    if (isPlaying && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (isPlaying && timeLeft === 0) {
-      handleNextStep();
+    function handleKeyPress(e: KeyboardEvent) {
+      switch(e.key) {
+        case ' ':
+          e.preventDefault()
+          togglePlayPause()
+          break
+        case 'ArrowLeft':
+          e.preventDefault()
+          previousStep()
+          break
+        case 'ArrowRight':
+          e.preventDefault()
+          nextStep()
+          break
+        case 'Escape':
+          e.preventDefault()
+          handleExit()
+          break
+      }
     }
 
-    return () => clearInterval(interval);
-  }, [isPlaying, timeLeft]);
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [screen, togglePlayPause, previousStep, nextStep, handleExit])
 
-  const handleStart = () => {
-    setIsPlaying(true);
-    setHasStarted(true);
-    trackUsage();
-  };
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
 
-  const handleNextStep = () => {
-    if (activeStep < recipe.steps.length - 1) {
-      setActiveStep((prev) => {
-        const next = prev + 1;
-        setTimeLeft(recipe.steps[next].duration);
-        return next;
-      });
-    } else {
-      setIsPlaying(false);
-      setIsComplete(true);
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    if (mins > 0) {
+      return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`
     }
-  };
-
-  const handlePreviousStep = () => {
-    if (activeStep > 0) {
-      setActiveStep((prev) => {
-        const next = prev - 1;
-        setTimeLeft(recipe.steps[next].duration);
-        return next;
-      });
-      setIsPlaying(false);
-    }
-  };
-
-  const handleRestart = () => {
-    setActiveStep(0);
-    setTimeLeft(recipe.steps[0].duration);
-    setIsPlaying(true);
-    setIsComplete(false);
-  };
-
-  const togglePlay = () => {
-    setIsPlaying(!isPlaying);
-  };
+    return `${secs}s`
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
+      <div 
+        className="flex min-h-screen items-center justify-center"
+        style={{ 
+          background: 'linear-gradient(45deg, #A855F7 0%, #EC4899 50%, #F97316 100%)',
+          backgroundAttachment: 'fixed'
+        }}
+      >
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-white"></div>
       </div>
-    );
+    )
   }
 
-  // Progress calculation for the circle
-  const currentStepDuration = recipe.steps[activeStep].duration;
-  const progress = ((currentStepDuration - timeLeft) / currentStepDuration) * 100;
-  const circumference = 2 * Math.PI * 120; // Radius 120
-  const dashoffset = circumference - (progress / 100) * circumference;
+  if (!recipe) {
+    return (
+      <div 
+        className="flex min-h-screen items-center justify-center text-white"
+        style={{ 
+          background: 'linear-gradient(45deg, #A855F7 0%, #EC4899 50%, #F97316 100%)',
+          backgroundAttachment: 'fixed'
+        }}
+      >
+        <div className="text-center">
+          <h2 className="mb-4 font-serif text-2xl font-semibold">Recipe not found</h2>
+          <Link
+            href="/recipes"
+            className="inline-block rounded-[24px] bg-white px-6 py-3 text-sm font-semibold text-[#1a1a2e]"
+          >
+            Back to Recipes
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  const steps = recipe.recipe_steps || []
+  const currentStep = steps[currentStepIndex]
+  const radius = 130
+  const circumference = 2 * Math.PI * radius // ~817
+  const progress = currentStep ? (currentStep.duration - timeRemaining) / currentStep.duration : 0
+  const strokeDashoffset = circumference * (1 - progress)
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col relative overflow-hidden">
-      {/* Background Gradients */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-        <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-blue-900 rounded-full blur-[120px] opacity-40 animate-pulse-slow"></div>
-        <div className="absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-pink-900 rounded-full blur-[120px] opacity-40 animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
-      </div>
+    <div 
+      className="relative min-h-screen text-white"
+      style={{ 
+        background: 'linear-gradient(135deg, #A855F7 0%, #EC4899 50%, #F97316 100%)',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      {/* Pre-Start Screen */}
+      {screen === 'pre-start' && (
+        <div className="relative z-10 mx-auto max-w-[600px] px-5 py-8">
+          <Link
+            href="/recipes"
+            className="mb-8 inline-flex items-center gap-2 rounded-[24px] border-2 border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>Back</span>
+          </Link>
 
-      {/* Header */}
-      <header className="relative z-10 p-6 flex justify-between items-center">
-        <button 
-          onClick={() => router.back()}
-          className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        <div className="text-sm font-medium tracking-wider uppercase opacity-70">Emotion Recipe</div>
-        <div className="w-10"></div> {/* Spacer */}
-      </header>
-
-      <main className="flex-1 relative z-10 flex flex-col items-center justify-center p-6 text-center">
-        {isComplete ? (
-          <div className="animate-fade-in space-y-8">
-            <div className="text-6xl mb-4">🎉</div>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-blue-400">
-              Recipe Complete!
+          <div className="space-y-8 text-center">
+            <h1 
+              className="font-serif text-[36px] font-semibold text-white"
+              style={{ fontFamily: 'var(--font-fraunces)' }}
+            >
+              {recipe.title}
             </h1>
-            <p className="text-slate-300 max-w-xs mx-auto">
-              Great job taking a moment to shift your state. How are you feeling now?
+
+            <div className="flex items-center justify-center gap-8">
+              <div className="text-center">
+                <div className="mb-1 font-serif text-2xl font-semibold">{formatDuration(recipe.total_duration)}</div>
+                <div className="text-sm text-white/80">Duration</div>
+              </div>
+              <div className="h-10 w-px bg-white/20"></div>
+              <div className="text-center">
+                <div className="mb-1 font-serif text-2xl font-semibold">{steps.length}</div>
+                <div className="text-sm text-white/80">Steps</div>
+              </div>
+            </div>
+
+            <p 
+              className="mx-auto max-w-[480px] text-lg leading-relaxed text-white/90"
+              style={{ fontFamily: 'var(--font-outfit)' }}
+            >
+              {recipe.description}
             </p>
-            
-            <div className="flex flex-col space-y-4 w-full max-w-xs mx-auto pt-8">
-              <Link 
-                href="/mood/new"
-                className="w-full py-4 bg-gradient-to-r from-pink-600 to-blue-600 rounded-xl font-bold shadow-lg shadow-pink-500/20 hover:shadow-pink-500/40 transition-all active:scale-95"
+
+            <div className="mx-auto max-w-[480px] space-y-3 rounded-[20px] bg-white/10 p-6 backdrop-blur-sm">
+              <h3 className="mb-4 font-serif text-xl font-semibold">Steps</h3>
+              {steps.map((step, idx) => (
+                <div key={step.id} className="flex items-start gap-4 text-left">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 font-semibold">
+                    {idx + 1}
+                  </div>
+                  <div className="flex-1">
+                    <div className="mb-1 font-semibold">{step.title}</div>
+                    <div className="text-sm text-white/80">{step.description}</div>
+                    <div className="mt-1 text-xs text-white/60">{formatDuration(step.duration)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={startRecipe}
+              className="mx-auto rounded-[24px] px-8 py-4 text-lg font-semibold text-white shadow-[0_4px_16px_rgba(168,85,247,0.3)] transition-transform hover:scale-105"
+              style={{
+                background: 'linear-gradient(90deg, #A855F7 0%, #EC4899 50%, #F97316 100%)',
+              }}
+            >
+              Start Recipe
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Player Screen */}
+      {screen === 'player' && currentStep && (
+        <div className="relative z-10 flex min-h-screen flex-col">
+          {/* Header */}
+          <header className="flex items-center justify-between p-6">
+            <button
+              onClick={handleExit}
+              className="rounded-[24px] border-2 border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+            >
+              Exit
+            </button>
+            <div className="text-sm font-medium text-white/80">
+              Step {currentStepIndex + 1} of {steps.length}
+            </div>
+            <div className="w-20"></div> {/* Spacer */}
+          </header>
+
+          {/* Main Content */}
+          <main className="flex flex-1 flex-col items-center justify-center px-6 pb-20">
+            {/* Step Title */}
+            <h2 
+              className="mb-6 text-center font-serif text-[32px] font-semibold text-white"
+              style={{ fontFamily: 'var(--font-fraunces)' }}
+            >
+              {currentStep.title}
+            </h2>
+
+            {/* Step Description */}
+            <p 
+              className="mb-12 max-w-[480px] text-center text-lg leading-relaxed text-white/90"
+              style={{ fontFamily: 'var(--font-outfit)' }}
+            >
+              {currentStep.description}
+            </p>
+
+            {/* Circular Timer */}
+            <div className="relative mb-12 flex h-[280px] w-[280px] items-center justify-center">
+              <svg className="absolute h-full w-full -rotate-90" viewBox="0 0 280 280">
+                <defs>
+                  <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#A855F7" />
+                    <stop offset="50%" stopColor="#EC4899" />
+                    <stop offset="100%" stopColor="#F97316" />
+                  </linearGradient>
+                </defs>
+                
+                {/* Background circle */}
+                <circle
+                  cx="140"
+                  cy="140"
+                  r={radius}
+                  fill="none"
+                  stroke="rgba(168, 85, 247, 0.1)"
+                  strokeWidth="8"
+                />
+                
+                {/* Progress circle */}
+                <circle
+                  cx="140"
+                  cy="140"
+                  r={radius}
+                  fill="none"
+                  stroke="url(#timerGradient)"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  style={{ 
+                    transition: 'stroke-dashoffset 1s linear',
+                  }}
+                />
+              </svg>
+              
+              {/* Time Display */}
+              <div className="absolute flex flex-col items-center justify-center">
+                <div 
+                  className="font-serif text-[56px] font-semibold leading-none"
+                  style={{ fontFamily: 'var(--font-fraunces)' }}
+                >
+                  {formatTime(timeRemaining)}
+                </div>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="mb-8 flex items-center justify-center gap-6">
+              <button
+                onClick={previousStep}
+                disabled={currentStepIndex === 0}
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                Log New Mood
-              </Link>
-              <button 
-                onClick={handleRestart}
-                className="w-full py-4 bg-white/10 rounded-xl font-bold hover:bg-white/20 transition-colors backdrop-blur-sm"
-              >
-                Run Recipe Again
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
               </button>
-              <Link
-                href="/recipes"
-                className="text-sm text-slate-400 hover:text-white transition-colors py-2"
+              
+              <button
+                onClick={togglePlayPause}
+                className="flex h-[72px] w-[72px] items-center justify-center rounded-full text-white shadow-[0_4px_16px_rgba(168,85,247,0.3)] transition-transform hover:scale-105"
+                style={{
+                  background: 'linear-gradient(90deg, #A855F7 0%, #EC4899 50%, #F97316 100%)',
+                }}
               >
-                Back to Recipes
-              </Link>
+                {isPlaying ? (
+                  <svg className="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                  </svg>
+                ) : (
+                  <svg className="ml-1 h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                )}
+              </button>
+
+              <button
+                onClick={nextStep}
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Step Navigation Dots */}
+            <div className="flex items-center justify-center gap-2">
+              {steps.map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`rounded-full transition-all ${
+                    idx === currentStepIndex
+                      ? 'h-2 w-6 bg-purple-300'
+                      : 'h-2 w-2 bg-white/30'
+                  }`}
+                />
+              ))}
+            </div>
+          </main>
+        </div>
+      )}
+
+      {/* Completion Screen */}
+      {screen === 'completion' && (
+        <div className="relative z-10 mx-auto flex min-h-screen max-w-[600px] flex-col items-center justify-center px-5 py-8 text-center">
+          <div className="mb-8 flex h-[120px] w-[120px] items-center justify-center rounded-full text-6xl shadow-[0_4px_16px_rgba(168,85,247,0.3)]" style={{
+            background: 'linear-gradient(90deg, #A855F7 0%, #EC4899 50%, #F97316 100%)',
+          }}>
+            ✓
+          </div>
+          
+          <h1 
+            className="mb-4 font-serif text-[36px] font-semibold text-white"
+            style={{ fontFamily: 'var(--font-fraunces)' }}
+          >
+            Recipe Complete!
+          </h1>
+          
+          <p 
+            className="mb-8 max-w-[480px] text-lg text-white/90"
+            style={{ fontFamily: 'var(--font-outfit)' }}
+          >
+            Great job taking a moment to shift your state. How are you feeling now?
+          </p>
+          
+          <div className="flex w-full max-w-[400px] flex-col gap-4">
+            <Link
+              href="/mood"
+              className="rounded-[24px] px-6 py-4 text-base font-semibold text-white shadow-[0_4px_16px_rgba(168,85,247,0.3)] transition-transform hover:scale-105"
+              style={{
+                background: 'linear-gradient(90deg, #A855F7 0%, #EC4899 50%, #F97316 100%)',
+              }}
+              onClick={() => {
+                // Store attempt ID in localStorage so we can link the follow-up entry
+                if (recipeAttemptId) {
+                  localStorage.setItem('recipeFeedbackAttemptId', recipeAttemptId)
+                  if (startingMood) {
+                    localStorage.setItem('recipeFeedbackStartingMood', JSON.stringify(startingMood))
+                  }
+                }
+              }}
+            >
+              Log Your Mood
+            </Link>
+            
+            <button
+              onClick={() => {
+                setScreen('player')
+                loadStep(0)
+              }}
+              className="rounded-[24px] border-2 border-white/20 bg-white/10 px-6 py-4 text-base font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+            >
+              Do It Again
+            </button>
+            
+            <Link
+              href="/recipes"
+              className="rounded-[24px] border-2 border-white/20 bg-white/10 px-6 py-4 text-base font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+            >
+              Back to Recipes
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Exit Confirmation Modal */}
+      {showExitConfirm && (
+        <div 
+          className="fixed inset-0 z-[1000] flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+          onClick={() => setShowExitConfirm(false)}
+        >
+          <div 
+            className="relative z-10 w-full max-w-[400px] rounded-[28px] bg-white p-6 shadow-[0_25px_80px_rgba(0,0,0,0.3)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-4 font-serif text-xl font-semibold text-[#1a1a2e]">
+              Exit Recipe?
+            </h3>
+            <p className="mb-6 text-sm text-[#4a4a6a]">
+              Are you sure you want to exit? Your progress will be lost.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                className="rounded-[24px] border-2 border-black/10 bg-white px-6 py-2.5 text-sm font-semibold text-[#1a1a2e] transition-colors hover:bg-gray-50"
+                onClick={() => setShowExitConfirm(false)}
+              >
+                Continue
+              </button>
+              <button
+                className="rounded-[24px] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(168,85,247,0.3)]"
+                style={{
+                  background: 'linear-gradient(90deg, #A855F7 0%, #EC4899 50%, #F97316 100%)',
+                }}
+                onClick={() => router.push('/recipes')}
+              >
+                Exit
+              </button>
             </div>
           </div>
-        ) : (
-          <div className="w-full max-w-md mx-auto flex flex-col items-center">
-            {!hasStarted ? (
-              <div className="space-y-8 animate-fade-in">
-                <div className="space-y-2">
-                  <h1 className="text-3xl font-bold">{recipe.title}</h1>
-                  <div className="inline-block px-3 py-1 rounded-full bg-pink-500/20 text-pink-300 text-sm font-medium border border-pink-500/30">
-                    Target: {recipe.target_emotion}
-                  </div>
-                </div>
-                
-                <div className="p-6 bg-white/5 rounded-2xl backdrop-blur-sm border border-white/10">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-300">Why this works</h3>
-                  <p className="text-slate-300 leading-relaxed">
-                    {recipe.why_this_works}
-                  </p>
-                </div>
+        </div>
+      )}
 
-                <div className="flex items-center justify-center space-x-8 py-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold">{recipe.duration}</div>
-                    <div className="text-xs text-slate-400 uppercase tracking-wide">Duration</div>
-                  </div>
-                  <div className="w-px h-10 bg-white/10"></div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold">{recipe.steps.length}</div>
-                    <div className="text-xs text-slate-400 uppercase tracking-wide">Steps</div>
-                  </div>
-                </div>
+      {/* Feedback Modal */}
+      <RecipeFeedbackModal
+        isOpen={showFeedback}
+        recipe={recipe}
+        attemptId={recipeAttemptId}
+        onClose={() => {
+          setShowFeedback(false)
+          setScreen('completion')
+        }}
+        onSubmit={async (feedback) => {
+          try {
+            // Get follow-up entry if user just logged a mood
+            const followUpAttemptId = localStorage.getItem('recipeFeedbackAttemptId')
+            let followUpEntryId: string | null = null
+            let endingMoodX: number | null = null
+            let endingMoodY: number | null = null
 
-                <button 
-                  onClick={handleStart}
-                  className="w-full py-4 bg-white text-slate-900 rounded-xl font-bold text-lg shadow-xl hover:bg-slate-100 transition-transform active:scale-95"
-                >
-                  Start Recipe
-                </button>
-              </div>
-            ) : (
-              <div className="w-full flex flex-col items-center">
-                {/* Timer Circle */}
-                <div className="relative w-64 h-64 mb-10 flex items-center justify-center">
-                  {/* Background Circle */}
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle
-                      cx="128"
-                      cy="128"
-                      r="120"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="transparent"
-                      className="text-white/10"
-                    />
-                    {/* Progress Circle */}
-                    <circle
-                      cx="128"
-                      cy="128"
-                      r="120"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="transparent"
-                      strokeDasharray={circumference}
-                      strokeDashoffset={dashoffset}
-                      strokeLinecap="round"
-                      className="text-pink-500 transition-all duration-1000 ease-linear"
-                    />
-                  </svg>
-                  
-                  {/* Time Display */}
-                  <div className="absolute flex flex-col items-center justify-center">
-                    <div className="text-6xl font-bold font-mono tracking-tight">
-                      {timeLeft}
-                    </div>
-                    <div className="text-sm text-pink-400 font-medium mt-1 uppercase tracking-wider">
-                      Seconds
-                    </div>
-                  </div>
-                </div>
+            if (followUpAttemptId === recipeAttemptId) {
+              // Try to get the most recent mood entry as follow-up
+              const { data: { user } } = await supabase.auth.getUser()
+              if (user) {
+                const { data: recentEntry } = await supabase
+                  .from('mood_entries')
+                  .select('id, happiness_level, motivation_level')
+                  .eq('user_id', user.id)
+                  .order('created_at', { ascending: false })
+                  .limit(1)
+                  .single()
 
-                {/* Instructions */}
-                <div className="w-full space-y-6 text-center animate-fade-in" key={activeStep}>
-                  <div className="space-y-2">
-                    <div className="text-sm uppercase tracking-widest text-blue-400 font-bold">
-                      Step {activeStep + 1}: {recipe.steps[activeStep].focus}
-                    </div>
-                    <h2 className="text-2xl font-medium leading-snug min-h-[4rem]">
-                      {recipe.steps[activeStep].instruction}
-                    </h2>
-                  </div>
+                if (recentEntry) {
+                  followUpEntryId = recentEntry.id
+                  endingMoodX = recentEntry.motivation_level
+                  endingMoodY = recentEntry.happiness_level
+                }
+              }
+              
+              localStorage.removeItem('recipeFeedbackAttemptId')
+              localStorage.removeItem('recipeFeedbackStartingMood')
+            }
 
-                  {/* Controls */}
-                  <div className="flex items-center justify-center space-x-6 pt-8">
-                    <button 
-                      onClick={handlePreviousStep}
-                      disabled={activeStep === 0}
-                      className="p-4 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                    
-                    <button 
-                      onClick={togglePlay}
-                      className="p-6 rounded-full bg-white text-slate-900 hover:scale-105 transition-transform shadow-lg shadow-white/10"
-                    >
-                      {isPlaying ? (
-                        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                        </svg>
-                      ) : (
-                        <svg className="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      )}
-                    </button>
+            const response = await fetch('/api/recipes/feedback', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                attemptId: recipeAttemptId,
+                rating: feedback.rating,
+                mostHelpfulIngredient: feedback.mostHelpfulIngredient,
+                notes: feedback.notes,
+                followUpEntryId,
+                endingMoodX,
+                endingMoodY,
+              }),
+            })
 
-                    <button 
-                      onClick={handleNextStep}
-                      className="p-4 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </main>
+            if (response.ok) {
+              setShowFeedback(false)
+              setScreen('completion')
+            } else {
+              console.error('Failed to submit feedback')
+              // Still close modal and show completion
+              setShowFeedback(false)
+              setScreen('completion')
+            }
+          } catch (err) {
+            console.error('Error submitting feedback:', err)
+            // Still close modal and show completion
+            setShowFeedback(false)
+            setScreen('completion')
+          }
+        }}
+      />
     </div>
-  );
+  )
 }
 
-
+export default function RecipePlayerPageWrapper() {
+  return (
+    <Suspense fallback={
+      <div 
+        className="flex min-h-screen items-center justify-center"
+        style={{ 
+          background: 'linear-gradient(45deg, #A855F7 0%, #EC4899 50%, #F97316 100%)',
+          backgroundAttachment: 'fixed'
+        }}
+      >
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-white"></div>
+      </div>
+    }>
+      <RecipePlayerPage />
+    </Suspense>
+  )
+}
