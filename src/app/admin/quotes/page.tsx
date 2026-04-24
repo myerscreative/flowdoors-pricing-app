@@ -374,7 +374,14 @@ export default function AdminQuotesPage() {
       author: 'Admin User',
     }
     try {
+      console.warn('💾 Saving note to Firestore...', { quoteId, noteContent })
+      
+      // Wait for Firestore write to complete before updating UI
       await addNoteToQuote(quoteId, newNote as QuoteNote)
+      
+      console.warn('✅ Note saved to Firestore successfully')
+      
+      // Only update local state after successful Firestore write
       setAllQuotes((prev) =>
         prev.map((q) =>
           q.id === quoteId
@@ -385,12 +392,18 @@ export default function AdminQuotesPage() {
             : q
         )
       )
+      
       toast({ title: 'Success', description: 'Note added successfully.' })
     } catch (error) {
-      console.error('Failed to add note', error)
+      console.error('❌ Failed to add note to Firestore:', error)
+      
+      // Show detailed error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.error('Error details:', errorMessage)
+      
       toast({
         title: 'Error',
-        description: 'Failed to add note.',
+        description: `Failed to add note: ${errorMessage}`,
         variant: 'destructive',
       })
     }
