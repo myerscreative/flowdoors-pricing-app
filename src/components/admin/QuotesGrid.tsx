@@ -55,7 +55,7 @@ import {
   User,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 /* ---------- Small runtime-safe helpers (no `any`) ---------- */
 function coerceDate(value: unknown): Date | undefined {
@@ -210,20 +210,6 @@ export const getStatusClasses = (status: string) => {
         textColor: 'text-gray-600',
       }
   }
-}
-
-const StatusBadge = ({ status }: { status: string }) => {
-  const { customClass } = getStatusClasses(status)
-  return (
-    <span
-      className={cn(
-        'px-2.5 py-1 rounded-full text-[11px] font-semibold border uppercase tracking-wide',
-        customClass
-      )}
-    >
-      {status}
-    </span>
-  )
 }
 
 /** Unified "Activity" dialog: search + view + add Notes/Tasks */

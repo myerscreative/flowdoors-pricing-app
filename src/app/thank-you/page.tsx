@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Check, Mail, Phone, Calendar, ArrowRight } from 'lucide-react'
+import { Check, Mail, Phone, ArrowRight } from 'lucide-react'
 import { Suspense } from 'react'
 
 function ThankYouContent() {
