@@ -1,25 +1,9 @@
-// src/app/api/notes/route.ts
+import { adminDb } from '@/lib/firebaseAdmin'
+import { tsToIso } from '@/lib/firestoreHelpers'
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '../../../lib/prisma'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-export async function GET() {
-  try {
-    const notes = await prisma.note.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: { attachments: { orderBy: { createdAt: 'asc' } } },
-    })
-    return NextResponse.json(notes)
-  } catch (err) {
-    console.error('notes GET error', err)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    )
-  }
-}
 
 type AttachmentIn = {
   name: string
@@ -37,67 +21,88 @@ type CreateNotePayload = {
 function isCreateNotePayload(x: unknown): x is CreateNotePayload {
   if (!x || typeof x !== 'object') return false
   const o = x as Record<string, unknown>
-
-  // Check content is a non-empty string
   if (typeof o.content !== 'string' || o.content.trim().length === 0)
     return false
-
-  // Check attachments if present
   if (o.attachments !== undefined) {
     if (!Array.isArray(o.attachments)) return false
-
-    // Validate each attachment
-    for (const attachment of o.attachments) {
-      if (!attachment || typeof attachment !== 'object') return false
-      const a = attachment as Record<string, unknown>
-
+    for (const a of o.attachments) {
+      if (!a || typeof a !== 'object') return false
+      const r = a as Record<string, unknown>
       if (
-        typeof a.name !== 'string' ||
-        typeof a.type !== 'string' ||
-        typeof a.size !== 'number' ||
-        typeof a.url !== 'string' ||
-        typeof a.isImage !== 'boolean'
+        typeof r.name !== 'string' ||
+        typeof r.type !== 'string' ||
+        typeof r.size !== 'number' ||
+        typeof r.url !== 'string' ||
+        typeof r.isImage !== 'boolean'
       ) {
         return false
       }
     }
   }
-
   return true
+}
+
+function docToNote(id: string, data: FirebaseFirestore.DocumentData) {
+  return {
+    id,
+    content: data.content ?? '',
+    createdAt: tsToIso(data.createdAt) ?? new Date(0).toISOString(),
+    attachments: Array.isArray(data.attachments)
+      ? (data.attachments as AttachmentIn[]).map((a, i) => ({
+          id: `${id}-a${i}`,
+          name: a.name,
+          type: a.type,
+          size: a.size,
+          url: a.url,
+          isImage: a.isImage,
+        }))
+      : [],
+  }
+}
+
+export async function GET() {
+  try {
+    const snap = await adminDb
+      .collection('notes')
+      .orderBy('createdAt', 'desc')
+      .get()
+    const notes = snap.docs.map((d: FirebaseFirestore.QueryDocumentSnapshot) =>
+      docToNote(d.id, d.data())
+    )
+    return NextResponse.json(notes)
+  } catch (err) {
+    console.error('notes GET error', err)
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    )
+  }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const bodyUnknown: unknown = await req.json()
-    if (!isCreateNotePayload(bodyUnknown)) {
+    const body: unknown = await req.json()
+    if (!isCreateNotePayload(body)) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
     }
-    const body = bodyUnknown // typed via guard
 
-    const content = body.content
-    const attachments = body.attachments || []
-
-    if (!content && attachments.length === 0) {
-      return NextResponse.json({ error: 'Empty note' }, { status: 400 })
-    }
-
-    const created = await prisma.note.create({
-      data: {
-        content,
-        attachments: {
-          create: attachments.map((a) => ({
-            name: a.name,
-            type: a.type,
-            size: Number(a.size) || 0,
-            url: a.url,
-            isImage: Boolean(a.isImage),
-          })),
-        },
-      },
-      include: { attachments: true },
+    const now = new Date()
+    const ref = await adminDb.collection('notes').add({
+      content: body.content,
+      attachments: (body.attachments ?? []).map((a) => ({
+        name: a.name,
+        type: a.type,
+        size: Number(a.size) || 0,
+        url: a.url,
+        isImage: Boolean(a.isImage),
+      })),
+      createdAt: now,
+      updatedAt: now,
     })
-
-    return NextResponse.json(created, { status: 201 })
+    const snap = await ref.get()
+    return NextResponse.json(docToNote(ref.id, snap.data() ?? {}), {
+      status: 201,
+    })
   } catch (err) {
     console.error('notes POST error', err)
     return NextResponse.json(

@@ -1,46 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import admin from 'firebase-admin'
-
-// Ensure Firebase Admin is initialized
-if (!admin.apps.length) {
-  try {
-    const projectId =
-      process.env.FIREBASE_PROJECT_ID ||
-      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
-      process.env.GCLOUD_PROJECT ||
-      process.env.GOOGLE_CLOUD_PROJECT
-
-    let credential: admin.credential.Credential
-
-    if (
-      process.env.FIREBASE_PRIVATE_KEY &&
-      process.env.FIREBASE_CLIENT_EMAIL &&
-      projectId
-    ) {
-      const pk = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-      credential = admin.credential.cert({
-        projectId,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: pk,
-      })
-      admin.initializeApp({ projectId, credential })
-    } else {
-      credential = admin.credential.applicationDefault()
-      admin.initializeApp({ projectId, credential })
-    }
-  } catch (e) {
-    console.error('Firebase Admin initialization failed:', e)
-  }
-}
+import { adminDb } from '@/lib/firebaseAdmin'
 
 export async function GET(_request: NextRequest) {
   try {
     // TODO: Add authentication check here if needed
-    const db = admin.firestore()
+    const db = adminDb
     const ordersSnapshot = await db.collection('orders').get()
 
     const orders: Array<Record<string, unknown>> = []
-    ordersSnapshot.forEach((doc: admin.firestore.QueryDocumentSnapshot) => {
+    ordersSnapshot.forEach((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
       const data = doc.data()
       orders.push({
         id: doc.id,

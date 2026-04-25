@@ -6,14 +6,15 @@ import { getStorage } from 'firebase/storage'
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions'
 
 // Fallback config for production when env vars aren't injected
-// These are the actual values from your Firebase project
+// TODO: Replace with actual FlowDoors Firebase project values
+// NOTE: Currently using ScenicDoors values - MUST BE REPLACED!
 const fallbackConfig = {
-  apiKey: 'AIzaSyDzzpdpzRfM2n-TJYP2W_L2Q5DKq9Ix8pg',
-  authDomain: 'scenic-doors-quoter.firebaseapp.com',
-  projectId: 'scenic-doors-quoter',
-  storageBucket: 'scenic-doors-quoter.firebasestorage.app',
-  messagingSenderId: '593997843062',
-  appId: '1:593997843062:web:130eb085ae949b1df0ad57',
+  apiKey: 'REPLACE_WITH_FLOWDOORS_API_KEY',
+  authDomain: 'flowdoors-quoter.firebaseapp.com',
+  projectId: 'flowdoors-quoter',
+  storageBucket: 'flowdoors-quoter.firebasestorage.app',
+  messagingSenderId: 'REPLACE_WITH_SENDER_ID',
+  appId: 'REPLACE_WITH_APP_ID',
 }
 
 const firebaseConfig = {
@@ -33,12 +34,16 @@ const firebaseConfig = {
 
 // Debug logging (only in development)
 if (process.env.NODE_ENV === 'development') {
+  const usingEnv = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
   console.warn(
     '🔍 Firebase Client: Using',
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
-      ? 'environment vars'
-      : 'fallback config'
+    usingEnv ? 'environment vars' : 'fallback config',
+    `- Project: ${firebaseConfig.projectId}`
   )
+  if (!usingEnv) {
+    console.warn('⚠️  WARNING: FlowDoors is currently using fallback ScenicDoors config!')
+    console.warn('⚠️  Set up a separate Firebase project for FlowDoors and update .env.local')
+  }
 }
 
 // Validate required environment variables

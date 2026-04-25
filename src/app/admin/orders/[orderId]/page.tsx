@@ -1,7 +1,34 @@
+import { ApprovalDrawingCard } from '@/components/orders/ApprovalDrawingCard'
+import { ClientPortalBar } from '@/components/orders/ClientPortalBar'
+import { InviteCustomerButton } from '@/components/orders/InviteCustomerButton'
+import { CollapsibleMediaCard } from '@/components/orders/CollapsibleMediaCard'
+import { DocumentsCard } from '@/components/orders/DocumentsCard'
+import { DoorSpecsGrid } from '@/components/orders/DoorSpecsGrid'
+import { EmailsCard } from '@/components/orders/EmailsCard'
+import { LineItemsTable } from '@/components/orders/LineItemsTable'
+import { OrderProgressTracker } from '@/components/orders/OrderProgressTracker'
+import { PaymentsCard } from '@/components/orders/PaymentsCard'
+import { PricingBreakdown } from '@/components/orders/PricingBreakdown'
+import { ShippingTrackingCard } from '@/components/orders/ShippingTrackingCard'
+import { TasksCard } from '@/components/orders/TasksCard'
+import type {
+  ApprovalDrawing,
+  DocumentRecord,
+  EmailRecord,
+  LineItem,
+  OrderStage,
+  PaymentRecord,
+  PricingRow,
+  ShipmentInfo,
+  SpecField,
+  TaskRecord,
+} from '@/components/orders/types'
+import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { prisma } from '@/lib/prisma'
-import { ArrowLeft } from 'lucide-react'
+import { adminDb } from '@/lib/firebaseAdmin'
+import { tsToIso } from '@/lib/firestoreHelpers'
+import { ArrowLeft, Paperclip, Camera } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
@@ -17,11 +44,10 @@ export async function generateMetadata({
 }) {
   const { orderId } = await params
   return {
-    title: `Order ${orderId} • Scenic Admin`,
+    title: `Order ${orderId} • FlowDoors Admin`,
   }
 }
 
-// Server Component (Next.js 15): unwrap params via await
 export default async function OrderPage({
   params,
 }: {
@@ -29,57 +55,195 @@ export default async function OrderPage({
 }) {
   const { orderId } = await params
 
-  // TODO: Replace these placeholders with real data (service call) in a later step
+  // Placeholder data (wire to services in a later step)
   const status = 'Pending'
-  const createdDate = '—' // e.g., Sep 10, 2025
+  const createdDate = '—'
   const customerName = '—'
   const email = '—'
   const phone = '—'
   const customerAddress = '—'
 
-  // Options (left rail)
-  const optionFinishExterior = 'Black'
-  const optionFinishInterior = 'Black'
-  const optionHandle = 'Modern Pull'
-  const optionTrack = 'Top-Hung (Concealed)'
-  const optionGlass = 'Low-E3, Dual Pane'
+  const specs: SpecField[] = [
+    { key: 'systemType', label: 'System Type', value: 'Multi-Slide' },
+    { key: 'material', label: 'Material', value: 'Aluminum' },
+    { key: 'overallSize', label: 'Overall Size', value: '192" × 96"' },
+    { key: 'panels', label: 'Panels', value: '4' },
+    { key: 'panelLayout', label: 'Panel Layout', value: '2 Left / 2 Right' },
+    { key: 'openingDirection', label: 'Opening Direction', value: 'Slides Left' },
+    { key: 'swing', label: 'Operation', value: '2 active, 2 stationary' },
+    { key: 'frameColor', label: 'Frame Color', value: 'Black' },
+    { key: 'glassType', label: 'Glass Type', value: 'Low-E3 Dual Pane' },
+    { key: 'hardware', label: 'Hardware', value: 'Modern Pull' },
+    { key: 'doorType', label: 'Track', value: 'Top-Hung (Concealed)' },
+    { key: 'roughOpening', label: 'Rough Opening', value: '194" × 97"' },
+  ]
 
-  // Specs (main sheet)
-  const systemType = 'Multi-Slide'
-  const operation = '2 Left / 2 Right'
-  const panelConfig = '4 Panels (2 active, 2 stationary)'
-  const systemWidthIn = '192' // inches
-  const systemHeightIn = '96' // inches
-  const roWidthIn = '194' // recommended rough opening (W)
-  const roHeightIn = '97' // recommended rough opening (H)
-
-  // Pricing (footer)
   const itemPriceUSD = 12450
+  const lineItems: LineItem[] = [
+    {
+      id: 'li1',
+      description: 'Multi-Slide Door System',
+      subtitle: '192" × 96" · Black · Low-E3 · Aluminum',
+      qty: 1,
+      unitPrice: itemPriceUSD,
+    },
+  ]
 
-  // Load persisted notes (internal follow-up notes).
-  // For now, show all notes. In a later step we can scope notes to this orderId.
-  const rawNotes = await prisma.note.findMany({
-    include: { attachments: true },
-    orderBy: { createdAt: 'desc' },
-  })
-  const initialNotes = rawNotes.map((n) => ({
-    id: n.id,
-    content: n.content,
-    createdAt: n.createdAt.toISOString(),
-    attachments: n.attachments.map((a) => ({
-      id: a.id,
-      name: a.name,
-      type: a.type,
-      size: a.size,
-      url: a.url,
-      isImage: a.isImage,
-    })),
-  }))
+  const subtotal = lineItems.reduce((s, i) => s + i.qty * i.unitPrice, 0)
+  const deliveryFee = 800
+  const taxAmount = Math.round(subtotal * 0.0875)
+  const pricingRows: PricingRow[] = [
+    { label: 'Delivery (Regular)', amount: deliveryFee },
+    { label: 'Tax', amount: taxAmount },
+  ]
+  const orderTotal = subtotal + deliveryFee + taxAmount
+
+  const stages: OrderStage[] = [
+    { id: 'order', label: 'Order', status: 'complete' },
+    { id: 'deposit', label: 'Deposit', status: 'complete' },
+    { id: 'manufacturing', label: 'Manufacturing', status: 'current' },
+    { id: 'balance', label: 'Balance', status: 'pending' },
+    { id: 'shipping', label: 'Shipping', status: 'pending' },
+    { id: 'delivered', label: 'Delivered', status: 'pending' },
+  ]
+
+  const payments: PaymentRecord[] = [
+    {
+      id: 'advance',
+      label: '50% Advance',
+      amount: orderTotal * 0.5,
+      status: 'paid',
+      date: 'Apr 16, 2026',
+      method: 'Square',
+    },
+    {
+      id: 'balance',
+      label: '50% Balance',
+      amount: orderTotal * 0.5,
+      status: 'due',
+      date: 'Due on shipment',
+    },
+  ]
+
+  const shipment: ShipmentInfo = {
+    trackingNumber: '—',
+    carrier: 'Carrier TBD',
+    status: 'pending',
+  }
+
+  const emails: EmailRecord[] = [
+    { id: 'e1', subject: `Manufacturing Update — ${orderId} | FlowDoors`, sentAt: 'Apr 18, 2026, 3:12 PM' },
+    { id: 'e2', subject: `Deposit Received — ${orderId} | FlowDoors`, sentAt: 'Apr 16, 2026, 3:18 PM' },
+    { id: 'e3', subject: `Balance Invoice — ${orderId} | FlowDoors`, sentAt: 'Apr 16, 2026, 3:16 PM' },
+    { id: 'e4', subject: `Approval Drawing Ready — Quote QT-2026-006 | FlowDoors`, sentAt: 'Apr 14, 2026, 3:14 PM' },
+    { id: 'e5', subject: `Quote Accepted — QT-2026-006 | FlowDoors`, sentAt: 'Apr 14, 2026, 2:58 PM' },
+  ]
+
+  const documents: DocumentRecord[] = [
+    { id: 'd1', title: 'Order Summary', subtitle: `${orderId}.pdf`, category: 'summary' },
+    { id: 'd2', title: 'Approval Drawing', subtitle: 'Signed — 4 panels, 192" × 96"', category: 'drawing', status: 'signed' },
+    { id: 'd3', title: 'Receipt — 50% Advance Invoice', subtitle: 'INV-2026-006-A.pdf', category: 'receipt', status: 'paid' },
+    { id: 'd4', title: 'Receipt — 50% Balance Invoice', subtitle: 'INV-2026-006-B.pdf', category: 'receipt', status: 'pending' },
+  ]
+
+  const approvalDrawing: ApprovalDrawing = {
+    status: 'signed',
+    panelCount: 4,
+    dimensions: '192" W × 96" H',
+    signedAt: 'Apr 14, 2026',
+  }
+
+  // Persisted tasks for this order (fall back to empty if Firestore unavailable)
+  let tasks: TaskRecord[] = []
+  try {
+    const snap = await adminDb
+      .collection('orders')
+      .doc(orderId)
+      .collection('tasks')
+      .orderBy('sortOrder', 'asc')
+      .get()
+    tasks = snap.docs.map(
+      (d: FirebaseFirestore.QueryDocumentSnapshot): TaskRecord => {
+        const t = d.data()
+        return {
+          id: d.id,
+          title: t.title ?? '',
+          done: Boolean(t.done),
+          completedAt: tsToIso(t.completedAt) ?? undefined,
+          dueDate: tsToIso(t.dueDate) ?? undefined,
+          priority:
+            t.priority === 'low' ||
+            t.priority === 'high' ||
+            t.priority === 'normal'
+              ? t.priority
+              : undefined,
+          assignee: t.assignee ?? undefined,
+        }
+      }
+    )
+  } catch (err) {
+    console.warn('Tasks fetch skipped:', err)
+  }
+
+  const portalPath = `/portal/${orderId}`
+  const portalUrl =
+    typeof process !== 'undefined' && process.env.NEXT_PUBLIC_APP_URL
+      ? `${process.env.NEXT_PUBLIC_APP_URL}${portalPath}`
+      : portalPath
+  const quoteUrl = `/admin/quotes/${orderId}`
+
+  // Load persisted notes from Firestore. Guarded for dev without Firebase.
+  let initialNotes: Array<{
+    id: string
+    content: string
+    createdAt: string
+    attachments: Array<{
+      id: string
+      name: string
+      type: string
+      size: number
+      url: string
+      isImage: boolean
+    }>
+  }> = []
+  try {
+    const snap = await adminDb
+      .collection('notes')
+      .orderBy('createdAt', 'desc')
+      .get()
+    initialNotes = snap.docs.map((d: FirebaseFirestore.QueryDocumentSnapshot) => {
+      const data = d.data()
+      const attachments = Array.isArray(data.attachments)
+        ? (data.attachments as Array<{
+            name: string
+            type: string
+            size: number
+            url: string
+            isImage: boolean
+          }>).map((a, i) => ({
+            id: `${d.id}-a${i}`,
+            name: a.name,
+            type: a.type,
+            size: a.size,
+            url: a.url,
+            isImage: a.isImage,
+          }))
+        : []
+      return {
+        id: d.id,
+        content: data.content ?? '',
+        createdAt: tsToIso(data.createdAt) ?? new Date(0).toISOString(),
+        attachments,
+      }
+    })
+  } catch (err) {
+    console.warn('Notes fetch skipped:', err)
+  }
 
   return (
-    <main className="max-w-6xl mx-auto p-6 md:p-8 space-y-8">
+    <main className="mx-auto max-w-7xl space-y-6 p-6 md:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold tracking-tight">
@@ -93,152 +257,139 @@ export default async function OrderPage({
             Created: {createdDate} · Customer: {customerName}
           </p>
         </div>
-        <Button asChild variant="outline" className="rounded-lg">
-          <Link href="/admin/orders" aria-label="Back to Orders">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Orders
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Button asChild variant="outline" className="rounded-lg">
+            <Link href="/admin/orders" aria-label="Back to Orders">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Orders
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      {/* NEW: Company & Customer Info (above hero) */}
-      <SectionCard ariaLabel="Order & Parties">
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Company */}
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight">
-              FlowDoors
-            </h2>
-            <div className="mt-2 text-sm text-gray-900">
-              <div>1234 Coastal View Dr.</div>
-              <div>San Diego, CA 92130</div>
-              <div className="mt-1">Phone: (858) 555-0138</div>
-              <div>Email: info@flowdoors.com</div>
-            </div>
-          </div>
+      <ClientPortalBar
+        portalPath={portalPath}
+        portalUrl={portalUrl}
+        quoteUrl={quoteUrl}
+      />
 
-          {/* Customer + Quote */}
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground">
-              Customer
-            </h3>
-            <div className="mt-2 space-y-1.5">
-              <InfoRow label="Name" value={customerName} />
-              <InfoRow label="Phone" value={phone} />
-              <InfoRow label="Email" value={email} />
-              <InfoRow label="Address" value={customerAddress} />
-            </div>
+      <OrderProgressTracker
+        stages={stages}
+        summary={{
+          title: 'Order in manufacturing',
+          description:
+            'Your doors are being built. You\u2019ll be notified when ready to ship.',
+          tone: 'info',
+        }}
+      />
 
-            <div className="mt-4">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Quote
-              </h3>
-              <div className="mt-2">
-                <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm font-medium text-gray-900">
-                  Quote # {orderId}
-                </span>
+      {/* Main + right-rail grid */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Main column */}
+        <div className="space-y-6 lg:col-span-2">
+          {/* Customer */}
+          <SectionCard ariaLabel="Customer">
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Customer
+              </h2>
+              <InviteCustomerButton
+                orderId={orderId}
+                defaultEmail={email !== '\u2014' ? email : ''}
+                defaultName={customerName !== '\u2014' ? customerName : ''}
+              />
+            </div>
+            <div className="mt-3 grid gap-4 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <InfoRow label="Name" value={customerName} />
+                <InfoRow label="Phone" value={phone} />
+                <InfoRow label="Email" value={email} />
+                <InfoRow label="Address" value={customerAddress} />
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Quote
+                </div>
+                <div className="mt-2">
+                  <span className="inline-flex items-center rounded-full border bg-muted px-3 py-1 text-sm font-medium text-foreground">
+                    Quote # {orderId}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          </SectionCard>
+
+          {/* Layout Preview */}
+          <SectionCard ariaLabel="Layout Preview">
+            <div className="aspect-[16/3.5] w-full overflow-hidden rounded-2xl bg-gradient-to-br from-muted to-muted/60" />
+            <div className="px-0 pb-0 pt-4">
+              <div className="text-sm text-muted-foreground">Layout Preview</div>
+              <div className="text-xs text-muted-foreground/80">
+                (Visual rendering of the door layout — coming in a later step)
+              </div>
+            </div>
+          </SectionCard>
+
+          <DoorSpecsGrid fields={specs} />
+
+          <LineItemsTable items={lineItems} />
+
+          <PricingBreakdown
+            subtotal={subtotal}
+            rows={pricingRows}
+            total={orderTotal}
+            installQuoteUrl={`/admin/quotes/new?installFor=${orderId}`}
+          />
+
+          <ApprovalDrawingCard drawing={approvalDrawing} />
+
+          <CollapsibleMediaCard
+            title="Site Photos"
+            icon={<Camera className="h-4 w-4" />}
+            iconTint="bg-primary/15 text-primary"
+            count={0}
+            emptyMessage="No site photos uploaded yet."
+          />
+
+          <CollapsibleMediaCard
+            title="Attachments"
+            icon={<Paperclip className="h-4 w-4" />}
+            iconTint="bg-primary/15 text-primary"
+            count={0}
+            emptyMessage="No attachments yet."
+          />
+
+          <SectionCard ariaLabel="Follow-up Notes (Internal)">
+            <div className="mb-2">
+              <h2 className="text-xl font-semibold tracking-tight">
+                Follow-up Notes{' '}
+                <span className="text-sm font-normal text-muted-foreground">
+                  (internal)
+                </span>
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                These notes are for sales/ops only and are not shown to the client.
+              </p>
+            </div>
+            <NotesPanel initialNotes={initialNotes} />
+          </SectionCard>
         </div>
 
-        <div className="mt-6 border-t border-gray-100 pt-4">
-          <div className="text-sm text-muted-foreground">
-            Items: Item 1 · Item 2 · Item 3
-          </div>
-        </div>
-      </SectionCard>
-
-      {/* Hero: Layout Preview (half height) */}
-      <SectionCard ariaLabel="Layout Preview">
-        <div className="aspect-[16/3.5] w-full overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100" />
-        <div className="px-0 pb-0 pt-4">
-          <div className="text-sm text-muted-foreground">Layout Preview</div>
-          <div className="text-xs text-gray-500">
-            (This will render a visual of the door layout in a later step)
-          </div>
-        </div>
-      </SectionCard>
-
-      {/* Content Grid: Left Options Rail + Main Spec Sheet */}
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Left rail: Options */}
-        <SectionCard className="md:col-span-1" ariaLabel="Options">
-          <h2 className="mb-4 text-xl font-semibold tracking-tight">Options</h2>
-
-          <OptionGroup title="Exterior Finish" value={optionFinishExterior} />
-          <OptionGroup title="Interior Finish" value={optionFinishInterior} />
-          <OptionGroup title="Handle" value={optionHandle} />
-          <OptionGroup title="Track" value={optionTrack} />
-          <OptionGroup title="Glass" value={optionGlass} />
-
-          <div className="mt-6 space-y-1 text-sm text-muted-foreground">
-            <div>Customer Email: {email}</div>
-            <div>Phone: {phone}</div>
-          </div>
-        </SectionCard>
-
-        {/* Main spec sheet */}
-        <SectionCard className="md:col-span-2" ariaLabel="Specification">
-          <h2 className="mb-4 text-xl font-semibold tracking-tight">
-            Specification
-          </h2>
-
-          <div className="divide-y divide-gray-100">
-            <DetailRow label="System Type" value={systemType} />
-            <DetailRow label="Operation" value={operation} />
-            <DetailRow label="Panel Configuration" value={panelConfig} />
-            <DetailRow
-              label="System Size (in)"
-              value={`${systemWidthIn}" W × ${systemHeightIn}" H`}
-            />
-            <DetailRow
-              label="Recommended Rough Opening (in)"
-              value={`${roWidthIn}" W × ${roHeightIn}" H`}
-            />
-            <DetailRow label="Exterior Finish" value={optionFinishExterior} />
-            <DetailRow label="Interior Finish" value={optionFinishInterior} />
-            <DetailRow label="Track Type" value={optionTrack} />
-            <DetailRow label="Glass" value={optionGlass} />
-            <DetailRow label="Hardware" value={optionHandle} />
-          </div>
-        </SectionCard>
+        {/* Right rail */}
+        <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+          <PaymentsCard payments={payments} total={orderTotal} />
+          <ShippingTrackingCard shipment={shipment} />
+          <EmailsCard emails={emails} />
+          <DocumentsCard documents={documents} />
+          <TasksCard orderId={orderId} initialTasks={tasks} />
+        </aside>
       </div>
-
-      {/* Follow-up Notes (Internal, not client-visible) */}
-      <SectionCard ariaLabel="Follow-up Notes (Internal)">
-        <div className="mb-2">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Follow-up Notes{' '}
-            <span className="text-sm font-normal text-muted-foreground">
-              (internal)
-            </span>
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            These notes are for sales/ops only and are not shown to the client.
-          </p>
-        </div>
-        {/* Client-side Notes UI fed by server-fetched data */}
-        <NotesPanel initialNotes={initialNotes} />
-      </SectionCard>
-
-      {/* Footer: Pricing */}
-      <SectionCard ariaLabel="Item Price">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight">Item Price</h2>
-            <p className="text-sm text-muted-foreground">
-              For this configuration
-            </p>
-          </div>
-          <div className="text-2xl font-bold">{formatUSD(itemPriceUSD)}</div>
-        </div>
-      </SectionCard>
     </main>
   )
 }
 
-/* --- Helpers (server-safe, presentation only) --- */
+/* --- Shared presentational helpers --- */
 
 function SectionCard({
   children,
@@ -251,7 +402,7 @@ function SectionCard({
 }) {
   return (
     <section
-      className={`rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ${className}`}
+      className={`rounded-2xl border bg-card text-card-foreground p-6 shadow-sm ${className}`}
       aria-label={ariaLabel}
     >
       {children}
@@ -259,45 +410,11 @@ function SectionCard({
   )
 }
 
-function OptionGroup({ title, value }: { title: string; value: string }) {
-  return (
-    <div className="mb-4">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">
-        {title}
-      </div>
-      <div className="mt-1 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-800">
-        {value}
-      </div>
-    </div>
-  )
-}
-
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-baseline justify-between gap-6 py-2.5">
-      <span className="w-48 shrink-0 text-sm text-muted-foreground">
-        {label}
-      </span>
-      <span className="truncate text-sm font-medium text-gray-900">
-        {value}
-      </span>
-    </div>
-  )
-}
-
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center gap-3 text-sm">
       <span className="w-24 shrink-0 text-muted-foreground">{label}</span>
-      <span className="truncate font-medium text-gray-900">{value}</span>
+      <span className="truncate font-medium text-foreground">{value}</span>
     </div>
   )
-}
-
-function formatUSD(n: number): string {
-  try {
-    return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
-  } catch {
-    return `$${(Math.round(n * 100) / 100).toFixed(2)}`
-  }
 }

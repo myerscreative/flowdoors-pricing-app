@@ -97,10 +97,10 @@ function Sidebar() {
   return (
     <div className="fixed inset-y-0 left-0 z-50 flex flex-col">
       {/* Sidebar */}
-      <div className={`${isCollapsed ? 'w-20' : 'w-72'} bg-white border-r border-gray-200 flex flex-col transition-all duration-300 shadow-lg h-full`}>
+      <div className={`${isCollapsed ? 'w-20' : 'w-72'} bg-card border-r border-border text-card-foreground flex flex-col transition-all duration-300 shadow-lg h-full`}>
         
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-flowdoors-blue-600 to-flowdoors-blue-500">
+        <div className="p-6 border-b border-border bg-gradient-to-r from-flowdoors-blue-600 to-flowdoors-blue-500">
           <div className="flex items-center justify-between">
             {!isCollapsed && (
               <div className="flex items-center gap-3">
@@ -142,13 +142,13 @@ function Sidebar() {
                   className={`
                     w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
                     ${isActive 
-                      ? 'bg-gradient-to-r from-flowdoors-blue-600 to-flowdoors-blue-500 text-white shadow-lg shadow-flowdoors-blue-500/30' 
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-gradient-to-r from-flowdoors-blue-600 to-flowdoors-blue-500 text-white shadow-lg shadow-flowdoors-blue-500/30'
+                      : 'text-foreground/80 hover:bg-muted'
                     }
                   `}
                 >
                   <div className="relative">
-                    <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-flowdoors-blue-600'} transition-colors`} />
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-muted-foreground group-hover:text-flowdoors-blue-500'} transition-colors`} />
                     {item.badge && (
                       <span className={`absolute -top-1 -right-1 ${item.badgeColor} text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center`}>
                         {item.badge}
@@ -158,10 +158,10 @@ function Sidebar() {
                   
                   {!isCollapsed && (
                     <div className="flex-1 text-left">
-                      <div className={`font-semibold ${isActive ? 'text-white' : 'text-gray-900'}`}>
+                      <div className={`font-semibold ${isActive ? 'text-white' : 'text-foreground'}`}>
                         {item.name}
                       </div>
-                      <div className={`text-xs ${isActive ? 'text-flowdoors-blue-100' : 'text-gray-500'}`}>
+                      <div className={`text-xs ${isActive ? 'text-flowdoors-blue-100' : 'text-muted-foreground'}`}>
                         {item.description}
                       </div>
                     </div>
@@ -179,7 +179,7 @@ function Sidebar() {
 
           {/* Divider */}
           {!isCollapsed && (
-            <div className="my-6 border-t border-gray-200"></div>
+            <div className="my-6 border-t border-border"></div>
           )}
 
           {/* Secondary Actions */}
@@ -188,10 +188,10 @@ function Sidebar() {
               onClick={() => router.push('/admin/settings')}
               className={`
                 w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
-                text-gray-700 hover:bg-gray-100
+                text-foreground/80 hover:bg-muted
               `}
             >
-              <Settings className="w-5 h-5 text-gray-500" />
+              <Settings className="w-5 h-5 text-muted-foreground" />
               {!isCollapsed && <span className="text-sm font-medium">Settings</span>}
             </button>
             
@@ -199,23 +199,23 @@ function Sidebar() {
               onClick={() => router.push('/admin/help')}
               className={`
                 w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
-                text-gray-700 hover:bg-gray-100
+                text-foreground/80 hover:bg-muted
               `}
             >
-              <HelpCircle className="w-5 h-5 text-gray-500" />
+              <HelpCircle className="w-5 h-5 text-muted-foreground" />
               {!isCollapsed && <span className="text-sm font-medium">Help & Support</span>}
             </button>
           </div>
         </nav>
 
         {/* User Profile Section */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
+        <div className="p-4 border-t border-border bg-muted/40">
           <div className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
               className={`
                 w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
-                hover:bg-white hover:shadow-md
+                hover:bg-card hover:shadow-md
               `}
             >
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-flowdoors-green-500 to-flowdoors-blue-500 flex items-center justify-center text-white font-bold shadow-md">
@@ -225,41 +225,41 @@ function Sidebar() {
               {!isCollapsed && (
                 <>
                   <div className="flex-1 text-left">
-                    <div className="text-sm font-semibold text-gray-900">John Doe</div>
-                    <div className="text-xs text-gray-500">john@flowdoors.com</div>
+                    <div className="text-sm font-semibold text-foreground">John Doe</div>
+                    <div className="text-xs text-muted-foreground">john@flowdoors.com</div>
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
                 </>
               )}
             </button>
 
             {/* User Dropdown Menu */}
             {showUserMenu && !isCollapsed && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
-                <button 
+              <div className="absolute bottom-full left-0 right-0 mb-2 bg-card text-card-foreground rounded-xl shadow-xl border border-border overflow-hidden">
+                <button
                   onClick={() => {
                     router.push('/admin/profile');
                     setShowUserMenu(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors"
                 >
-                  <User className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-700">View Profile</span>
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-foreground/90">View Profile</span>
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     router.push('/admin/settings');
                     setShowUserMenu(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors"
                 >
-                  <Settings className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-700">Account Settings</span>
+                  <Settings className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-foreground/90">Account Settings</span>
                 </button>
-                <div className="border-t border-gray-200"></div>
-                <button 
+                <div className="border-t border-border"></div>
+                <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-red-600"
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-destructive/10 transition-colors text-destructive"
                 >
                   <LogOut className="w-4 h-4" />
                   <span className="text-sm font-medium">Sign Out</span>
