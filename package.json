@@ -88,6 +88,8 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@next/eslint-plugin-next": "^15.5.0",
+    "@opentelemetry/exporter-jaeger": "^2.7.0",
+    "@opentelemetry/winston-transport": "^0.25.0",
     "@types/jest": "^29.5.14",
     "@types/lodash": "^4.17.4",
     "@types/node": "^20.19.10",
