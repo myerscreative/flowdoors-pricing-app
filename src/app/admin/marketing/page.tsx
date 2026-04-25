@@ -23,7 +23,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { exportFunnelData, exportMarketingSummary } from '@/lib/exportUtils'
 
 export default function MarketingPage() {
-  const [lastUpdated, setLastUpdated] = useState(new Date())
   const [isLoading, setIsLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -150,7 +149,6 @@ export default function MarketingPage() {
     if (useMockData) {
       console.log('[Marketing Page] Using mock data (all zeros)')
       setMarketingData(mockData)
-      setLastUpdated(new Date())
       return
     }
 
@@ -212,7 +210,6 @@ export default function MarketingPage() {
       setMarketingData(mockData)
     } finally {
       setIsLoading(false)
-      setLastUpdated(new Date())
       console.log('[Marketing Page] Fetch complete')
     }
   }, [getDateRange, mockData, useMockData])

@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select'
 import { trackConversion } from '@/lib/analytics/googleAds'
 import { getStoredAttribution } from '@/lib/marketing/attribution'
-import { ArrowLeft, ArrowRight, Check, Home, Building2, MapPin, Clock } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, MapPin, Clock } from 'lucide-react'
 import Image from 'next/image'
 
 type Step = 1 | 2 | 3
