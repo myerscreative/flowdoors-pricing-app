@@ -16,6 +16,8 @@ dist/
 .env.production
 .env.development
 .env*.local
+.env.*.backup
+.env.local.backup
 
 # Firebase service account keys
 *.key.json

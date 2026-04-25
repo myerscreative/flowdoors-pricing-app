@@ -131,8 +131,8 @@ export function useCurrentUserRole() {
           isDev,
         })
 
-        // Force development mode for now to bypass auth issues
-        if (true) { // Temporarily force dev mode
+        // Use development mode bypass only in actual dev environment
+        if (isDev) {
           console.warn(
             '🔧 Development mode: bypassing auth, setting role to admin'
           )

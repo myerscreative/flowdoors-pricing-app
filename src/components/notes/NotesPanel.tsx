@@ -68,7 +68,7 @@ function AttachmentChip({
   onRemove?: () => void
 }) {
   return (
-    <div className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white">
+    <div className="group relative overflow-hidden rounded-lg border border-border bg-card">
       {a.isImage ? (
         <Image
           src={a.url}
@@ -80,19 +80,19 @@ function AttachmentChip({
         />
       ) : (
         <div className="h-28 w-28 p-2">
-          <div className="flex h-full w-full flex-col items-center justify-center rounded-md bg-gray-50 text-center">
-            <div className="text-[11px] font-medium text-gray-700 line-clamp-2">
+          <div className="flex h-full w-full flex-col items-center justify-center rounded-md bg-muted text-center">
+            <div className="text-[11px] font-medium text-foreground/90 line-clamp-2">
               {a.name}
             </div>
-            <div className="text-[10px] text-gray-500">{fmtSize(a.size)}</div>
+            <div className="text-[10px] text-muted-foreground">{fmtSize(a.size)}</div>
           </div>
         </div>
       )}
-      <div className="flex items-center justify-between gap-1 border-t border-gray-200 px-2 py-1">
+      <div className="flex items-center justify-between gap-1 border-t border-border px-2 py-1">
         <a
           href={a.url}
           download={a.name}
-          className="text-[11px] text-blue-600 hover:underline"
+          className="text-[11px] text-primary hover:underline"
         >
           Download
         </a>
@@ -100,7 +100,7 @@ function AttachmentChip({
           <button
             type="button"
             onClick={onRemove}
-            className="rounded px-1 text-[11px] text-red-600 hover:bg-red-50"
+            className="rounded px-1 text-[11px] text-destructive hover:bg-destructive/10"
             aria-label={`Remove ${a.name}`}
           >
             Remove
@@ -260,15 +260,15 @@ export default function NotesPanel({
 
   /* ---------- Render ---------- */
   return (
-    <div className="rounded-xl border border-gray-200 bg-white">
+    <div className="rounded-xl border border-border bg-card">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
         {!composerOpen && (
           <button
             type="button"
             onClick={() => setComposerOpen(true)}
-            className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground/90 shadow-sm hover:bg-muted focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             Add note
           </button>
@@ -277,8 +277,8 @@ export default function NotesPanel({
 
       {/* Composer */}
       {composerOpen && (
-        <div className="border-t border-gray-200 px-4 py-3">
-          <label className="mb-1 block text-xs font-medium text-gray-600">
+        <div className="border-t border-border px-4 py-3">
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">
             Add Note
           </label>
           <textarea
@@ -286,7 +286,7 @@ export default function NotesPanel({
             value={composerText}
             onChange={(e) => setComposerText(e.target.value)}
             placeholder="Write a note… paragraphs and line breaks are preserved."
-            className="w-full resize-y rounded-lg border border-gray-300 bg-white p-3 text-sm text-gray-900 outline-none ring-blue-500 focus:ring-2"
+            className="w-full resize-y rounded-lg border border-border bg-card p-3 text-sm text-foreground outline-none ring-blue-500 focus:ring-2"
           />
 
           {/* Attach files */}
@@ -301,11 +301,11 @@ export default function NotesPanel({
             <button
               type="button"
               onClick={() => composerInputRef.current?.click()}
-              className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground/90 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Attach files
             </button>
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-muted-foreground">
               Images show thumbnails; all files are downloadable.
             </span>
           </div>
@@ -326,7 +326,7 @@ export default function NotesPanel({
             <button
               type="button"
               onClick={addNote}
-              className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Save Note
             </button>
@@ -344,7 +344,7 @@ export default function NotesPanel({
                 })
                 setComposerFiles([])
               }}
-              className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground/90 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Cancel
             </button>
@@ -354,14 +354,14 @@ export default function NotesPanel({
 
       {/* Empty state */}
       {!composerOpen && notes.length === 0 && (
-        <div className="border-t border-gray-200 px-4 py-10 text-center text-sm text-gray-500">
+        <div className="border-t border-border px-4 py-10 text-center text-sm text-muted-foreground">
           No notes yet.
         </div>
       )}
 
       {/* Notes list */}
       {notes.length > 0 && (
-        <ul className="divide-y divide-gray-200">
+        <ul className="divide-y divide-border">
           {notes.map((n) => {
             const isEditing = n.id === editingId
             return (
@@ -373,23 +373,23 @@ export default function NotesPanel({
                     onClick={() =>
                       setMenuOpenId((v) => (v === n.id ? null : n.id))
                     }
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     ⋮
                   </button>
                   {menuOpenId === n.id && (
                     <div
-                      className="absolute right-0 z-10 mt-1 w-36 overflow-hidden rounded-md border border-gray-200 bg-white shadow-md"
+                      className="absolute right-0 z-10 mt-1 w-36 overflow-hidden rounded-md border border-border bg-card shadow-md"
                       onMouseLeave={() => setMenuOpenId(null)}
                     >
                       <button
-                        className="block w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
+                        className="block w-full px-3 py-2 text-left text-sm hover:bg-muted"
                         onClick={() => startEdit(n)}
                       >
                         Edit
                       </button>
                       <button
-                        className="block w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                        className="block w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
                         onClick={() => deleteNote(n.id)}
                       >
                         Delete
@@ -399,7 +399,7 @@ export default function NotesPanel({
                 </div>
 
                 {/* timestamp */}
-                <div className="mb-1 text-xs font-medium text-gray-500">
+                <div className="mb-1 text-xs font-medium text-muted-foreground">
                   {fmtTime(n.createdAt)}
                 </div>
 
@@ -410,7 +410,7 @@ export default function NotesPanel({
                       rows={5}
                       value={editingText}
                       onChange={(e) => setEditingText(e.target.value)}
-                      className="w-full resize-y rounded-lg border border-gray-300 bg-white p-3 text-sm text-gray-900 outline-none ring-blue-500 focus:ring-2"
+                      className="w-full resize-y rounded-lg border border-border bg-card p-3 text-sm text-foreground outline-none ring-blue-500 focus:ring-2"
                     />
 
                     <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -424,7 +424,7 @@ export default function NotesPanel({
                       <button
                         type="button"
                         onClick={() => editorInputRef.current?.click()}
-                        className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground/90 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         Attach files
                       </button>
@@ -446,7 +446,7 @@ export default function NotesPanel({
                       <button
                         type="button"
                         onClick={saveEdit}
-                        className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         Save
                       </button>
@@ -467,7 +467,7 @@ export default function NotesPanel({
                             n.attachments ? [...n.attachments] : []
                           )
                         }}
-                        className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground/90 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         Cancel
                       </button>
@@ -475,7 +475,7 @@ export default function NotesPanel({
                   </div>
                 ) : (
                   <>
-                    <div className="whitespace-pre-wrap text-sm leading-6 text-gray-800">
+                    <div className="whitespace-pre-wrap text-sm leading-6 text-foreground">
                       {n.content}
                     </div>
                     {n.attachments && n.attachments.length > 0 ? (

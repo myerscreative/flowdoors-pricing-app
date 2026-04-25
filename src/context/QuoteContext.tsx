@@ -21,6 +21,7 @@ import {
   DELIVERY_OPTIONS,
   PRODUCT_TYPES,
   PRODUCT_SQFT_RATE,
+  PANEL_COST,
 } from '@/lib/constants'
 // import { isEqual } from 'lodash'; // Unused import
 import { useSearchParams } from 'next/navigation'
@@ -126,14 +127,14 @@ const calculatePrice = (state: Quote): Quote => {
     const sqFt = (item.product.widthIn * item.product.heightIn) / 144
 
     const rate = PRODUCT_SQFT_RATE[item.product.type] ?? 50
+    const panelCount = parseInt(item.product.panels, 10) || 1
     const baseCost = 0
-    const sizeAndPanelCost = sqFt * rate
+    const sizeAndPanelCost = sqFt * rate + panelCount * PANEL_COST
 
     const paneCost = 0 // All systems now use dual pane by default
     const tintCost =
       TINT_OPTIONS.find((t) => t.name === item.glazing.tint)?.price || 0
-    const glazingCost =
-      (paneCost + tintCost) * (parseInt(item.product.panels, 10) || 1)
+    const glazingCost = (paneCost + tintCost) * panelCount
 
     const pocketDoorCost = item.product.systemType === 'Pocket Door' ? 1200 : 0
 

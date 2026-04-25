@@ -48,9 +48,12 @@ export const PRODUCT_TYPES: ProductTypeInfo[] = [
 
 // Product-specific square-foot pricing used in calculations
 export const PRODUCT_SQFT_RATE: Record<ProductId, number> = {
-  'Slide-and-Stack': 110,
+  'Slide-and-Stack': 125,
   '': 50,
 }
+
+// Flat cost added per panel
+export const PANEL_COST = 1000
 
 // Slide-and-Stack configurations
 export const SLIDE_AND_STACK_CONFIGS: Record<

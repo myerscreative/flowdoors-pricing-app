@@ -7,7 +7,7 @@ import { FirebaseError } from 'firebase/app'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { useRouter } from 'next/navigation'
 import type { FormEvent } from 'react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type Mode = 'login' | 'reset'
 
@@ -34,6 +34,20 @@ export default function AdminLoginPage() {
   const getEmail = () => (emailRef.current?.value ?? email).trim()
   const isBusy = ui.kind === 'submitting' || ui.kind === 'reset-sending'
   const router = useRouter()
+
+  // Auto-redirect in development mode
+  useEffect(() => {
+    const isDev =
+      process.env.NODE_ENV === 'development' ||
+      (typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1'))
+    
+    if (isDev) {
+      console.warn('🔧 Development mode: auto-redirecting to admin dashboard')
+      setTimeout(() => router.push('/admin'), 100)
+    }
+  }, [router])
 
   // --- LOGIN HANDLERS ---
   async function onSubmitLogin(e: FormEvent<HTMLFormElement>) {

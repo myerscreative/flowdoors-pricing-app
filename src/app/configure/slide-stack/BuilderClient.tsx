@@ -966,14 +966,13 @@ export default function SlideStackBuilder() {
                           heightIn: height as number,
                         },
                       })
-                      if (layoutCode) {
-                        dispatch({
-                          type: 'SET_CONFIGURATION',
-                          payload: {
-                            configuration: layoutCode,
-                          },
-                        })
-                      }
+                      dispatch({
+                        type: 'SET_VISUAL_CONFIGURATION',
+                        payload: {
+                          configuration: layoutCode ?? '',
+                          panels: panelCount != null ? String(panelCount) : '',
+                        },
+                      })
                       dispatch({
                         type: 'SET_EXTERIOR_COLOR',
                         payload: { ral: '', name: exterior, hex: '#000000' },
