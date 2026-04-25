@@ -6,7 +6,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "postinstall": "pnpm prisma:generate && simple-git-hooks",
+    "postinstall": "simple-git-hooks",
     "dev": "pnpm dev:ports && next dev -p 3000",
     "dev:ports": "lsof -ti TCP:3000,3001,3002 2>/dev/null | xargs kill -9 2>/dev/null || true",
     "clean": "rm -rf .next .turbo .vercel/out node_modules/.cache",
@@ -16,9 +16,6 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "typecheck": "tsc --noEmit",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name init_notes",
-    "prisma:studio": "prisma studio",
     "lint": "next lint",
     "prepare": "husky",
     "format": "prettier --write .",
